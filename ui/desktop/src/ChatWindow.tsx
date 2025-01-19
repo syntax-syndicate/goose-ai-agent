@@ -337,8 +337,8 @@ export default function ChatWindow() {
   const openNewChatWindow = () => {
     window.electron.createChatWindow();
   };
-  const { switchModel, currentModel} = useModel(); // Access switchModel via useModel
-  const { addRecentModel } = useRecentModels(); // Access addRecentModel from useRecentModels
+  const {switchModel, currentModel} = useModel(); // Access switchModel via useModel
+  const {addRecentModel} = useRecentModels(); // Access addRecentModel from useRecentModels
 
   // Add keyboard shortcut handler
   useEffect(() => {

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import LauncherWindow from './LauncherWindow';
 import ChatWindow from './ChatWindow';
 import ErrorScreen from './components/ErrorScreen';
-import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer } from 'react-toastify';
 import { ModelProvider} from "./components/settings/models/ModelContext";
 import { ActiveKeysProvider } from "./components/settings/api_keys/ActiveKeysContext";
+import 'react-toastify/dist/ReactToastify.css'; // import first
+import { ToastContainer } from 'react-toastify'; // then this
 
 export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null);
@@ -28,7 +28,6 @@ export default function App() {
   if (fatalError) {
     return <ErrorScreen error={fatalError} onReload={() => window.electron.reloadApp()} />;
   }
-
   return (
       <ModelProvider>
         <ActiveKeysProvider>
@@ -43,4 +42,3 @@ export default function App() {
         </ActiveKeysProvider>
       </ModelProvider>
   );
-}
