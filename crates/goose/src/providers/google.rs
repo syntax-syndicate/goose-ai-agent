@@ -11,7 +11,7 @@ use serde_json::Value;
 use std::time::Duration;
 
 pub const GOOGLE_API_HOST: &str = "https://generativelanguage.googleapis.com";
-pub const GOOGLE_DEFAULT_MODEL: &str = "gemini-1.5-flash";
+pub const GOOGLE_DEFAULT_MODEL: &str = "gemini-2.0-flash-exp";
 
 #[derive(Debug, serde::Serialize)]
 pub struct GoogleProvider {

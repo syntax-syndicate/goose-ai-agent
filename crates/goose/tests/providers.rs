@@ -75,12 +75,14 @@ lazy_static::lazy_static! {
 /// Generic test harness for any Provider implementation
 struct ProviderTester {
     provider: Box<dyn Provider + Send + Sync>,
+    name: String,
 }
 
 impl ProviderTester {
-    fn new<T: Provider + Send + Sync + 'static>(provider: T) -> Self {
+    fn new<T: Provider + Send + Sync + 'static>(provider: T, name: String) -> Self {
         Self {
             provider: Box::new(provider),
+            name,
         }
     }
 
@@ -135,6 +137,10 @@ impl ProviderTester {
             )
             .await?;
 
+        println!("=== {}::reponse1 ===", self.name);
+        dbg!(&response1);
+        println!("===================");
+
         // Verify we got a tool request
         assert!(
             response1
@@ -143,8 +149,6 @@ impl ProviderTester {
                 .any(|content| matches!(content, MessageContent::ToolRequest(_))),
             "Expected tool request in response"
         );
-
-        dbg!(&response1);
 
         let id = &response1
             .content
@@ -178,7 +182,9 @@ impl ProviderTester {
             )
             .await?;
 
+        println!("=== {}::reponse2 ===", self.name);
         dbg!(&response2);
+        println!("===================");
 
         assert!(
             response2
@@ -216,6 +222,9 @@ where
     F: FnOnce() -> Result<T>,
     T: Provider + Send + Sync + 'static,
 {
+    // We start off as failed, so that if the process panics it is seen as a failure
+    TEST_REPORT.record_fail(name);
+
     // Take exclusive access to environment modifications
     let lock = ENV_LOCK.lock().unwrap();
 
@@ -276,7 +285,7 @@ where
         return Err(provider.err().expect("is error"));
     }
 
-    let tester = ProviderTester::new(provider.expect("already checked"));
+    let tester = ProviderTester::new(provider.expect("already checked"), name.to_string());
     match tester.run_test_suite().await {
         Ok(_) => {
             TEST_REPORT.record_pass(name);
@@ -328,7 +337,13 @@ async fn test_databricks_provider_oauth() -> Result<()> {
 
 #[tokio::test]
 async fn test_ollama_provider() -> Result<()> {
-    test_provider("Ollama", &[], None, ollama::OllamaProvider::from_env).await
+    test_provider(
+        "Ollama",
+        &["OLLAMA_HOST"],
+        None,
+        ollama::OllamaProvider::from_env,
+    )
+    .await
 }
 
 #[tokio::test]
