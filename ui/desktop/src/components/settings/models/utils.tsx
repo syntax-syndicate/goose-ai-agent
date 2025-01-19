@@ -3,10 +3,19 @@ import { Model } from "./ModelContext";
 import {ToastFailureGeneral, ToastSuccessModelSwitch} from "./toasts";
 
 export function useHandleModelSelection() {
-    const { switchModel } = useModel(); // Access switchModel via useModel
+    const { switchModel, currentModel} = useModel(); // Access switchModel via useModel
 
     return (model: Model, componentName?: string) => {
         try {
+            // Check if the selected model is already the active model
+            if (currentModel?.id === model.id) {
+                console.log(`[${componentName}] Selected model is already active: ${model.name}`);
+                return;
+            }
+
+            // Check for API key
+
+
             // Call the context's switchModel to update the model
             switchModel(model);
 

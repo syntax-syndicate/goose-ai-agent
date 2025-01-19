@@ -4,22 +4,13 @@ import { ModelList } from "./ModelList"
 import { ProviderButtons } from "./ProviderButtons"
 import { AddModelDialog } from "./AddModelDialog"
 import BackButton from "../../ui/BackButton";
-import { models } from "./hardcoded_stuff"
 import { SearchBar} from "./Search";
-import { useModel } from './ModelContext';
+import { useModel} from "./ModelContext";
 
 
 // TODO: handle darkmode
 export default function MoreModelsPage() {
-    const [currentModel, setCurrentModel] = useState(models.find(m => m.active))
-
-    // TODO: use function that affects state globally
-    const handleModelChange = (modelId: number) => {
-        const newModel = models.find(m => m.id === modelId)
-        if (newModel) {
-            setCurrentModel(newModel)
-        }
-    }
+    const { currentModel, switchModel } = useModel(); // Access global state and updater
 
     return (
         <div className="flex min-h-screen bg-background text-foreground">
@@ -46,7 +37,7 @@ export default function MoreModelsPage() {
                 {/* Main content area */}
                 <div className="space-y-8">
                     {/* Search section */}
-                    <SearchBar onModelChange={handleModelChange}/>
+                    <SearchBar/>
 
                     {/* Provider buttons */}
                     <div className="space-y-4">

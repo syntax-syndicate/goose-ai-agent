@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { GOOSE_MODEL } from "../../../env_vars";
-import { models } from './hardcoded_stuff'; // Assuming hardcoded models are here
+import { goose_models } from './hardcoded_stuff'; // Assuming hardcoded models are here
 
 // TODO: API keys
 export interface Model {
@@ -29,7 +29,7 @@ export const ModelProvider = ({ children }: { children: ReactNode }) => {
 
     const switchModel = (model: Model) => {
         const newModel = model.id
-            ? models.find((m) => m.id === model.id) || model
+            ? goose_models.find((m) => m.id === model.id) || model
             : { id: Date.now(), ...model }; // Assign unique ID for user-defined models
         updateModel(newModel);
     };
