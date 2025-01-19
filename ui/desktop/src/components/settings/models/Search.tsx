@@ -10,6 +10,7 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
     const [activeModel, setActiveModel] = useState(models.find(m => m.active)?.id)
     const [showResults, setShowResults] = useState(false)
     const resultsRef = useRef<(HTMLDivElement | null)[]>([])
+    const searchBarRef = useRef<HTMLDivElement>(null)
 
     const filteredModels = models
         .filter((model) => model.name.toLowerCase().includes(search.toLowerCase()))
@@ -18,6 +19,19 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
     useEffect(() => {
         setFocusedIndex(-1)
     }, [search])
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
+                setShowResults(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [])
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "ArrowDown") {
@@ -42,15 +56,20 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
         if (model.id !== activeModel) {
             setActiveModel(model.id)
             onModelChange(model.id)
-            toast.success(`Switched to ${model.name}`, {
-                position: "bottom-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            toast.success(
+                <div>
+                    <strong>Model Changed</strong>
+                    <div>Switched to {model.name}</div>
+                </div>,
+                {
+                    position: "bottom-right",
+                    autoClose: 3000,
+                    hideProgressBar: true,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
         }
     }
 
@@ -63,22 +82,23 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
     }, [focusedIndex])
 
     return (
-        <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="relative" ref={searchBarRef}>
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"/>
             <input
                 type="text"
                 placeholder="Search models..."
                 value={search}
                 onChange={(e) => {
-                    setSearch(e.target.value)
-                    setShowResults(true)
+                    setSearch(e.target.value);
+                    setShowResults(true);
                 }}
                 onKeyDown={handleKeyDown}
                 onFocus={() => setShowResults(true)}
-                className="w-full pl-10 py-2 bg-background border border-muted-foreground/20 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-12 py-2 bg-background border border-muted-foreground/20 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {showResults && search && (
-                <div className="absolute z-10 w-full mt-2 bg-background border border-muted-foreground/20 rounded-md shadow-lg">
+                <div
+                    className="absolute z-10 w-full mt-2 bg-white border border-muted-foreground/20 rounded-md shadow-lg">
                     {filteredModels.length > 0 ? (
                         filteredModels.map((model, index) => (
                             <div
