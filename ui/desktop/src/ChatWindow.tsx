@@ -21,6 +21,7 @@ import { ChatLayout } from "./components/chat_window/ChatLayout"
 import { ChatRoutes } from "./components/chat_window/ChatRoutes"
 import { WelcomeModal } from "./components/welcome_screen/WelcomeModal"
 import { getStoredProvider, initializeSystem } from './utils/providerUtils'
+import {ToastContainer} from "react-toastify";
 
 declare global {
   interface Window {
@@ -365,8 +366,8 @@ export default function ChatWindow() {
   const initialQuery = searchParams.get("initialQuery");
   const historyParam = searchParams.get("history");
   const initialHistory = historyParam
-    ? JSON.parse(decodeURIComponent(historyParam))
-    : [];
+      ? JSON.parse(decodeURIComponent(historyParam))
+      : [];
 
   const [chats, setChats] = useState<Chat[]>(() => {
     const firstChat = {
@@ -379,7 +380,7 @@ export default function ChatWindow() {
 
   const [selectedChatId, setSelectedChatId] = useState(1);
   const [mode, setMode] = useState<"expanded" | "compact">(
-    initialQuery ? "compact" : "expanded"
+      initialQuery ? "compact" : "expanded"
   );
   const [working, setWorking] = useState<Working>(Working.Idle);
   const [progressMessage, setProgressMessage] = useState<string>("");
@@ -415,7 +416,7 @@ export default function ChatWindow() {
         "Content-Type": "application/json",
         "X-Secret-Key": getSecretKey(),
       },
-      body: JSON.stringify({ key, value }),
+      body: JSON.stringify({key, value}),
     });
 
     if (!response.ok) {
@@ -467,27 +468,36 @@ export default function ChatWindow() {
   }, []);
 
   return (
-      <ChatLayout mode={mode}>
-        <ChatRoutes
-            chats={chats}
-            setChats={setChats}
-            selectedChatId={selectedChatId}
-            setSelectedChatId={setSelectedChatId}
-            setProgressMessage={setProgressMessage}
-            setWorking={setWorking}
-        />
-        <WingToWing
-            onExpand={toggleMode}
-            progressMessage={progressMessage}
-            working={working}
-        />
-        {showWelcomeModal && (
-            <WelcomeModal
-                selectedProvider={selectedProvider}
-                setSelectedProvider={setSelectedProvider}
-                onSubmit={handleModalSubmit}
-            />
-        )}
-      </ChatLayout>
+      <div>
+        <ChatLayout mode={mode}>
+          <ChatRoutes
+              chats={chats}
+              setChats={setChats}
+              selectedChatId={selectedChatId}
+              setSelectedChatId={setSelectedChatId}
+              setProgressMessage={setProgressMessage}
+              setWorking={setWorking}
+          />
+          <WingToWing
+              onExpand={toggleMode}
+              progressMessage={progressMessage}
+              working={working}
+          />
+          {showWelcomeModal && (
+              <WelcomeModal
+                  selectedProvider={selectedProvider}
+                  setSelectedProvider={setSelectedProvider}
+                  onSubmit={handleModalSubmit}
+              />
+          )}
+        </ChatLayout>
+        {/*<ToastContainer*/}
+        {/*    aria-label="Notification container"*/}
+        {/*    position="top-right"*/}
+        {/*    autoClose={3000}*/}
+        {/*    closeOnClick*/}
+        {/*    pauseOnHover*/}
+        {/*/>*/}
+      </div>
   );
 }

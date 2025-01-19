@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import LauncherWindow from './LauncherWindow';
 import ChatWindow from './ChatWindow';
 import ErrorScreen from './components/ErrorScreen';
+import 'react-toastify/dist/ReactToastify.css'; // import first
+import { ToastContainer } from 'react-toastify'; // then this
 
 export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null);
@@ -24,6 +26,17 @@ export default function App() {
   if (fatalError) {
     return <ErrorScreen error={fatalError} onReload={() => window.electron.reloadApp()} />;
   }
-  
-  return isLauncher ? <LauncherWindow /> : <ChatWindow />;
+
+  return (
+      <>
+        {isLauncher ? <LauncherWindow /> : <ChatWindow />}
+          <ToastContainer
+              aria-label={"Test"}
+              position="top-right"
+              autoClose={3000}
+              closeOnClick
+              pauseOnHover
+          />
+      </>
+  );
 }
