@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import LauncherWindow from './LauncherWindow';
 import ChatWindow from './ChatWindow';
 import ErrorScreen from './components/ErrorScreen';
-import 'react-toastify/dist/ReactToastify.css'; // import first
-import { ToastContainer } from 'react-toastify'; // then this
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
+import { ModelProvider} from "./components/settings/models/ModelContext";
 
 export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null);
@@ -28,15 +29,15 @@ export default function App() {
   }
 
   return (
-      <>
+      <ModelProvider>
         {isLauncher ? <LauncherWindow /> : <ChatWindow />}
-          <ToastContainer
-              aria-label={"Test"}
-              position="top-right"
-              autoClose={3000}
-              closeOnClick
-              pauseOnHover
-          />
-      </>
+        <ToastContainer
+            aria-label="Toast notifications"
+            position="top-right"
+            autoClose={3000}
+            closeOnClick
+            pauseOnHover
+        />
+      </ModelProvider>
   );
 }

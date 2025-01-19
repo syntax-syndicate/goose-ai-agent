@@ -3,6 +3,7 @@ import { Search } from 'lucide-react'
 import { Switch } from "../../ui/switch"
 import { toast } from "react-toastify"
 import { models } from "./hardcoded_stuff"
+import { useHandleModelSelection } from "./utils";
 
 export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) => void }) {
     const [search, setSearch] = useState("")
@@ -11,6 +12,8 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
     const [showResults, setShowResults] = useState(false)
     const resultsRef = useRef<(HTMLDivElement | null)[]>([])
     const searchBarRef = useRef<HTMLDivElement>(null)
+    const handleModelSelection = useHandleModelSelection(); // Use the utility hook
+
 
     const filteredModels = models
         .filter((model) => model.name.toLowerCase().includes(search.toLowerCase()))
@@ -58,20 +61,6 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
         if (model.id !== activeModel) {
             setActiveModel(model.id)
             onModelChange(model.id)
-            toast.success(
-                <div>
-                    <strong>Model Changed</strong>
-                    <div>Switched to {model.name}</div>
-                </div>,
-                {
-                    position: "bottom-right",
-                    autoClose: 3000,
-                    hideProgressBar: true,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
         }
     }
 
@@ -110,6 +99,7 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
                                 className={`p-2 flex justify-between items-center hover:bg-muted/50 cursor-pointer ${
                                     index === focusedIndex ? 'bg-muted/50' : ''
                                 }`}
+                                onClick={() => handleModelSelection(model, "SearchBar")} // Use the hook
                             >
                                 <div>
                                     <span className="font-medium">{model.name}</span>

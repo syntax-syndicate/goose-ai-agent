@@ -6,11 +6,14 @@ import { AddModelDialog } from "./AddModelDialog"
 import BackButton from "../../ui/BackButton";
 import { models } from "./hardcoded_stuff"
 import { SearchBar} from "./Search";
+import { useModel } from './ModelContext';
+
 
 // TODO: handle darkmode
 export default function MoreModelsPage() {
     const [currentModel, setCurrentModel] = useState(models.find(m => m.active))
 
+    // TODO: use function that affects state globally
     const handleModelChange = (modelId: number) => {
         const newModel = models.find(m => m.id === modelId)
         if (newModel) {
