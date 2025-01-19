@@ -1,17 +1,12 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
+import { recent_models} from "./hardcoded_stuff";
 
 // TODO: models -- dynamically create this
-const recentModels = [
-    { name: "GPT-4", provider: "OpenAI", lastUsed: "2 hours ago" },
-    { name: "Claude 3", provider: "Anthropic", lastUsed: "Yesterday" },
-    { name: "PaLM 2", provider: "Google", lastUsed: "3 days ago" },
-]
-
 export function ModelList() {
     return (
         <div className="space-y-2">
-            {recentModels.map((model) => (
+            {recent_models.map((model) => (
                 <div
                     key={model.name}
                     className="flex items-center justify-between p-4 rounded-lg border border-muted-foreground/20 bg-background hover:bg-muted/50 transition-colors"
