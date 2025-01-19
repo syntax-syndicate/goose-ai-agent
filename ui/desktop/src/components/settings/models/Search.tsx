@@ -20,6 +20,7 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
         setFocusedIndex(-1)
     }, [search])
 
+    // FIXME: errors
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
@@ -33,6 +34,7 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
         }
     }, [])
 
+    // FIXME: arrow keys not responding but esc works
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "ArrowDown") {
             e.preventDefault()
@@ -81,6 +83,7 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
         }
     }, [focusedIndex])
 
+    // TODO: handle darkmode
     return (
         <div className="relative" ref={searchBarRef}>
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"/>
@@ -103,16 +106,16 @@ export function SearchBar({ onModelChange }: { onModelChange: (modelId: number) 
                         filteredModels.map((model, index) => (
                             <div
                                 key={model.id}
-                                ref={el => resultsRef.current[index] = el}
+                                ref={(el) => (resultsRef.current[index] = el)}
                                 className={`p-2 flex justify-between items-center hover:bg-muted/50 cursor-pointer ${
                                     index === focusedIndex ? 'bg-muted/50' : ''
                                 }`}
                             >
                                 <div>
-                                    {model.name}
-                                    <span className="ml-2 text-xs text-muted-foreground">
+                                    <span className="font-medium">{model.name}</span>
+                                    <span className="ml-2 text-xs text-gray-500 italic">
                     {model.provider}
-                  </span>
+                </span>
                                 </div>
                                 <Switch
                                     checked={model.id === activeModel}

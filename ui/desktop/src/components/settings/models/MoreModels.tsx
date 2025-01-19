@@ -7,6 +7,7 @@ import BackButton from "../../ui/BackButton";
 import { models } from "./hardcoded_stuff"
 import { SearchBar} from "./Search";
 
+// TODO: handle darkmode
 export default function MoreModelsPage() {
     const [currentModel, setCurrentModel] = useState(models.find(m => m.active))
 
@@ -32,8 +33,7 @@ export default function MoreModelsPage() {
                         <h1 className="text-2xl font-semibold">More Models</h1>
                         {currentModel && (
                             <p className="text-sm text-muted-foreground mt-2">
-                                Current model: <span
-                                className="font-medium">{currentModel.name}</span> ({currentModel.provider})
+                                Current model: <span className="font-medium">{currentModel.name}</span> ({currentModel.provider})
                             </p>
                         )}
                     </div>
