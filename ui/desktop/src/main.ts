@@ -13,37 +13,12 @@ import { createEnvironmentMenu, EnvToggles, loadSettings, saveSettings, updateEn
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) app.quit();
 
-// deep linking
-// This event is fired when the user opens "goose://..."
-// Handle the protocol. In this case, we choose to show an Error Box.
+// This event is fired when the user opens "goose://..." links
 app.on('open-url', async (event, url) => {
-  // Prevent default handling
   event.preventDefault();  
-  // Create a new window if none exist
-  
-
-  const parsedUrl = new URL(url);
-  const system = parsedUrl.searchParams.get("cmd");
-  const args = parsedUrl.searchParams.getAll("arg");
-  const description = parsedUrl.searchParams.get("description") || "";
-  const website = parsedUrl.searchParams.get("website") || "";
-  
-  const result = dialog.showMessageBoxSync({
-    type: 'question',
-    buttons: ['Add to new session', 'Add to any current sessions','Cancel'],
-    title: 'Add MCP system',
-    detail: `${description} ${website} ${system} ${args}`.trim(),
-    message: `Add extension to goose?`
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('add-extension', url);
   });
-
-  if (result === 0) {
-    await createChat(app, undefined, undefined, undefined, url);
-  } else if (result === 1) {
-    BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('add-system', url);
-    });
-  }
-
 })
 
 
@@ -136,7 +111,7 @@ const createLauncher = () => {
 let windowCounter = 0;
 const windowMap = new Map<number, BrowserWindow>();
 
-const createChat = async (app, query?: string, dir?: string, version?: string, deepLink?: string) => {
+const createChat = async (app, query?: string, dir?: string, version?: string) => {
   const env = version ? { GOOSE_AGENT_VERSION: version } : {};
 
   // Apply current environment settings before creating chat
@@ -162,7 +137,6 @@ const createChat = async (app, query?: string, dir?: string, version?: string, d
         GOOSE_PORT: port,
         GOOSE_WORKING_DIR: working_dir,
         REQUEST_DIR: dir,
-        DEEP_LINK: deepLink,
       })],
     },
   });
@@ -224,9 +198,7 @@ const createChat = async (app, query?: string, dir?: string, version?: string, d
       },
     };
 
-    app.emit('open-url', mockEvent, "goose://extension?cmd=npx&arg=-y&arg=@modelcontextprotocol/server-memory&description=memory system&website=examplesite.com&env=KEYHERE=VALUEHERE");    
-    
-    
+    app.emit('open-url', mockEvent, 'goose://extension?cmd=npx&arg=-y&arg=%40modelcontextprotocol%2Fserver-github&id=github&name=GitHub&description=Repository%20management%2C%20file%20operations%2C%20and%20GitHub%20API%20integration&env=GITHUB_TOKEN%3DGitHub%20personal%20access%20token');
   });
 
 
@@ -517,5 +489,3 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
-
-
