@@ -40,13 +40,6 @@ jobs:
           sudo apt update -y
           sudo apt install -y libdbus-1-dev gnome-keyring libxcb1-dev
 
-      - name: Start gnome-keyring
-        # run gnome-keyring with 'foobar' as password for the login keyring
-        # this will create a new login keyring and unlock it
-        # the login password doesn't matter, but the keyring must be unlocked for the tests to work
-        run: |
-          gnome-keyring-daemon --components=secrets --daemonize --unlock <<< 'foobar'
-
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -76,8 +69,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-build-
 
-      - name: Run Tests
-        run: cargo test
+      - name: Build and Test
+        run: |
+          gnome-keyring-daemon --components=secrets --daemonize --unlock <<< 'foobar'
+          cargo test
 
       ## TODO: Need to decide if we wanna error out on clippy warnings. It was not being used before. 
       # - name: Run Cargo Clippy (Lint)
