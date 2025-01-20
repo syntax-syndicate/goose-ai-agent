@@ -293,7 +293,7 @@ impl Capabilities {
             .map(|name| {
                 let instructions = self.instructions.get(name).cloned().unwrap_or_default();
                 let has_resources = self.resource_capable_systems.contains(name);
-                SystemInfo::new(name, "", &instructions, has_resources)
+                SystemInfo::new(name, &instructions, has_resources)
             })
             .collect();
 

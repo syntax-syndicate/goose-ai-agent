@@ -114,16 +114,14 @@ impl std::fmt::Display for SystemConfig {
 #[derive(Clone, Debug, Serialize)]
 pub struct SystemInfo {
     name: String,
-    description: String,
     instructions: String,
     has_resources: bool,
 }
 
 impl SystemInfo {
-    pub fn new(name: &str, description: &str, instructions: &str, has_resources: bool) -> Self {
+    pub fn new(name: &str, instructions: &str, has_resources: bool) -> Self {
         Self {
             name: name.to_string(),
-            description: description.to_string(),
             instructions: instructions.to_string(),
             has_resources,
         }
