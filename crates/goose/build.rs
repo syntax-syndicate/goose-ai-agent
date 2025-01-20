@@ -5,10 +5,10 @@ use std::path::Path;
 const BASE_DIR: &str = "../../tokenizer_files";
 const MODELS: &[&str] = &[
     "Xenova/claude-tokenizer",
-    "Xenova/gemma-2-tokenizer",
     "Xenova/gpt-4o",
-    "Qwen/Qwen2.5-Coder-32B-Instruct",
     "Xenova/llama3-tokenizer",
+    "Xenova/gemma-2-tokenizer",
+    "Qwen/Qwen2.5-Coder-32B-Instruct",
 ];
 
 #[tokio::main]
