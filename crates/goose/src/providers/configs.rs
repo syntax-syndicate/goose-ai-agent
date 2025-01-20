@@ -15,7 +15,8 @@ const QWEN_TOKENIZER: &str = "Qwen--Qwen2.5-Coder-32B-Instruct";
 pub struct ModelConfig {
     /// The name of the model to use
     pub model_name: String,
-    // HuggingFace tokenizer name
+    // Optional tokenizer name (corresponds to the sanitized HuggingFace tokenizer name)
+    // "Xenova/gpt-4o" -> "Xenova/gpt-4o"
     // If not provided, best attempt will be made to infer from model name or default
     pub tokenizer_name: String,
     /// Optional explicit context limit that overrides any defaults

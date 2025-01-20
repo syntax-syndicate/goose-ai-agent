@@ -59,10 +59,7 @@ impl TokenCounter {
     /// Fallback: If not found in embedded, we look in `base_dir` on disk.
     /// If not on disk, we download from Hugging Face, then load from disk.
     fn download_and_load(tokenizer_name: &str) -> Result<Self, Box<dyn Error>> {
-        // This is where we store them locally
-        // e.g. "../tokenizer_files/Xenova--llama3-tokenizer"
-        let base_dir = std::env::temp_dir();
-        let local_dir = base_dir.join(tokenizer_name);
+        let local_dir = std::env::temp_dir().join(tokenizer_name);
         let local_json_path = local_dir.join("tokenizer.json");
 
         // If the file doesn't already exist, we download from HF
