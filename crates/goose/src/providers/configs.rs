@@ -4,11 +4,8 @@ const DEFAULT_CONTEXT_LIMIT: usize = 200_000;
 const DEFAULT_ESTIMATE_FACTOR: f32 = 0.8;
 
 // Tokenizer names, used to infer from model name
-const GPT_4O_TOKENIZER: &str = "Xenova--gpt-4o";
-const CLAUDE_TOKENIZER: &str = "Xenova--claude-tokenizer";
-const LLAMA_TOKENIZER: &str = "Xenova--llama3-tokenizer";
-const GOOGLE_TOKENIZER: &str = "Xenova--gemma-2-tokenizer";
-const QWEN_TOKENIZER: &str = "Qwen--Qwen2.5-Coder-32B-Instruct";
+pub const GPT_4O_TOKENIZER: &str = "Xenova--gpt-4o";
+pub const CLAUDE_TOKENIZER: &str = "Xenova--claude-tokenizer";
 
 /// Configuration for model-specific settings and limits
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,14 +51,8 @@ impl ModelConfig {
     fn infer_tokenizer_name(model_name: &str) -> &'static str {
         if model_name.contains("claude") {
             CLAUDE_TOKENIZER
-        } else if model_name.contains("qwen") {
-            QWEN_TOKENIZER
-        } else if model_name.contains("gemini") {
-            GOOGLE_TOKENIZER
-        } else if model_name.contains("llama") {
-            LLAMA_TOKENIZER
         } else {
-            // default
+            // Default tokenizer
             GPT_4O_TOKENIZER
         }
     }

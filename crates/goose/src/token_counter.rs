@@ -19,7 +19,7 @@ pub struct TokenCounter {
 impl TokenCounter {
     /// Creates a new `TokenCounter` using the given HuggingFace tokenizer name.
     ///
-    /// * `tokenizer_name` might look like "Xenova--gpt-4o" or "Xenova--llama3-tokenizer"
+    /// * `tokenizer_name` might look like "Xenova--gpt-4o"
     ///   or "Qwen--Qwen2.5-Coder-32B-Instruct", etc.
     pub fn new(tokenizer_name: &str) -> Self {
         match Self::load_from_embedded(tokenizer_name) {
@@ -235,33 +235,14 @@ impl TokenCounter {
 mod tests {
     use super::*;
     use crate::message::{Message, MessageContent}; // or however your `Message` is imported
+    use crate::providers::configs::{CLAUDE_TOKENIZER, GPT_4O_TOKENIZER};
     use mcp_core::role::Role;
     use mcp_core::tool::Tool;
     use serde_json::json;
 
-    // Some constants for known embedded tokenizers
-    // (Adjust these to match your actual embedded directory names.)
-    const QWEN_TOKENIZER_KEY: &str = "Qwen--Qwen2.5-Coder-32B-Instruct";
-    const CLAUDE_TOKENIZER_KEY: &str = "Xenova--claude-tokenizer";
-    const GPT_4O_TOKENIZER_KEY: &str = "Xenova--gpt-4o";
-
-    #[test]
-    fn test_qwen_tokenizer_and_count_tokens() {
-        // Create a TokenCounter for Qwen
-        let counter = TokenCounter::new(QWEN_TOKENIZER_KEY);
-
-        // Example text
-        let text = "Hey there!";
-        let count = counter.count_tokens(text);
-        println!("Token count for '{}': {:?}", text, count);
-
-        // The old test expected 3 tokens
-        assert_eq!(count, 3, "Qwen tokenizer token count mismatch");
-    }
-
     #[test]
     fn test_claude_tokenizer() {
-        let counter = TokenCounter::new(CLAUDE_TOKENIZER_KEY);
+        let counter = TokenCounter::new(CLAUDE_TOKENIZER);
 
         let text = "Hello, how are you?";
         let count = counter.count_tokens(text);
@@ -273,7 +254,7 @@ mod tests {
 
     #[test]
     fn test_gpt_4o_tokenizer() {
-        let counter = TokenCounter::new(GPT_4O_TOKENIZER_KEY);
+        let counter = TokenCounter::new(GPT_4O_TOKENIZER);
 
         let text = "Hey there!";
         let count = counter.count_tokens(text);
@@ -285,7 +266,7 @@ mod tests {
 
     #[test]
     fn test_count_chat_tokens() {
-        let counter = TokenCounter::new(GPT_4O_TOKENIZER_KEY);
+        let counter = TokenCounter::new(GPT_4O_TOKENIZER);
 
         let system_prompt =
             "You are a helpful assistant that can answer questions about the weather.";
@@ -355,7 +336,7 @@ mod tests {
     // Ignored cause this actually downloads a tokenizer from Hugging Face
     #[test]
     #[ignore]
-    fn test_download_if_not_embedded() {
+    fn test_download_tokenizer_successfully_if_not_embedded() {
         let non_embedded_key = "openai-community/gpt2";
         let counter = TokenCounter::new(non_embedded_key);
 
