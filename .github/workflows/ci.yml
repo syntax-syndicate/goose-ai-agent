@@ -9,6 +9,7 @@ on:
       - 'docs/**'
     branches:
       - v1.0
+  workflow_dispatch:
 
 name: CI
 
@@ -120,3 +121,8 @@ jobs:
       - name: Run Lint
         run: npm run lint:check
         working-directory: ui/desktop
+
+  bundle-desktop-unsigned:
+    uses: ./.github/workflows/bundle-desktop.yml
+    with:
+      signing: false
