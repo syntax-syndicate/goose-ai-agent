@@ -1,7 +1,6 @@
 use chrono::{DateTime, TimeZone, Utc};
 use futures::stream::{FuturesUnordered, StreamExt};
 use mcp_client::McpService;
-use rust_decimal_macros::dec;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::sync::LazyLock;
@@ -207,11 +206,6 @@ impl Capabilities {
                     e.usage.total_tokens = Some(
                         e.usage.total_tokens.unwrap_or(0) + usage.usage.total_tokens.unwrap_or(0),
                     );
-                    if e.cost.is_none() || usage.cost.is_none() {
-                        e.cost = None; // Pricing is not available for all models
-                    } else {
-                        e.cost = Some(e.cost.unwrap_or(dec!(0)) + usage.cost.unwrap_or(dec!(0)));
-                    }
                 })
                 .or_insert_with(|| usage.clone());
         });
