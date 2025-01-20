@@ -122,7 +122,9 @@ jobs:
         run: npm run lint:check
         working-directory: ui/desktop
 
+  # Faster Desktop App build for PRs only
   bundle-desktop-unsigned:
     uses: ./.github/workflows/bundle-desktop.yml
+    if: github.event_name == 'pull_request'
     with:
       signing: false
