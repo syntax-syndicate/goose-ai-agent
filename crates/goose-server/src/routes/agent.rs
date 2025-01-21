@@ -1,5 +1,4 @@
 use crate::state::AppState;
-use std::env;
 use axum::{
     extract::State,
     http::{HeaderMap, StatusCode},
@@ -9,6 +8,7 @@ use axum::{
 use goose::{agents::AgentFactory, providers::factory};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
 
 #[derive(Serialize)]
 struct VersionsResponse {

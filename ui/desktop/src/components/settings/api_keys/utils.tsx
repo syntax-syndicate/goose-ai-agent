@@ -2,14 +2,9 @@ import {Provider, ProviderResponse} from './types'
 import { getApiUrl, getSecretKey } from "../../../config";
 
 export async function getActiveProviders(): Promise<string[]> {
-    console.log("here 1")
     try {
-        console.log("here 2")
-
         // Fetch the secrets settings
         const secretsSettings = await getSecretsSettings();
-
-        console.log("here 3")
 
         // Extract active providers based on `is_set` in `secret_status`
         const activeProviders = Object.values(secretsSettings) // Convert object to array
@@ -18,8 +13,6 @@ export async function getActiveProviders(): Promise<string[]> {
                 return apiKeyStatus.some((key) => key.is_set); // Check if any key has `is_set: true`
             })
             .map((provider) => provider.name || "Unknown Provider"); // Extract provider name
-
-        console.log("here 4")
 
         return activeProviders;
     } catch (error) {
@@ -50,7 +43,6 @@ export async function getSecretsSettings(): Promise<Record<string, ProviderRespo
     }
 
     const data = await response.json() as Record<string, ProviderResponse>;
-    console.log("raw response", data)
     return data
 }
 
@@ -65,8 +57,6 @@ export async function getProvidersList(): Promise<Provider[]> {
     }
 
     const data = await response.json();
-    console.log("Raw API Response:", data); // Log the raw response
-
 
     // Format the response into an array of providers
     return data.map((item: any) => ({

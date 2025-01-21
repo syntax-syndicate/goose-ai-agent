@@ -478,12 +478,22 @@ export default function ChatWindow() {
       const storedModel = getStoredModel()
       if (storedProvider) {
         try {
-          // Call the context's switchModel to update the model
-          switchModel(model);
-
-          // Keep track of the recently used models
-          addRecentModel(model);
           await initializeSystem(storedProvider, storedModel);
+          if (!storedModel) {
+            // get the default model
+            const modelName = getDefaultModel(storedProvider.toLowerCase())
+
+            // create model object
+            const model = createSelectedModel(storedProvider.toLowerCase(), modelName)
+
+            // Call the context's switchModel to track the set model state in the front end
+            switchModel(model);
+
+            // Keep track of the recently used models
+            addRecentModel(model);
+
+            console.log("set up provider with default model", storedProviders, modelName)
+          }
         } catch (error) {
           console.error("Failed to initialize with stored provider:", error);
         }

@@ -16,7 +16,6 @@ export const ActiveKeysProvider = ({ children }: { children: ReactNode }) => {
         const fetchActiveProviders = async () => {
             try {
                 const providers = await getActiveProviders(); // Fetch the active providers
-                console.log("Fetched providers:", providers);
                 setActiveKeys(providers); // Update state with fetched providers
             } catch (error) {
                 console.error("Error fetching active providers:", error);
