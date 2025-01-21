@@ -1,9 +1,12 @@
-import * as React from "react";
-import { Check, ChevronDown, Edit2, Plus, X } from "lucide-react";
-import { Button } from "../../ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion";
 import { supported_providers, required_keys, provider_aliases } from "../models/hardcoded_stuff";
 import { useActiveKeys } from "../api_keys/ActiveKeysContext";
+import { ProviderSetupModal } from "../modals/ProviderSetupModal";
+import React from "react";
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@radix-ui/react-accordion";
+import {Check, ChevronDown, Edit2, Plus, X} from "lucide-react";
+import {Button} from "../../ui/button";
+import {getApiUrl, getSecretKey} from "../../../config";
+import {getActiveProviders} from "../api_keys/utils";
 
 // Utility Functions
 function getProviderDescription(provider) {
@@ -133,19 +136,78 @@ function ProviderItem({ provider, activeKeys, onEdit, onDelete, onAdd }) {
 
 // Main Component
 export function Providers() {
-    const { activeKeys } = useActiveKeys();
+    const { activeKeys, setActiveKeys } = useActiveKeys();
     const providers = useProviders(activeKeys);
+    const [selectedProvider, setSelectedProvider] = React.useState(null);
+    const [isModalOpen, setIsModalOpen] = React.useState(false);
 
     const handleEdit = (provider) => {
-        console.log("Edit", provider);
+        setSelectedProvider(provider);
+        setIsModalOpen(true);
     };
 
-    const handleDelete = (provider) => {
-        console.log("Delete", provider);
-    };
+    const handleModalSubmit = async (apiKey) => {
+        if (!selectedProvider) return;
 
-    const handleAdd = (provider) => {
-        console.log("Add", provider);
+        const provider = selectedProvider.name;
+        const keyName = required_keys[provider]?.[0]; // Get the first key, assuming one key per provider
+
+        if (!keyName) {
+            console.error(`No key found for provider ${provider}`);
+            return;
+        }
+
+        try {
+            // Log to debug the payload
+            console.log("Attempting to delete key:", keyName);
+
+            // Delete old key logic
+            const deleteResponse = await fetch(getApiUrl("/secrets/delete"), {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Secret-Key": getSecretKey(),
+                },
+                body: JSON.stringify({ key: keyName }), // Send the key as expected by the Rust endpoint
+            });
+
+            if (!deleteResponse.ok) {
+                const errorText = await deleteResponse.text();
+                console.error("Delete response error:", errorText);
+                throw new Error("Failed to delete old key");
+            }
+
+            console.log("Key deleted successfully.");
+
+            // Store new key logic
+            const storeResponse = await fetch(getApiUrl("/secrets/store"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Secret-Key": getSecretKey(),
+                },
+                body: JSON.stringify({
+                    key: keyName,
+                    value: apiKey.trim(),
+                }),
+            });
+
+            if (!storeResponse.ok) {
+                const errorText = await storeResponse.text();
+                console.error("Store response error:", errorText);
+                throw new Error("Failed to store new key");
+            }
+
+            console.log("Key stored successfully.");
+
+            // Update active keys
+            const updatedKeys = await getActiveProviders();
+            setActiveKeys(updatedKeys);
+
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error("Error handling modal submit:", error);
+        }
     };
 
     return (
@@ -161,11 +223,21 @@ export function Providers() {
                         provider={provider}
                         activeKeys={activeKeys}
                         onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onAdd={handleAdd}
+                        onDelete={() => console.log("Delete", provider)}
+                        onAdd={() => console.log("Add", provider)}
                     />
                 ))}
             </Accordion>
+
+            {isModalOpen && selectedProvider && (
+                <ProviderSetupModal
+                    provider={selectedProvider.name}
+                    model="Example Model"
+                    endpoint="Example Endpoint"
+                    onSubmit={handleModalSubmit}
+                    onCancel={() => setIsModalOpen(false)}
+                />
+            )}
         </div>
     );
 }
