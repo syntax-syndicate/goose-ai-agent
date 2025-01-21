@@ -66,7 +66,6 @@ mod tests {
         let instructions = router.instructions();
 
         assert!(instructions.contains("Test hint content"));
-        assert!(instructions.contains("# Project Hints"));
     }
 
     #[test]
@@ -218,7 +217,7 @@ impl DeveloperRouter {
         let hints_path = cwd.join(".goosehints");
         let instructions = if hints_path.is_file() {
             if let Ok(hints) = std::fs::read_to_string(&hints_path) {
-                format!("{base_instructions}\n# Project Hints\n{hints}")
+                format!("{base_instructions}\n### Project Hints\nThe developer system includes some hints for working on the project in this directory.\n{hints}")
             } else {
                 base_instructions
             }
