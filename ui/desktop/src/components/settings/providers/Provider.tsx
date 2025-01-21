@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Check, ChevronDown, Edit2, Plus, X } from "lucide-react"
-import { Button } from "../../ui/button"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion"
-import { supported_providers, required_keys, provider_aliases } from "../models/hardcoded_stuff"
-import { useActiveKeys } from "../api_keys/ActiveKeysContext"
+import * as React from "react";
+import { Check, ChevronDown, Edit2, Plus, X } from "lucide-react";
+import { Button } from "../../ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion";
+import { supported_providers, required_keys, provider_aliases } from "../models/hardcoded_stuff";
+import { useActiveKeys } from "../api_keys/ActiveKeysContext";
 
 interface Provider {
-    id: string
-    name: string
-    keyName: string[]
-    isConfigured: boolean
-    description: string
+    id: string;
+    name: string;
+    keyName: string[];
+    isConfigured: boolean;
+    description: string;
 }
 
 function getProviderDescription(provider: string): string {
@@ -23,47 +23,46 @@ function getProviderDescription(provider: string): string {
         "Groq": "Access Mixtral and other Groq-hosted models",
         "Databricks": "Access models hosted on your Databricks instance",
         "OpenRouter": "Access a variety of AI models through OpenRouter",
-        "Ollama": "Run and use open-source models locally"
-    }
-    return descriptions[provider] || `Access ${provider} models`
+        "Ollama": "Run and use open-source models locally",
+    };
+    return descriptions[provider] || `Access ${provider} models`;
 }
 
 export function Providers() {
-    const { activeKeys } = useActiveKeys()
-    const [selectedProvider, setSelectedProvider] = React.useState<Provider | null>(null)
-    const [isModalOpen, setIsModalOpen] = React.useState(false)
+    const { activeKeys } = useActiveKeys();// Fetch active keys from context
+    console.log("activeKeys", activeKeys)
+    const [selectedProvider, setSelectedProvider] = React.useState<Provider | null>(null);
+    const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-    // Transform supported providers into our Provider interface
     const providers: Provider[] = React.useMemo(() => {
-        return supported_providers.map(providerName => {
-            const alias = provider_aliases.find(p => p.provider === providerName)?.alias || providerName.toLowerCase()
-            const requiredKeys = required_keys[providerName] || []
-            
-            // Check if all required keys are present in activeKeys
-            const isConfigured = requiredKeys.length === 0 || 
-                requiredKeys.every(key => activeKeys.includes(key))
+        return supported_providers.map((providerName) => {
+            const alias = provider_aliases.find((p) => p.provider === providerName)?.alias || providerName.toLowerCase();
+            const requiredKeys = required_keys[providerName] || [];
+
+            // Check if the provider name exists in activeKeys
+            const isConfigured = activeKeys.includes(providerName);
 
             return {
                 id: alias,
                 name: providerName,
                 keyName: requiredKeys,
                 isConfigured,
-                description: getProviderDescription(providerName)
-            }
-        })
-    }, [activeKeys])
+                description: getProviderDescription(providerName),
+            };
+        });
+    }, [activeKeys]);
 
     return (
         <div className="space-y-6">
             <div className="text-gray-500 dark:text-gray-400 mb-6">
                 Configure your AI model providers by adding their API keys. Your keys are stored securely and encrypted locally.
             </div>
-            
+
             <Accordion type="single" collapsible className="w-full space-y-4">
                 {providers.map((provider) => (
-                    <AccordionItem 
-                        key={provider.id} 
-                        value={provider.id} 
+                    <AccordionItem
+                        key={provider.id}
+                        value={provider.id}
                         className="border rounded-lg px-6 bg-white dark:bg-gray-800 shadow-sm"
                     >
                         <AccordionTrigger className="hover:no-underline py-4">
@@ -92,7 +91,7 @@ export function Providers() {
                                     {provider.keyName.length > 0 ? (
                                         <div className="text-sm space-y-2">
                                             <span className="text-gray-500 dark:text-gray-400">Required API Keys:</span>
-                                            {provider.keyName.map(key => (
+                                            {provider.keyName.map((key) => (
                                                 <div key={key} className="flex items-center gap-2">
                                                     <code className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{key}</code>
                                                     {activeKeys.includes(key) && (
@@ -106,7 +105,7 @@ export function Providers() {
                                             No API keys required
                                         </div>
                                     )}
-                                    
+
                                     {provider.keyName.length > 0 && (
                                         <div className="flex items-center gap-3">
                                             {provider.isConfigured ? (
@@ -115,8 +114,8 @@ export function Providers() {
                                                         variant="outline"
                                                         size="default"
                                                         onClick={() => {
-                                                            setSelectedProvider(provider)
-                                                            setIsModalOpen(true)
+                                                            setSelectedProvider(provider);
+                                                            setIsModalOpen(true);
                                                         }}
                                                         className="text-gray-700 dark:text-gray-300"
                                                     >
@@ -139,8 +138,8 @@ export function Providers() {
                                                     variant="default"
                                                     size="default"
                                                     onClick={() => {
-                                                        setSelectedProvider(provider)
-                                                        setIsModalOpen(true)
+                                                        setSelectedProvider(provider);
+                                                        setIsModalOpen(true);
                                                     }}
                                                     className="text-indigo-50 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 w-fit"
                                                 >
@@ -157,5 +156,5 @@ export function Providers() {
                 ))}
             </Accordion>
         </div>
-    )
+    );
 }

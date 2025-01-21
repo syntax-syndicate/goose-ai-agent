@@ -1,5 +1,5 @@
 import React from "react";
-import { Providers } from "./Providers"
+import { Providers } from "./Provider"
 import { ScrollArea } from "../../ui/scroll-area";
 import BackButton from "../../ui/BackButton";
 

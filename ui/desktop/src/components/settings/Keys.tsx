@@ -10,7 +10,7 @@ import {
   transformProviderSecretsResponse,
   transformSecrets,
 } from './providers/utils';
-import { ProviderSetupModal } from "../welcome_screen/ProviderSetupModal";
+import { ProviderSetupModal } from "./modals/ProviderSetupModal";
 import { Provider } from './providers/types'
 import { ProviderCard } from './providers/ProviderCard'
 import { ConfirmDeletionModal } from './modals/ConfirmDeletionModal'
