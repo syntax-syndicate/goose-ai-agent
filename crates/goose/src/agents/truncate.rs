@@ -79,8 +79,6 @@ impl TruncateAgent {
             return count;
         }
 
-        
-
         0
     }
 
@@ -112,7 +110,7 @@ impl TruncateAgent {
         }
 
         // use trimmed message-history
-        
+
         Vec::from(trimmed_items)
     }
 }

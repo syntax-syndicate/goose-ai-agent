@@ -342,15 +342,12 @@ impl MemoryRouter {
         match tool_call.name.as_str() {
             "remember_memory" => {
                 let args = MemoryArgs::from_value(&tool_call.arguments)?;
-                let data = args
-                    .data
-                    .filter(|d| !d.is_empty())
-                    .ok_or_else(|| {
-                        io::Error::new(
-                            io::ErrorKind::InvalidInput,
-                            "Data must exist when remembering a memory",
-                        )
-                    })?;
+                let data = args.data.filter(|d| !d.is_empty()).ok_or_else(|| {
+                    io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        "Data must exist when remembering a memory",
+                    )
+                })?;
                 self.remember("context", args.category, data, &args.tags, args.is_global)?;
                 Ok(format!("Stored memory in category: {}", args.category))
             }

@@ -77,8 +77,6 @@ fn default_port() -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
-    
 
     #[test]
     fn test_socket_addr_conversion() {

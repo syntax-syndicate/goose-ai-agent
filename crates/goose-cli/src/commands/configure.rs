@@ -227,9 +227,7 @@ pub fn toggle_systems_dialog() -> Result<(), Box<dyn Error>> {
     let mut config = Config::load().unwrap_or_default();
 
     if config.systems.is_empty() {
-        cliclack::outro(
-            "No systems configured yet. Run configure and add some systems first.",
-        )?;
+        cliclack::outro("No systems configured yet. Run configure and add some systems first.")?;
         return Ok(());
     }
 
