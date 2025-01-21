@@ -10,6 +10,7 @@ on:
         description: 'Whether to perform signing and notarization'
         required: false
         default: false
+        type: boolean
     secrets:
       CERTIFICATE_OSX_APPLICATION:
         description: 'Certificate for macOS application signing'
