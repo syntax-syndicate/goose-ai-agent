@@ -410,7 +410,10 @@ impl MemoryRouter {
                 let args = MemoryArgs::from_value(&tool_call.arguments)?;
                 if args.category == "*" {
                     self.clear_all_global_or_local_memories(args.is_global)?;
-                    Ok(format!("Cleared all memory {} categories", if args.is_global { "global" } else { "local" }))
+                    Ok(format!(
+                        "Cleared all memory {} categories",
+                        if args.is_global { "global" } else { "local" }
+                    ))
                 } else {
                     self.clear_memory(args.category, args.is_global)?;
                     Ok(format!("Cleared memories in category: {}", args.category))
