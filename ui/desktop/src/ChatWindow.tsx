@@ -492,7 +492,7 @@ export default function ChatWindow() {
             // Keep track of the recently used models
             addRecentModel(model);
 
-            console.log("set up provider with default model", storedProviders, modelName)
+            console.log("set up provider with default model", storedProvider, modelName)
           }
         } catch (error) {
           console.error("Failed to initialize with stored provider:", error);

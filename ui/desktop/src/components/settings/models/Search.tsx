@@ -8,7 +8,6 @@ import {useActiveKeys} from "../api_keys/ActiveKeysContext";
 
 
 // TODO: dark mode (p1)
-// TODO: change underlying model on submit (p0)
 // FIXME: arrow keys do not work to select a model (p1)
 export function SearchBar() {
     const [search, setSearch] = useState("");
@@ -36,7 +35,6 @@ export function SearchBar() {
         setFocusedIndex(-1);
     }, [search]);
 
-    // TODO: fix red lines below (p2)
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
