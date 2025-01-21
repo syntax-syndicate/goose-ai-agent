@@ -4,7 +4,12 @@ import { Switch } from "../../ui/switch";
 import { goose_models } from "./hardcoded_stuff";
 import { useModel } from "./ModelContext";
 import { useHandleModelSelection } from "./utils";
+import {useActiveKeys} from "../api_keys/ActiveKeysContext";
 
+
+// TODO: dark mode (p1)
+// TODO: change underlying model on submit (p0)
+// FIXME: arrow keys do not work to select a model (p1)
 export function SearchBar() {
     const [search, setSearch] = useState("");
     const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -15,7 +20,15 @@ export function SearchBar() {
     const { currentModel } = useModel(); // Access global state
     const handleModelSelection = useHandleModelSelection();
 
-    const filteredModels = goose_models
+    // search results filtering
+    // results set will only include models that have a configured provider
+    const { activeKeys } = useActiveKeys(); // Access active keys from context
+
+    const model_options = goose_models.filter((model) =>
+        activeKeys.includes(model.provider)
+    );
+
+    const filteredModels = model_options
         .filter((model) => model.name.toLowerCase().includes(search.toLowerCase()))
         .slice(0, 5);
 

@@ -11,14 +11,9 @@ import {
     ModalTrigger,
 } from "../../ui/modal"
 import Select from 'react-select';
-import SelectItem from 'react-select';
-import SelectTrigger from 'react-select';
-import SelectContent from 'react-select';
-import SelectValue from 'react-select';
 import { Input } from "../../ui/input"
 import { Label } from "../../ui/label"
 import { Plus } from 'lucide-react'
-import {supported_providers} from "./hardcoded_stuff";
 import { useHandleModelSelection } from "./utils";
 import { useActiveKeys } from "../api_keys/ActiveKeysContext";
 
