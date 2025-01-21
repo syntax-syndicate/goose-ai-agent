@@ -48,3 +48,4 @@ export const useModel = () => {
     if (!context) throw new Error('useModel must be used within a ModelProvider');
     return context;
 };
+
