@@ -63,9 +63,6 @@ export default function MoreModelsPage() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-medium">Recently Used Models</h2>
-                            <Button variant="ghost" className="text-blue-500 hover:text-blue-600">
-                                View all
-                            </Button>
                         </div>
                         <RecentModels />
                     </div>

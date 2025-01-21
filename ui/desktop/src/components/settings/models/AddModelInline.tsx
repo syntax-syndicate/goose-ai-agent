@@ -47,14 +47,28 @@ export function AddModelInline() {
             return;
         }
 
-        // Construct a model object
-        const newModel = {
-            name: modelName,
-            provider: selectedProvider,
-        };
+        // Find the selected model from the filtered models
+        let selectedModel = goose_models.find(
+            (model) =>
+                model.provider.toLowerCase() === selectedProvider &&
+                model.name.toLowerCase() === modelName.toLowerCase()
+        );
 
+        if (!selectedModel) {
+            // Normalize the casing for the provider using the first matching model
+            const normalizedProvider = goose_models.find(
+                (model) => model.provider.toLowerCase() === selectedProvider
+            )?.provider || selectedProvider;
+
+            // Construct a model object
+            selectedModel = {
+                name: modelName,
+                provider: normalizedProvider, // Use normalized provider
+            };
+            console.log("made up selectedmodel", modelName, normalizedProvider);
+        }
         // Trigger the model selection logic
-        handleModelSelection(newModel, "AddModelInline");
+        handleModelSelection(selectedModel, "AddModelInline");
 
         // Reset form state
         setSelectedProvider(null); // Clear the provider selection

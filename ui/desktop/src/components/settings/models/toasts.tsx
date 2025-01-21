@@ -22,7 +22,7 @@ export function ToastFailureGeneral(msg?: string) {
     return toast.error(
         <div>
             <strong>Error</strong>
-            <div>msg</div>
+            <div>{msg}</div>
         </div>,
         {
             position: "bottom-right",

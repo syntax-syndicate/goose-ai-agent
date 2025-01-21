@@ -11,6 +11,9 @@ import { Button } from "../ui/button";
 import { RevealKeysDialog } from "./modals/RevealKeysDialog";
 import { showToast } from "../ui/toast";
 import BackButton from "../ui/BackButton";
+import { useRecentModels } from "./models/RecentModels";
+import { useHandleModelSelection} from "./models/utils";
+
 
 const EXTENSIONS_DESCRIPTION =
     "The Model Context Protocol (MCP) is a system that allows AI models to securely connect with local or remote resources using standard server setups. It works like a client-server setup and expands AI capabilities using three main components: Prompts, Resources, and Tools.";
@@ -70,6 +73,8 @@ const DEFAULT_SETTINGS: SettingsType = {
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { recentModels } = useRecentModels(); // Access recent models
+  const handleModelSelection = useHandleModelSelection();
 
   const [settings, setSettings] = React.useState<SettingsType>(() => {
     const saved = localStorage.getItem("user_settings");
@@ -81,14 +86,12 @@ export default function Settings() {
     localStorage.setItem("user_settings", JSON.stringify(settings));
   }, [settings]);
 
-  const handleModelToggle = (modelId: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      models: prev.models.map((model) => ({
-        ...model,
-        enabled: model.id === modelId,
-      })),
-    }));
+  const handleModelToggle = async (model: Model) => {
+    try {
+      await handleModelSelection(model, "Settings"); // Use the provided model selection logic
+    } catch (error) {
+      console.error("Failed to switch model:", error);
+    }
   };
 
   const handleExtensionToggle = (extensionId: string) => {
@@ -217,12 +220,12 @@ export default function Settings() {
                       >
                         More Models
                       </button>
-                </div>
-                {settings.models.map((model) => (
-                    <ToggleableItem
-                        key={model.id}
+                    </div>
+                    {recentModels.map((model) => (
+                        <ToggleableItem
+                            key={model.id}
                             {...model}
-                            onToggle={handleModelToggle}
+                            onToggle={() => handleModelToggle(model.id!)}
                         />
                     ))}
                   </section>

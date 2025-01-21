@@ -7,12 +7,13 @@ export interface Model {
     id?: number; // Make `id` optional to allow user-defined models
     name: string;
     provider: string;
+    lastUsed?: string;
 }
 
 interface ModelContextValue {
     currentModel: Model | null;
     setCurrentModel: (model: Model) => void;
-    switchModel: (model: Model) => void;
+    switchModel: (model: Model) => void; // Add the reusable switch function
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined);
@@ -25,7 +26,7 @@ export const ModelProvider = ({ children }: { children: ReactNode }) => {
     const updateModel = (model: Model) => {
         setCurrentModel(model);
         localStorage.setItem(GOOSE_PROVIDER, model.provider)
-        localStorage.setItem(GOOSE_MODEL, model.name);
+        localStorage.setItem(GOOSE_MODEL, JSON.stringify(model));
     };
 
     const switchModel = (model: Model) => {

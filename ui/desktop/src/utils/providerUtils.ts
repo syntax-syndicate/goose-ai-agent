@@ -9,8 +9,20 @@ export function getStoredProvider(config: any): string | null {
 }
 
 export function getStoredModel(): string | null {
-  console.log("local storage goose provider", localStorage.getItem(GOOSE_MODEL))
-  return localStorage.getItem(GOOSE_MODEL)
+  const storedModel = localStorage.getItem("GOOSE_MODEL"); // Adjust key name if necessary
+  console.log("local storage goose model", storedModel);
+
+  if (storedModel) {
+    try {
+      const modelInfo: Model = JSON.parse(storedModel);
+      return modelInfo.name || null; // Return name if it exists, otherwise null
+    } catch (error) {
+      console.error("Error parsing GOOSE_MODEL from local storage:", error);
+      return null; // Return null if parsing fails
+    }
+  }
+
+  return null; // Return null if storedModel is not found
 }
 
 export interface Provider {

@@ -1,14 +1,16 @@
+import {Model} from "./ModelContext"
+
 // TODO: move into backends / fetch dynamically
-export const goose_models = [
-    { id: 1, name: "gpt-4o-mini", provider: "OpenAI", required_keys: ["OPENAI_API_KEY"]},
-    { id: 2, name: "gpt-4o", provider: "OpenAI", required_keys: ["OPENAI_API_KEY"]},
-    { id: 3, name: "gpt-4-turbo", provider: "OpenAI", required_keys: ["OPENAI_API_KEY"] },
-    { id: 4, name: "gpt-3.5-turbo", provider: "OpenAI", required_keys: ["OPENAI_API_KEY"] },
-    { id: 5, name: "o1", provider: "OpenAI", required_keys: ["OPENAI_API_KEY"] },
-    { id: 6, name: "o1-mini", provider: "OpenAI", required_keys: ["OPENAI_API_KEY"] },
-    { id: 7, name: "claude-3-5-sonnet-latest", provider: "Anthropic", required_keys: ["ANTHROPIC_API_KEY"] },
-    { id: 8, name: "claude-3-5-haiku-latest", provider: "Anthropic", required_keys: ["ANTHROPIC_API_KEY"] },
-    { id: 9, name: "claude-3-opus-latest", provider: "Anthropic", required_keys: ["ANTHROPIC_API_KEY"] },
+export const goose_models: Model[] = [
+    { id: 1, name: "gpt-4o-mini", provider: "OpenAI"},
+    { id: 2, name: "gpt-4o", provider: "OpenAI"},
+    { id: 3, name: "gpt-4-turbo", provider: "OpenAI"},
+    { id: 4, name: "gpt-3.5-turbo", provider: "OpenAI"},
+    { id: 5, name: "o1", provider: "OpenAI"},
+    { id: 6, name: "o1-mini", provider: "OpenAI"},
+    { id: 7, name: "claude-3-5-sonnet-latest", provider: "Anthropic" },
+    { id: 8, name: "claude-3-5-haiku-latest", provider: "Anthropic" },
+    { id: 9, name: "claude-3-opus-latest", provider: "Anthropic"},
 ]
 
 export const openai_models = [
