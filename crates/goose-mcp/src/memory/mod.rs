@@ -355,6 +355,16 @@ impl MemoryRouter {
         Ok(())
     }
 
+    pub fn clear_all_memories(&self, is_global: bool) -> io::Result<()> {
+        let base_dir = if is_global {
+            &self.global_memory_dir
+        } else {
+            &self.local_memory_dir
+        };
+        fs::remove_dir_all(base_dir)?;
+        Ok(())
+    }
+
     async fn execute_tool_call(&self, tool_call: ToolCall) -> Result<String, io::Error> {
         match tool_call.name.as_str() {
             "remember_memory" => {
@@ -370,13 +380,22 @@ impl MemoryRouter {
             }
             "retrieve_memories" => {
                 let args = MemoryArgs::from_value(&tool_call.arguments)?;
-                let memories = self.retrieve(args.category, args.is_global)?;
+                let memories = if args.category == "*" {
+                    self.retrieve_all(args.is_global)?
+                } else {
+                    self.retrieve(args.category, args.is_global)?
+                };
                 Ok(format!("Retrieved memories: {:?}", memories))
             }
             "remove_memory_category" => {
                 let args = MemoryArgs::from_value(&tool_call.arguments)?;
-                self.clear_memory(args.category, args.is_global)?;
-                Ok(format!("Cleared memories in category: {}", args.category))
+                if args.category == "*" {
+                    self.clear_all_memories(args.is_global)?;
+                    Ok("Cleared all memory categories".to_string())
+                } else {
+                    self.clear_memory(args.category, args.is_global)?;
+                    Ok(format!("Cleared memories in category: {}", args.category))
+                }
             }
             "remove_specific_memory" => {
                 let args = MemoryArgs::from_value(&tool_call.arguments)?;
