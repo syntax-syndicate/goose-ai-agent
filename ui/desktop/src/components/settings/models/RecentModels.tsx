@@ -3,7 +3,7 @@ import { Clock } from 'lucide-react';
 import { recent_models} from "./hardcoded_stuff";
 
 // TODO: models -- dynamically create this
-export function ModelList() {
+export function RecentModels() {
     return (
         <div className="space-y-2">
             {recent_models.map((model) => (

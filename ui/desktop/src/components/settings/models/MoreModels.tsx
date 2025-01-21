@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from "../../ui/button"
-import { ModelList } from "./ModelList"
+import { RecentModels } from "./RecentModels"
 import { ProviderButtons } from "./ProviderButtons"
 import { AddModelDialog } from "./AddModelDialog"
 import BackButton from "../../ui/BackButton";
@@ -32,6 +32,12 @@ export default function MoreModelsPage() {
                         )}
                     </div>
                     <AddModelDialog/>
+                    <Button
+                        variant="outline"
+                        onClick={() => console.log("Navigate to Configure Providers")}
+                    >
+                        Configure Providers
+                    </Button>
                 </div>
 
                 {/* Main content area */}
@@ -53,7 +59,7 @@ export default function MoreModelsPage() {
                                 View all
                             </Button>
                         </div>
-                        <ModelList/>
+                        <RecentModels/>
                     </div>
                 </div>
             </div>
