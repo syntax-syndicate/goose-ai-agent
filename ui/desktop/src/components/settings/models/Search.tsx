@@ -23,6 +23,7 @@ export function SearchBar() {
         setFocusedIndex(-1);
     }, [search]);
 
+    // TODO: fix red lines below (p2)
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {

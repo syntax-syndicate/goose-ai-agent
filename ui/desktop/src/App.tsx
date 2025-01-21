@@ -5,6 +5,7 @@ import ErrorScreen from './components/ErrorScreen';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import { ModelProvider} from "./components/settings/models/ModelContext";
+import { ActiveKeysProvider } from "./components/settings/api_keys/ActiveKeysContext";
 
 export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null);
@@ -30,6 +31,7 @@ export default function App() {
 
   return (
       <ModelProvider>
+        <ActiveKeysProvider>
         {isLauncher ? <LauncherWindow /> : <ChatWindow />}
         <ToastContainer
             aria-label="Toast notifications"
@@ -38,6 +40,7 @@ export default function App() {
             closeOnClick
             pauseOnHover
         />
+        </ActiveKeysProvider>
       </ModelProvider>
   );
 }
