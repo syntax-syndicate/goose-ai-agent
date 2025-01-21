@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button } from "../../ui/button"
 import { RecentModels } from "./RecentModels"
 import { ProviderButtons } from "./ProviderButtons"
-import { AddModelDialog } from "./AddModelDialog"
 import BackButton from "../../ui/BackButton";
 import { SearchBar} from "./Search";
 import { useModel} from "./ModelContext";
