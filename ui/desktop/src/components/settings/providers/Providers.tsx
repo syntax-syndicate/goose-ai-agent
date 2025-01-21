@@ -81,44 +81,47 @@ export function Providers() {
                             </div>
                         </AccordionTrigger>
                         <AccordionContent className="pt-4 pb-6">
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 <p className="text-sm text-gray-600 dark:text-gray-300">{provider.description}</p>
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col space-y-4">
                                     <div className="text-sm">
                                         <span className="text-gray-500 dark:text-gray-400">API Key Name: </span>
                                         <code className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{provider.keyName}</code>
                                     </div>
                                     {provider.isConfigured ? (
-                                        <div className="space-x-2">
+                                        <div className="flex items-center gap-3">
                                             <Button
                                                 variant="outline"
-                                                size="sm"
+                                                size="default"
                                                 onClick={() => {
                                                     setSelectedProvider(provider)
                                                     setIsModalOpen(true)
                                                 }}
+                                                className="text-gray-700 dark:text-gray-300"
                                             >
                                                 <Edit2 className="h-4 w-4 mr-2" />
                                                 Edit Key
                                             </Button>
                                             <Button
-                                                variant="destructive"
-                                                size="sm"
+                                                variant="outline"
+                                                size="default"
                                                 onClick={() => {
                                                     // Handle delete
                                                 }}
+                                                className="text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50"
                                             >
                                                 Delete Key
                                             </Button>
                                         </div>
                                     ) : (
                                         <Button
-                                            size="sm"
+                                            variant="default"
+                                            size="default"
                                             onClick={() => {
                                                 setSelectedProvider(provider)
                                                 setIsModalOpen(true)
                                             }}
-                                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                            className="text-indigo-50 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 w-fit"
                                         >
                                             <Plus className="h-4 w-4 mr-2" />
                                             Add Key
