@@ -8,6 +8,24 @@ import {Button} from "../../ui/button";
 import {getApiUrl, getSecretKey} from "../../../config";
 import {getActiveProviders} from "../api_keys/utils";
 
+function ConfirmationModal({ message, onConfirm, onCancel }) {
+    return (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm">
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <p className="text-gray-800 dark:text-gray-200 mb-6">{message}</p>
+                <div className="flex justify-end gap-4">
+                    <Button variant="ghost" onClick={onCancel} className="text-gray-500">
+                        Cancel
+                    </Button>
+                    <Button variant="destructive" onClick={onConfirm}>
+                        Confirm
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // Utility Functions
 function getProviderDescription(provider) {
     const descriptions = {
@@ -140,13 +158,24 @@ export function Providers() {
     const providers = useProviders(activeKeys);
     const [selectedProvider, setSelectedProvider] = React.useState(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
+    const [isConfirmationOpen, setIsConfirmationOpen] = React.useState(false);
 
     const handleEdit = (provider) => {
         setSelectedProvider(provider);
         setIsModalOpen(true);
     };
 
-    const handleModalSubmit = async (apiKey) => {
+    const handleAdd = (provider) => {
+        setSelectedProvider(provider);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = (provider) => {
+        setSelectedProvider(provider);
+        setIsConfirmationOpen(true);
+    };
+
+    const confirmDelete = async () => {
         if (!selectedProvider) return;
 
         const provider = selectedProvider.name;
@@ -158,9 +187,6 @@ export function Providers() {
         }
 
         try {
-            // Log to debug the payload
-            console.log("Attempting to delete key:", keyName);
-
             // Delete old key logic
             const deleteResponse = await fetch(getApiUrl("/secrets/delete"), {
                 method: "DELETE",
@@ -168,45 +194,24 @@ export function Providers() {
                     "Content-Type": "application/json",
                     "X-Secret-Key": getSecretKey(),
                 },
-                body: JSON.stringify({ key: keyName }), // Send the key as expected by the Rust endpoint
+                body: JSON.stringify({ key: keyName }),
             });
 
             if (!deleteResponse.ok) {
                 const errorText = await deleteResponse.text();
                 console.error("Delete response error:", errorText);
-                throw new Error("Failed to delete old key");
+                throw new Error("Failed to delete key");
             }
 
             console.log("Key deleted successfully.");
-
-            // Store new key logic
-            const storeResponse = await fetch(getApiUrl("/secrets/store"), {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Secret-Key": getSecretKey(),
-                },
-                body: JSON.stringify({
-                    key: keyName,
-                    value: apiKey.trim(),
-                }),
-            });
-
-            if (!storeResponse.ok) {
-                const errorText = await storeResponse.text();
-                console.error("Store response error:", errorText);
-                throw new Error("Failed to store new key");
-            }
-
-            console.log("Key stored successfully.");
 
             // Update active keys
             const updatedKeys = await getActiveProviders();
             setActiveKeys(updatedKeys);
 
-            setIsModalOpen(false);
+            setIsConfirmationOpen(false);
         } catch (error) {
-            console.error("Error handling modal submit:", error);
+            console.error("Error confirming delete:", error);
         }
     };
 
@@ -223,8 +228,8 @@ export function Providers() {
                         provider={provider}
                         activeKeys={activeKeys}
                         onEdit={handleEdit}
-                        onDelete={() => console.log("Delete", provider)}
-                        onAdd={() => console.log("Add", provider)}
+                        onDelete={handleDelete}
+                        onAdd={handleAdd}
                     />
                 ))}
             </Accordion>
@@ -236,6 +241,14 @@ export function Providers() {
                     endpoint="Example Endpoint"
                     onSubmit={handleModalSubmit}
                     onCancel={() => setIsModalOpen(false)}
+                />
+            )}
+
+            {isConfirmationOpen && selectedProvider && (
+                <ConfirmationModal
+                    message={`Are you sure you want to delete the API key for ${selectedProvider.name}? This action cannot be undone.`}
+                    onConfirm={confirmDelete}
+                    onCancel={() => setIsConfirmationOpen(false)}
                 />
             )}
         </div>
