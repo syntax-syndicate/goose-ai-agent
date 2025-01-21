@@ -131,10 +131,18 @@ impl MemoryRouter {
              - **Search by Category**:
                - Provides all memories within the specified context.
                - Use: `retrieve_memories(category="development", is_global=False)`
+               - Note: If you want to retrieve all local memories, use `retrieve_memories(category="*", is_global=False)`
+               - Note: If you want to retrieve all global memories, use `retrieve_memories(category="*", is_global=True)`
              - **Filter by Tags**:
                - Enables targeted retrieval based on specific tags.
                - Use: Provide tag filters to refine search.
-             The Protocol is:
+            To remove a memory, use the following protocol:
+            - **Remove by Category**:
+              - Removes all memories within the specified category.
+              - Use: `remove_memory_category(category="development", is_global=False)`
+              - Note: If you want to remove all local memories, use `remove_memory_category(category="*", is_global=False)`
+              - Note: If you want to remove all global memories, use `remove_memory_category(category="*", is_global=True)`
+            The Protocol is:
              1. Confirm what kind of information the user seeks by category or keyword.
              2. Suggest categories or relevant tags based on the user's request.
              3. Use the retrieve function to access relevant memory entries.
@@ -186,6 +194,17 @@ impl MemoryRouter {
         let retrieved_local_memories = memory_router.retrieve_all(false);
 
         let mut updated_instructions = instructions;
+
+        let memories_follow_up_instructions = formatdoc! {r#"
+            **Here are the user's currently saved memories:**
+            Please keep this information in mind when answering future questions.
+            Do not bring up memories unless relevant.
+            Note: if the user has not saved any memories, this section will be empty.
+            Note: if the user removes a memory that was previously loaded into the system, please remove it from the system instructions.
+            "#};
+
+        updated_instructions.push_str("\n\n");
+        updated_instructions.push_str(&memories_follow_up_instructions);
 
         if let Ok(global_memories) = retrieved_global_memories {
             if !global_memories.is_empty() {
@@ -422,10 +441,7 @@ impl Router for MemoryRouter {
     }
 
     fn capabilities(&self) -> ServerCapabilities {
-        CapabilitiesBuilder::new()
-            .with_tools(false)
-            .with_resources(false, false)
-            .build()
+        CapabilitiesBuilder::new().with_tools(false).build()
     }
 
     fn list_tools(&self) -> Vec<Tool> {
