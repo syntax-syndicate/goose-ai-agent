@@ -6,7 +6,7 @@ import { AddModelDialog } from "./AddModelDialog"
 import BackButton from "../../ui/BackButton";
 import { SearchBar} from "./Search";
 import { useModel} from "./ModelContext";
-
+import { AddModelInline } from "./AddModelInline";
 
 // TODO: handle darkmode
 export default function MoreModelsPage() {
@@ -33,7 +33,6 @@ export default function MoreModelsPage() {
                         >
                             Configure Providers
                         </Button>
-                        <AddModelDialog />
                     </div>
                 </div>
 
@@ -50,6 +49,9 @@ export default function MoreModelsPage() {
                 <div className="space-y-8">
                     {/* Search section */}
                     <SearchBar />
+
+                    {/*Add model*/}
+                    <AddModelInline/>
 
                     {/* Provider buttons */}
                     <div className="space-y-4">

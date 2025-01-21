@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { GOOSE_MODEL } from "../../../env_vars";
+import { GOOSE_MODEL, GOOSE_PROVIDER } from "../../../env_vars";
 import { goose_models } from './hardcoded_stuff'; // Assuming hardcoded models are here
 
 // TODO: API keys
@@ -12,7 +12,7 @@ export interface Model {
 interface ModelContextValue {
     currentModel: Model | null;
     setCurrentModel: (model: Model) => void;
-    switchModel: (model: Model) => void; // Add the reusable switch function
+    switchModel: (model: Model) => void;
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined);
@@ -24,7 +24,8 @@ export const ModelProvider = ({ children }: { children: ReactNode }) => {
 
     const updateModel = (model: Model) => {
         setCurrentModel(model);
-        localStorage.setItem(GOOSE_MODEL, JSON.stringify(model));
+        localStorage.setItem(GOOSE_PROVIDER, model.provider)
+        localStorage.setItem(GOOSE_MODEL, model.name);
     };
 
     const switchModel = (model: Model) => {

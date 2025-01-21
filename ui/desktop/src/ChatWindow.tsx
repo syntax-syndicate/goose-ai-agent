@@ -15,6 +15,7 @@ import UserMessage from "./components/UserMessage";
 import WingToWing, { Working } from "./components/WingToWing";
 import { askAi } from "./utils/askAI";
 import {
+  getStoredModel,
   Provider,
 } from "./utils/providerUtils";
 import { ChatLayout } from "./components/chat_window/ChatLayout"
@@ -439,7 +440,7 @@ export default function ChatWindow() {
       await storeSecret(secretKey, trimmedKey);
 
       // Initialize the system with the selected provider
-      await initializeSystem(selectedProvider.id);
+      await initializeSystem(selectedProvider.id, null);
 
       // Save provider selection and close modal
       localStorage.setItem("GOOSE_PROVIDER", selectedProvider.id);
@@ -455,9 +456,10 @@ export default function ChatWindow() {
     const setupStoredProvider = async () => {
       const config = window.electron.getConfig();
       const storedProvider = getStoredProvider(config);
+      const storedModel = getStoredModel()
       if (storedProvider) {
         try {
-          await initializeSystem(storedProvider);
+          await initializeSystem(storedProvider, storedModel);
         } catch (error) {
           console.error("Failed to initialize with stored provider:", error);
         }
