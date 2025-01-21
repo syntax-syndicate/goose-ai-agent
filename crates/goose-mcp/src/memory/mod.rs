@@ -374,7 +374,7 @@ impl MemoryRouter {
         Ok(())
     }
 
-    pub fn clear_all_memories(&self, is_global: bool) -> io::Result<()> {
+    pub fn clear_all_global_or_local_memories(&self, is_global: bool) -> io::Result<()> {
         let base_dir = if is_global {
             &self.global_memory_dir
         } else {
@@ -409,8 +409,8 @@ impl MemoryRouter {
             "remove_memory_category" => {
                 let args = MemoryArgs::from_value(&tool_call.arguments)?;
                 if args.category == "*" {
-                    self.clear_all_memories(args.is_global)?;
-                    Ok("Cleared all memory categories".to_string())
+                    self.clear_all_global_or_local_memories(args.is_global)?;
+                    Ok(format!("Cleared all memory {} categories", if args.is_global { "global" } else { "local" }))
                 } else {
                     self.clear_memory(args.category, args.is_global)?;
                     Ok(format!("Cleared memories in category: {}", args.category))
