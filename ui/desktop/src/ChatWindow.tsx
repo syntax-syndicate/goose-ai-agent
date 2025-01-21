@@ -478,6 +478,11 @@ export default function ChatWindow() {
       const storedModel = getStoredModel()
       if (storedProvider) {
         try {
+          // Call the context's switchModel to update the model
+          switchModel(model);
+
+          // Keep track of the recently used models
+          addRecentModel(model);
           await initializeSystem(storedProvider, storedModel);
           if (!storedModel) {
             // get the default model
