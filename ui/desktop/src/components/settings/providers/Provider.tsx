@@ -7,6 +7,7 @@ import {Check, ChevronDown, Edit2, Plus, X} from "lucide-react";
 import {Button} from "../../ui/button";
 import {getApiUrl, getSecretKey} from "../../../config";
 import {getActiveProviders} from "../api_keys/utils";
+import {toast} from "react-toastify";
 
 function ConfirmationModal({ message, onConfirm, onCancel }) {
     return (
@@ -170,6 +171,76 @@ export function Providers() {
         setIsModalOpen(true);
     };
 
+    const handleModalSubmit = async (apiKey) => {
+        if (!selectedProvider) return;
+
+        const provider = selectedProvider.name;
+        const keyName = required_keys[provider]?.[0]; // Get the first key, assuming one key per provider
+
+        if (!keyName) {
+            console.error(`No key found for provider ${provider}`);
+            return;
+        }
+
+        try {
+            if (selectedProvider.isConfigured) {
+                // Delete existing key logic if configured
+                const deleteResponse = await fetch(getApiUrl("/secrets/delete"), {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Secret-Key": getSecretKey(),
+                    },
+                    body: JSON.stringify({ key: keyName }),
+                });
+
+                if (!deleteResponse.ok) {
+                    const errorText = await deleteResponse.text();
+                    console.error("Delete response error:", errorText);
+                    throw new Error("Failed to delete old key");
+                }
+
+                console.log("Old key deleted successfully.");
+            }
+
+            // Store new key logic
+            const storeResponse = await fetch(getApiUrl("/secrets/store"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Secret-Key": getSecretKey(),
+                },
+                body: JSON.stringify({
+                    key: keyName,
+                    value: apiKey.trim(),
+                }),
+            });
+
+            if (!storeResponse.ok) {
+                const errorText = await storeResponse.text();
+                console.error("Store response error:", errorText);
+                throw new Error("Failed to store new key");
+            }
+
+            console.log("Key stored successfully.");
+
+            // Show success toast
+            toast.success(
+                selectedProvider.isConfigured
+                    ? `Successfully updated API key for ${provider}`
+                    : `Successfully added API key for ${provider}`
+            );
+
+            // Update active keys
+            const updatedKeys = await getActiveProviders();
+            setActiveKeys(updatedKeys);
+
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error("Error handling modal submit:", error);
+        }
+    };
+
     const handleDelete = (provider) => {
         setSelectedProvider(provider);
         setIsConfirmationOpen(true);
@@ -204,6 +275,8 @@ export function Providers() {
             }
 
             console.log("Key deleted successfully.");
+            // Show success toast
+            toast.success(`Successfully deleted API key for ${provider}`)
 
             // Update active keys
             const updatedKeys = await getActiveProviders();
@@ -212,6 +285,8 @@ export function Providers() {
             setIsConfirmationOpen(false);
         } catch (error) {
             console.error("Error confirming delete:", error);
+            // Show success toast
+            toast.error(`Unable to delete API key for ${provider}`);
         }
     };
 
