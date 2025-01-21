@@ -44,14 +44,17 @@ pub fn load_prompt_files() -> HashMap<String, Prompt> {
     for entry in PROMPTS_DIR.files() {
         let prompt_str = String::from_utf8_lossy(entry.contents()).into_owned();
 
-        let template: PromptTemplate =
-            match serde_json::from_str(&prompt_str) {
-                Ok(t) => t,
-                Err(e) => {
-                    eprintln!("Failed to parse prompt template in {}: {}", entry.path().display(), e);
-                    continue; // Skip invalid prompt file
-                }
-            };
+        let template: PromptTemplate = match serde_json::from_str(&prompt_str) {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!(
+                    "Failed to parse prompt template in {}: {}",
+                    entry.path().display(),
+                    e
+                );
+                continue; // Skip invalid prompt file
+            }
+        };
 
         let arguments = template
             .arguments
@@ -75,7 +78,6 @@ pub fn load_prompt_files() -> HashMap<String, Prompt> {
 
     prompts
 }
-
 
 pub struct DeveloperRouter {
     tools: Vec<Tool>,
