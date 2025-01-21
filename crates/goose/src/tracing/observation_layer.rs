@@ -67,6 +67,12 @@ pub struct SpanTracker {
     current_trace_id: Option<String>,
 }
 
+impl Default for SpanTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SpanTracker {
     pub fn new() -> Self {
         Self {

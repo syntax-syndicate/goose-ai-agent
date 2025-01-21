@@ -380,7 +380,7 @@ pub trait Router: Send + Sync + 'static {
 
             let messages = vec![PromptMessage::new_text(
                 PromptMessageRole::User,
-                format!("{}", description_filled),
+                description_filled.to_string(),
             )];
 
             // Build the final response
