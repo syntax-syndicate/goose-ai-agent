@@ -10,45 +10,51 @@ import { useModel} from "./ModelContext";
 
 // TODO: handle darkmode
 export default function MoreModelsPage() {
-    const { currentModel, switchModel } = useModel(); // Access global state and updater
+    const { currentModel } = useModel(); // Access global state
 
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
+        <div className="flex min-h-screen bg-background text-foreground overflow-y-auto overflow-x-hidden">
             {/* Left-hand side exit button */}
             <aside className="w-48 border-r border-gray-100 dark:border-gray-700 px-2 pt-6">
                 <div className="sticky top-8">
-                    <BackButton/>
+                    <BackButton />
                 </div>
             </aside>
 
             <div className="container max-w-6xl mx-auto p-6">
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-2xl font-semibold">More Models</h1>
-                        {currentModel && (
-                            <p className="text-sm text-muted-foreground mt-2">
-                                Current model: <span className="font-medium">{currentModel.name}</span> ({currentModel.provider})
-                            </p>
-                        )}
+                {/* First row: Title and buttons */}
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-2xl font-semibold">More Models</h1>
+
+                    <div className="flex items-center space-x-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => console.log("Navigate to Configure Providers")}
+                        >
+                            Configure Providers
+                        </Button>
+                        <AddModelDialog />
                     </div>
-                    <AddModelDialog/>
-                    <Button
-                        variant="outline"
-                        onClick={() => console.log("Navigate to Configure Providers")}
-                    >
-                        Configure Providers
-                    </Button>
                 </div>
+
+                {/* Second row: Current model */}
+                {currentModel && (
+                    <div className="mb-8">
+                        <p className="text-sm text-muted-foreground">
+                            Current model: <span className="font-medium">{currentModel.name}</span> ({currentModel.provider})
+                        </p>
+                    </div>
+                )}
 
                 {/* Main content area */}
                 <div className="space-y-8">
                     {/* Search section */}
-                    <SearchBar/>
+                    <SearchBar />
 
                     {/* Provider buttons */}
                     <div className="space-y-4">
                         <h2 className="text-lg font-medium">Browse by Provider</h2>
-                        <ProviderButtons/>
+                        <ProviderButtons />
                     </div>
 
                     {/* Recent models */}
@@ -59,12 +65,11 @@ export default function MoreModelsPage() {
                                 View all
                             </Button>
                         </div>
-                        <RecentModels/>
+                        <RecentModels />
                     </div>
                 </div>
             </div>
         </div>
     );
 }
-
 
