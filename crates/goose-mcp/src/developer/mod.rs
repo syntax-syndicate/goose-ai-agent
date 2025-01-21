@@ -198,7 +198,7 @@ impl DeveloperRouter {
         let cwd = std::env::current_dir().expect("should have a current working dir");
         let base_instructions = formatdoc! {r#"
             The developer system gives you the capabilities to edit code files and run shell commands,
-            and can be used to solve a wide problems.
+            and can be used to solve a wide range of problems.
 
             You can use the shell tool to run any command that would work on the relevant operating system.
             Use the shell tool as needed to locate files or interact with the project.
