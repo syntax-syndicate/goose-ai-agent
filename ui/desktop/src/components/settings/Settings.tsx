@@ -74,8 +74,7 @@ const DEFAULT_SETTINGS: SettingsType = {
 export default function Settings() {
   const navigate = useNavigate();
   const { recentModels } = useRecentModels(); // Access recent models
-  const handleModelSelection = useHandleModelSelection();
-
+  
   const [settings, setSettings] = React.useState<SettingsType>(() => {
     const saved = localStorage.getItem("user_settings");
     return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
@@ -85,14 +84,6 @@ export default function Settings() {
   React.useEffect(() => {
     localStorage.setItem("user_settings", JSON.stringify(settings));
   }, [settings]);
-
-  const handleModelToggle = async (model: Model) => {
-    try {
-      await handleModelSelection(model, "Settings"); // Use the provided model selection logic
-    } catch (error) {
-      console.error("Failed to switch model:", error);
-    }
-  };
 
   const handleExtensionToggle = (extensionId: string) => {
     setSettings((prev) => ({

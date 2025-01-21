@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Button } from "../../ui/button"
 import { RecentModels } from "./RecentModels"
 import { ProviderButtons } from "./ProviderButtons"
@@ -70,4 +69,3 @@ export default function MoreModelsPage() {
         </div>
     );
 }
-
