@@ -252,7 +252,7 @@ where
 
         let parent_span_id = ctx
             .span_scope(id)
-            .and_then(|scope| scope.skip(1).next())
+            .and_then(|mut scope| scope.nth(1))
             .map(|parent| parent.id().into_u64());
 
         let mut visitor = JsonVisitor::new();

@@ -365,19 +365,21 @@ pub fn configure_systems_dialog() -> Result<(), Box<dyn Error>> {
                 cliclack::confirm("Would you like to add environment variables?").interact()?;
 
             let mut envs = HashMap::new();
-            while add_env {
-                let key = cliclack::input("Environment variable name:")
-                    .placeholder("API_KEY")
-                    .interact()?;
+            if add_env {
+                loop {
+                    let key = cliclack::input("Environment variable name:")
+                        .placeholder("API_KEY")
+                        .interact()?;
 
-                let value = cliclack::password("Environment variable value:")
-                    .mask('▪')
-                    .interact()?;
+                    let value = cliclack::password("Environment variable value:")
+                        .mask('▪')
+                        .interact()?;
 
-                envs.insert(key, value);
+                    envs.insert(key, value);
 
-                if !cliclack::confirm("Add another environment variable?").interact()? {
-                    break;
+                    if !cliclack::confirm("Add another environment variable?").interact()? {
+                        break;
+                    }
                 }
             }
 
@@ -427,19 +429,21 @@ pub fn configure_systems_dialog() -> Result<(), Box<dyn Error>> {
                 cliclack::confirm("Would you like to add environment variables?").interact()?;
 
             let mut envs = HashMap::new();
-            while add_env {
-                let key = cliclack::input("Environment variable name:")
-                    .placeholder("API_KEY")
-                    .interact()?;
+            if add_env {
+                loop {
+                    let key = cliclack::input("Environment variable name:")
+                        .placeholder("API_KEY")
+                        .interact()?;
 
-                let value = cliclack::password("Environment variable value:")
-                    .mask('▪')
-                    .interact()?;
+                    let value = cliclack::password("Environment variable value:")
+                        .mask('▪')
+                        .interact()?;
 
-                envs.insert(key, value);
+                    envs.insert(key, value);
 
-                if !cliclack::confirm("Add another environment variable?").interact()? {
-                    break;
+                    if !cliclack::confirm("Add another environment variable?").interact()? {
+                        break;
+                    }
                 }
             }
 

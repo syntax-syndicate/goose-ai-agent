@@ -234,7 +234,7 @@ impl DeveloperRouter {
             .lock()
             .unwrap()
             .get(uri)
-            .map_or(false, |r| r.is_active())
+            .is_some_and(|r| r.is_active())
     }
 
     // Helper method to resolve a path relative to cwd
