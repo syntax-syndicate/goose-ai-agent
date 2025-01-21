@@ -5,7 +5,7 @@ import ErrorScreen from './components/ErrorScreen';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import { ModelProvider} from "./components/settings/models/ModelContext";
-import {ActiveKeysProvider} from "./components/settings/api_keys/ActiveKeysContext";
+import { ActiveKeysProvider } from "./components/settings/api_keys/ActiveKeysContext";
 
 export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null);
@@ -28,17 +28,19 @@ export default function App() {
   if (fatalError) {
     return <ErrorScreen error={fatalError} onReload={() => window.electron.reloadApp()} />;
   }
+
   return (
       <ModelProvider>
         <ActiveKeysProvider>
-        {isLauncher ? <LauncherWindow /> : <ChatWindow />}
-        <ToastContainer
-            aria-label="Toast notifications"
-            position="top-right"
-            autoClose={3000}
-            closeOnClick
-            pauseOnHover
-        />
+          {isLauncher ? <LauncherWindow /> : <ChatWindow />}
+          <ToastContainer
+              aria-label="Toast notifications"
+              position="top-right"
+              autoClose={3000}
+              closeOnClick
+              pauseOnHover
+          />
         </ActiveKeysProvider>
       </ModelProvider>
   );
+}
