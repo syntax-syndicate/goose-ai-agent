@@ -527,13 +527,6 @@ export default function ChatWindow() {
               />
           )}
         </ChatLayout>
-        {/*<ToastContainer*/}
-        {/*    aria-label="Notification container"*/}
-        {/*    position="top-right"*/}
-        {/*    autoClose={3000}*/}
-        {/*    closeOnClick*/}
-        {/*    pauseOnHover*/}
-        {/*/>*/}
       </div>
   );
 }
