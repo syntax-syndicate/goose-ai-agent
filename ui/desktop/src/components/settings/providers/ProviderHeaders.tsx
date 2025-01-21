@@ -1,5 +1,5 @@
 import React from 'react'
-import BackButton from "@/src/components/ui/BackButton";
+import BackButton from "../../ui/BackButton";
 
 export function Header() {
     return (

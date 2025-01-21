@@ -4,7 +4,7 @@ import * as React from "react"
 import { Check, ChevronDown, Edit2, Plus, X } from "lucide-react"
 import { Button } from "../../ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion"
-import { AddKeyModal } from "./add-key-modal"
+//import { AddKeyModal } from "./add-key-modal"
 
 interface Provider {
     id: string
@@ -123,7 +123,7 @@ export function Providers() {
                 ))}
             </Accordion>
 
-            <AddKeyModal provider={selectedProvider} open={isModalOpen} onOpenChange={setIsModalOpen} />
+            {/*<AddKeyModal provider={selectedProvider} open={isModalOpen} onOpenChange={setIsModalOpen} />*/}
         </>
     )
 }
