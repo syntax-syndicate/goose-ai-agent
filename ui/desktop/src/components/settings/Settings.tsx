@@ -10,8 +10,10 @@ import { Modal, ModalContent, ModalHeader, ModalTitle } from "../ui/modal";
 import { Button } from "../ui/button";
 import { RevealKeysDialog } from "./modals/RevealKeysDialog";
 import { showToast } from "../ui/toast";
-import {RecentModelsRadio, useRecentModels} from "./models/RecentModels";
 import BackButton from "../ui/BackButton";
+import {RecentModelsRadio, useRecentModels} from "./models/RecentModels";
+import { useHandleModelSelection} from "./models/utils";
+
 
 const EXTENSIONS_DESCRIPTION =
     "The Model Context Protocol (MCP) is a system that allows AI models to securely connect with local or remote resources using standard server setups. It works like a client-server setup and expands AI capabilities using three main components: Prompts, Resources, and Tools.";
@@ -72,7 +74,8 @@ const DEFAULT_SETTINGS: SettingsType = {
 export default function Settings() {
   const navigate = useNavigate();
   const { recentModels } = useRecentModels(); // Access recent models
-  
+  const handleModelSelection = useHandleModelSelection();
+
   const [settings, setSettings] = React.useState<SettingsType>(() => {
     const saved = localStorage.getItem("user_settings");
     return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
