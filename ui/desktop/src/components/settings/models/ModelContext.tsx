@@ -25,7 +25,7 @@ export const ModelProvider = ({ children }: { children: ReactNode }) => {
 
     const updateModel = (model: Model) => {
         setCurrentModel(model);
-        localStorage.setItem(GOOSE_PROVIDER, model.provider)
+        localStorage.setItem(GOOSE_PROVIDER, model.provider.toLowerCase())
         localStorage.setItem(GOOSE_MODEL, JSON.stringify(model));
     };
 

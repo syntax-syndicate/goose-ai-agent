@@ -22,7 +22,10 @@ import { ChatLayout } from "./components/chat_window/ChatLayout"
 import { ChatRoutes } from "./components/chat_window/ChatRoutes"
 import { WelcomeModal } from "./components/welcome_screen/WelcomeModal"
 import { getStoredProvider, initializeSystem } from './utils/providerUtils'
-import {ToastContainer} from "react-toastify";
+import {useModel} from "./components/settings/models/ModelContext";
+import {useRecentModels} from "./components/settings/models/RecentModels";
+import {createSelectedModel} from "./components/settings/models/utils";
+import {getDefaultModel} from "./components/settings/models/hardcoded_stuff";
 
 declare global {
   interface Window {
@@ -334,6 +337,8 @@ export default function ChatWindow() {
   const openNewChatWindow = () => {
     window.electron.createChatWindow();
   };
+  const { switchModel, currentModel} = useModel(); // Access switchModel via useModel
+  const { addRecentModel } = useRecentModels(); // Access addRecentModel from useRecentModels
 
   // Add keyboard shortcut handler
   useEffect(() => {
@@ -442,8 +447,22 @@ export default function ChatWindow() {
       // Initialize the system with the selected provider
       await initializeSystem(selectedProvider.id, null);
 
+      // get the default model
+      const modelName = getDefaultModel(selectedProvider.id)
+
+      // create model object
+      const model = createSelectedModel(selectedProvider.id, modelName)
+
+      // Call the context's switchModel to track the set model state in the front end
+      switchModel(model);
+
+      // Keep track of the recently used models
+      addRecentModel(model);
+
+
       // Save provider selection and close modal
       localStorage.setItem("GOOSE_PROVIDER", selectedProvider.id);
+      console.log("set up provider with default model", selectedProvider.id, modelName)
       setShowWelcomeModal(false);
     } catch (error) {
       console.error("Failed to setup provider:", error);
@@ -459,6 +478,11 @@ export default function ChatWindow() {
       const storedModel = getStoredModel()
       if (storedProvider) {
         try {
+          // Call the context's switchModel to update the model
+          switchModel(model);
+
+          // Keep track of the recently used models
+          addRecentModel(model);
           await initializeSystem(storedProvider, storedModel);
         } catch (error) {
           console.error("Failed to initialize with stored provider:", error);

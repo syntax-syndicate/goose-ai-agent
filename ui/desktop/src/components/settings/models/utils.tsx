@@ -42,6 +42,29 @@ export function useHandleModelSelection() {
     };
 }
 
+export function createSelectedModel(selectedProvider, modelName) {
+    let selectedModel = goose_models.find(
+        (model) =>
+            model.provider.toLowerCase() === selectedProvider &&
+            model.name.toLowerCase() === modelName.toLowerCase()
+    );
+
+    if (!selectedModel) {
+        // Normalize the casing for the provider using the first matching model
+        const normalizedProvider = goose_models.find(
+            (model) => model.provider.toLowerCase() === selectedProvider
+        )?.provider || selectedProvider;
+
+        // Construct a model object
+        selectedModel = {
+            name: modelName,
+            provider: normalizedProvider, // Use normalized provider
+        };
+    }
+
+    return selectedModel
+}
+
 export function useFilteredModels(search: string, activeKeys: string[]) {
     const filteredModels = useMemo(() => {
         const modelOptions = goose_models.filter((model) =>

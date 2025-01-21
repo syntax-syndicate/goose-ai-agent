@@ -3,7 +3,7 @@ import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import Select from 'react-select';
 import { Plus } from 'lucide-react';
-import { useHandleModelSelection } from "./utils";
+import {createSelectedModel, useHandleModelSelection} from "./utils";
 import { useActiveKeys } from "../api_keys/ActiveKeysContext";
 import { goose_models } from "./hardcoded_stuff";
 
@@ -48,25 +48,8 @@ export function AddModelInline() {
         }
 
         // Find the selected model from the filtered models
-        let selectedModel = goose_models.find(
-            (model) =>
-                model.provider.toLowerCase() === selectedProvider &&
-                model.name.toLowerCase() === modelName.toLowerCase()
-        );
+        const selectedModel = createSelectedModel(selectedProvider, modelName)
 
-        if (!selectedModel) {
-            // Normalize the casing for the provider using the first matching model
-            const normalizedProvider = goose_models.find(
-                (model) => model.provider.toLowerCase() === selectedProvider
-            )?.provider || selectedProvider;
-
-            // Construct a model object
-            selectedModel = {
-                name: modelName,
-                provider: normalizedProvider, // Use normalized provider
-            };
-            console.log("made up selectedmodel", modelName, normalizedProvider);
-        }
         // Trigger the model selection logic
         handleModelSelection(selectedModel, "AddModelInline");
 

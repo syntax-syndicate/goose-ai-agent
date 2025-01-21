@@ -11,7 +11,7 @@ import { Button } from "../ui/button";
 import { RevealKeysDialog } from "./modals/RevealKeysDialog";
 import { showToast } from "../ui/toast";
 import BackButton from "../ui/BackButton";
-import { useRecentModels } from "./models/RecentModels";
+import {RecentModelsRadio, useRecentModels} from "./models/RecentModels";
 import { useHandleModelSelection} from "./models/utils";
 
 
@@ -221,13 +221,7 @@ export default function Settings() {
                         More Models
                       </button>
                     </div>
-                    {recentModels.map((model) => (
-                        <ToggleableItem
-                            key={model.id}
-                            {...model}
-                            onToggle={() => handleModelToggle(model.id!)}
-                        />
-                    ))}
+                    <RecentModelsRadio/>
                   </section>
 
                   {/* Extensions Section */}
