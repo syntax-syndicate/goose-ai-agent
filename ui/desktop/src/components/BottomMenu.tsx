@@ -3,11 +3,13 @@ import { useModel } from "./settings/models/ModelContext";
 import { useRecentModels } from "./settings/models/RecentModels"; // Hook for recent models
 import { ChevronUp, ChevronDown, Settings } from "lucide-react";
 import { ModelRadioList } from "./settings/models/ModelRadioList";
+import { useNavigate } from "react-router-dom";
 
 export default function BottomMenu({ hasMessages }) {
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const { currentModel } = useModel();
   const { recentModels } = useRecentModels(); // Get recent models
+  const navigate = useNavigate();
 
   return (
     <div className="flex justify-between relative border-t dark:border-gray-700 text-bottom-menu dark:text-bottom-menu-dark pl-[15px] text-[10px] h-[30px] leading-[30px] align-middle bg-bottom-menu-background dark:bg-bottom-menu-background-dark rounded-b-2xl">
@@ -78,7 +80,10 @@ export default function BottomMenu({ hasMessages }) {
               />
               <div
                 className="flex items-center p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => window.electron.openSettings("models")}
+                onClick={() => {
+                  setIsModelMenuOpen(false);
+                  navigate("/settings");
+                }}
               >
                 <Settings className="w-4 h-4 mr-2" />
                 <span>Tools and Settings</span>
