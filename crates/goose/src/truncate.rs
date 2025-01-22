@@ -167,7 +167,9 @@ pub fn truncate_messages(
     strategy: &dyn TruncationStrategy,
 ) -> Result<()> {
     if messages.len() != token_counts.len() {
-        return Err(anyhow!("The vector for messages and token_counts must have same length"));
+        return Err(anyhow!(
+            "The vector for messages and token_counts must have same length"
+        ));
     }
 
     // Step 1: Calculate total tokens

@@ -2,7 +2,7 @@ use anyhow::Result;
 use dotenv::dotenv;
 use goose::message::{Message, MessageContent};
 use goose::providers::base::Provider;
-use goose::providers::{databricks, openai};
+use goose::providers::{anthropic, databricks, google, groq, ollama, openai, openrouter};
 use mcp_core::content::Content;
 use mcp_core::tool::Tool;
 use std::collections::HashMap;
@@ -331,6 +331,61 @@ async fn test_databricks_provider_oauth() -> Result<()> {
         &["DATABRICKS_HOST"],
         Some(env_mods),
         databricks::DatabricksProvider::from_env,
+    )
+    .await
+}
+
+#[tokio::test]
+async fn test_ollama_provider() -> Result<()> {
+    test_provider(
+        "Ollama",
+        &["OLLAMA_HOST"],
+        None,
+        ollama::OllamaProvider::from_env,
+    )
+    .await
+}
+
+#[tokio::test]
+async fn test_groq_provider() -> Result<()> {
+    test_provider(
+        "Groq",
+        &["GROQ_API_KEY"],
+        None,
+        groq::GroqProvider::from_env,
+    )
+    .await
+}
+
+#[tokio::test]
+async fn test_anthropic_provider() -> Result<()> {
+    test_provider(
+        "Anthropic",
+        &["ANTHROPIC_API_KEY"],
+        None,
+        anthropic::AnthropicProvider::from_env,
+    )
+    .await
+}
+
+#[tokio::test]
+async fn test_openrouter_provider() -> Result<()> {
+    test_provider(
+        "OpenRouter",
+        &["OPENROUTER_API_KEY"],
+        None,
+        openrouter::OpenRouterProvider::from_env,
+    )
+    .await
+}
+
+#[tokio::test]
+async fn test_google_provider() -> Result<()> {
+    test_provider(
+        "Google",
+        &["GOOGLE_API_KEY"],
+        None,
+        google::GoogleProvider::from_env,
     )
     .await
 }

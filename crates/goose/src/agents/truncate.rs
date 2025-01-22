@@ -14,10 +14,10 @@ use crate::providers::base::ProviderUsage;
 use crate::providers::errors::ProviderError;
 use crate::register_agent;
 use crate::token_counter::TokenCounter;
+use crate::truncate::{truncate_messages, OldestFirstTruncation};
 use indoc::indoc;
 use mcp_core::tool::Tool;
 use serde_json::{json, Value};
-use crate::truncate::{OldestFirstTruncation, truncate_messages};
 
 /// Truncate implementation of an Agent
 pub struct TruncateAgent {
@@ -52,7 +52,12 @@ impl TruncateAgent {
             .map(|msg| self.token_counter.count_tokens(&msg.as_concat_text()))
             .collect();
 
-        let _ = truncate_messages(messages, &mut token_counts, context_limit, &OldestFirstTruncation);
+        let _ = truncate_messages(
+            messages,
+            &mut token_counts,
+            context_limit,
+            &OldestFirstTruncation,
+        );
         Ok(())
     }
 }
