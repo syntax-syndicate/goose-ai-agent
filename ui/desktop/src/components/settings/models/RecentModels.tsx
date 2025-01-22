@@ -4,7 +4,6 @@ import { Model } from "./ModelContext"
 import { useHandleModelSelection } from "./utils";
 import { useModel } from "./ModelContext";
 
-
 const MAX_RECENT_MODELS = 3
 
 export function useRecentModels() {
@@ -90,14 +89,21 @@ export function RecentModelsRadio() {
                         <p className="font-medium">{model.name}</p>
                         <p className="text-sm text-muted-foreground">{model.provider}</p>
                     </div>
-                    <input
-                        type="radio"
-                        name="recentModels"
-                        value={model.name}
-                        checked={selectedModel === model.name}
-                        onChange={() => handleRadioChange(model)}
-                        className="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out focus:ring-0 focus:outline-none"
-                    />
+                    <div className="relative">
+                        <input
+                            type="radio"
+                            name="recentModels"
+                            value={model.name}
+                            checked={selectedModel === model.name}
+                            onChange={() => handleRadioChange(model)}
+                            className="peer sr-only" // Hide the default radio button
+                        />
+                        <div className="h-4 w-4 rounded-full border border-gray-400 dark:border-gray-500
+                                      peer-checked:border-[6px] peer-checked:border-black dark:peer-checked:border-white
+                                      peer-checked:bg-white dark:peer-checked:bg-black
+                                      transition-all duration-200 ease-in-out">
+                        </div>
+                    </div>
                 </label>
             ))}
         </div>
