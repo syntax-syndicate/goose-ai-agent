@@ -167,7 +167,7 @@ pub fn truncate_messages(
     strategy: &dyn TruncationStrategy,
 ) -> Result<()> {
     if messages.len() != token_counts.len() {
-        return Err(anyhow!("Messages and token counts must have same length"));
+        return Err(anyhow!("The vector for messages and token_counts must have same length"));
     }
 
     // Step 1: Calculate total tokens
@@ -185,7 +185,7 @@ pub fn truncate_messages(
     // If there are no valid user messages, or the smallest one is too big for the context
     if min_user_msg_tokens.is_none() || min_user_msg_tokens.unwrap() > context_limit {
         return Err(anyhow!(
-            "Context limit too small to maintain conversation coherence"
+            "Not possible to truncate messages within context limit"
         ));
     }
 

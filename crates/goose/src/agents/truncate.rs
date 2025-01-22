@@ -2,7 +2,6 @@
 /// It makes no attempt to handle context limits, and cannot read resources
 use async_trait::async_trait;
 use futures::stream::BoxStream;
-use mcp_core::Role;
 use tokio::sync::Mutex;
 use tracing::{debug, instrument};
 
@@ -18,6 +17,7 @@ use crate::token_counter::TokenCounter;
 use indoc::indoc;
 use mcp_core::tool::Tool;
 use serde_json::{json, Value};
+use crate::truncate::{OldestFirstTruncation, truncate_messages};
 
 /// Truncate implementation of an Agent
 pub struct TruncateAgent {
@@ -38,7 +38,7 @@ impl TruncateAgent {
     /// Ensures the last message is a user message and removes tool call-response pairs
     async fn truncate_messages(&self, messages: &mut Vec<Message>) -> anyhow::Result<()> {
         println!("Truncating messages to fit within the model's context window");
-        let model_limit = self
+        let context_limit = self
             .capabilities
             .lock()
             .await
@@ -47,65 +47,12 @@ impl TruncateAgent {
             .get_estimated_limit();
 
         // Calculate current token count
-        let mut total_tokens: usize = messages
+        let mut token_counts: Vec<usize> = messages
             .iter()
             .map(|msg| self.token_counter.count_tokens(&msg.as_concat_text()))
-            .sum();
+            .collect();
 
-        println!("Total tokens (before): {}", total_tokens);
-
-        // Truncate messages from the start until within the limit
-        while total_tokens > model_limit && !messages.is_empty() {
-            // Remove the oldest message
-            let removed = messages.remove(0);
-            let removed_tokens = self.token_counter.count_tokens(&removed.as_concat_text());
-            total_tokens -= removed_tokens;
-            println!("Removed message with {} tokens", removed_tokens);
-
-            // If the removed message is a ToolRequest or ToolResponse, also remove its pair
-            if removed.is_tool_call() || removed.is_tool_response() {
-                if let Some(pair_id) = removed.get_tool_id() {
-                    // Find and remove the corresponding pair
-                    if let Some(pair_index) = messages
-                        .iter()
-                        .position(|msg| msg.get_tool_id() == Some(pair_id))
-                    {
-                        let pair_removed = messages.remove(pair_index);
-                        let pair_removed_tokens = self
-                            .token_counter
-                            .count_tokens(&pair_removed.as_concat_text());
-                        total_tokens -= pair_removed_tokens;
-                        println!(
-                            "Also removed paired message with {} tokens (id: {})",
-                            pair_removed_tokens, pair_id
-                        );
-                    }
-                }
-            }
-        }
-
-        println!("Total tokens (after): {}", total_tokens);
-
-        // Ensure the last message is a user message
-        while let Some(last_msg) = messages.last() {
-            if last_msg.role != Role::User {
-                if let Some(removed) = messages.pop() {
-                    let removed_tokens = self.token_counter.count_tokens(&removed.as_concat_text());
-                    total_tokens -= removed_tokens;
-                    println!("Removed non-user message to ensure last message is user (removed {} tokens)", removed_tokens);
-                }
-            } else {
-                break;
-            }
-        }
-
-        if total_tokens > model_limit {
-            return Err(anyhow::anyhow!(
-                "Unable to truncate messages within context window."
-            ));
-        }
-
-        println!("Truncation complete. Total tokens: {}", total_tokens);
+        let _ = truncate_messages(messages, &mut token_counts, context_limit, &OldestFirstTruncation);
         Ok(())
     }
 }
