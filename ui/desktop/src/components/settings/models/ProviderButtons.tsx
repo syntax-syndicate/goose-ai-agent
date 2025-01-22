@@ -48,7 +48,8 @@ export function ProviderButtons() {
                                     : 'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900'}
                                 rounded-full shadow-md border-none
                                 hover:bg-gray-700 hover:text-white
-                                focus:outline-none focus:ring-2 focus:ring-gray-500
+                                focus:outline-none focus:ring-0
+                                focus-visible:ring-0 focus-visible:outline-none
                                 dark:hover:bg-gray-300 dark:hover:text-gray-900`}
                             onClick={() => {
                                 setSelectedProvider(selectedProvider === provider ? null : provider);

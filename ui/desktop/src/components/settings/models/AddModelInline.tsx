@@ -70,8 +70,7 @@ export function AddModelInline() {
     };
 
     return (
-        <div className="p-6 border border-gray-200 rounded-lg shadow mb-6">
-            <h2 className="text-lg font-semibold mb-4">Add New Model</h2>
+        <div className="mb-6">
             <form className="grid grid-cols-[1.5fr_2fr_auto] gap-4 items-center">
                 <Select
                     options={providerOptions}
