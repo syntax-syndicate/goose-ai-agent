@@ -92,6 +92,11 @@ function ProviderKeyList({ keyNames, activeKeys }) {
 }
 
 function ProviderActions({ provider, onEdit, onDelete, onAdd }) {
+    // If provider has no required keys, don't show any actions
+    if (!provider.keyName || provider.keyName.length === 0) {
+        return null;
+    }
+
     return provider.isConfigured ? (
         <div className="flex items-center gap-3">
             <Button
