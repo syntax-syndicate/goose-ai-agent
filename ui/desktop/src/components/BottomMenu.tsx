@@ -113,7 +113,7 @@ export default function BottomMenu({ hasMessages }) {
               />
               <div
                 className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700
-                  border-t border-gray-100 dark:border-gray-700"
+                  border-t-2 border-gray-200 dark:border-gray-600"
                 onClick={() => {
                   setIsModelMenuOpen(false);
                   navigate("/settings");
