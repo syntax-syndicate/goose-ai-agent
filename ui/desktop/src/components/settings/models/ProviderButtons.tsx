@@ -74,6 +74,7 @@ export function ProviderButtons() {
                             >
                                 <span>{model.name}</span>
                                 <Switch
+                                    variant="mono"
                                     checked={model.id === currentModel?.id}
                                     onCheckedChange={() => handleModelSelection(model, "ProviderButtons")}
                                 />
