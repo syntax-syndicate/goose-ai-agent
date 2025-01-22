@@ -33,7 +33,13 @@ export default function MoreModelsPage() {
                                     <div className="flex items-center justify-between mb-8">
                                         <h1 className="text-2xl font-semibold tracking-tight">More Models</h1>
                                         <Button
-                                            variant="outline"
+                                            variant="default"
+                                            className="h-9 px-4 text-sm whitespace-nowrap shrink-0
+                                                bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900
+                                                rounded-full shadow-md border-none
+                                                hover:bg-gray-700 hover:text-white
+                                                focus:outline-none focus:ring-2 focus:ring-gray-500
+                                                dark:hover:bg-gray-300 dark:hover:text-gray-900"
                                             onClick={() => navigate("/settings/configure-providers")}
                                         >
                                             Configure Providers
@@ -73,7 +79,7 @@ export default function MoreModelsPage() {
                                     <div className="flex items-center justify-between mb-4">
                                         <h2 className="text-lg font-medium">Recently Used Models</h2>
                                     </div>
-                                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                                    <div>
                                         <RecentModels />
                                     </div>
                                 </section>
