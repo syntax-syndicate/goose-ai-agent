@@ -90,8 +90,7 @@ export const supported_providers = [
     "OpenAI", "Anthropic", "Databricks", "Groq", "Google", "Ollama", "OpenRouter"
 ]
 
-// TODO: models -- update this with correct links and providers
-const model_docs_link = [
+export const model_docs_link = [
     { name: "OpenAI", href: "https://platform.openai.com/docs/models" },
     { name: "Anthropic", href: "https://docs.anthropic.com/en/docs/about-claude/models" },
     { name: "Google", href: "https://ai.google/get-started/our-models/" },

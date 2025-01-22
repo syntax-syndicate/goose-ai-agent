@@ -63,7 +63,7 @@ export default function MoreModelsPage() {
                                 {/* Provider Section */}
                                 <section>
                                     <h2 className="text-lg font-medium mb-4">Browse by Provider</h2>
-                                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                                    <div>
                                         <ProviderButtons />
                                     </div>
                                 </section>
