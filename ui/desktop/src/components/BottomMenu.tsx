@@ -64,15 +64,15 @@ export default function BottomMenu({ hasMessages }) {
           <div className="absolute bottom-[30px] right-0 w-[300px] bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-lg">
             <div className="p-2">
               <ModelRadioList 
-                className="space-y-2"
+                className="divide-y divide-gray-100 dark:divide-gray-700"
                 renderItem={({ model, isSelected, onSelect }) => (
                   <label key={model.name} className="block cursor-pointer">
-                    <div className="flex items-center justify-between p-4 transition-colors
+                    <div className="flex items-center justify-between p-3 transition-colors
                       hover:text-gray-900 dark:hover:text-white"
                       onClick={onSelect}>
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">{model.name}</p>
-                        <p className="font-medium">{model.provider}</p>
+                      <div>
+                        <p className="text-sm font-semibold">{model.name}</p>
+                        <p className="text-xs text-muted-foreground">{model.provider}</p>
                       </div>
                       <div className="relative">
                         <input
@@ -94,14 +94,15 @@ export default function BottomMenu({ hasMessages }) {
                 )}
               />
               <div
-                className="flex items-center p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="flex items-center p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700
+                  border-t border-gray-100 dark:border-gray-700"
                 onClick={() => {
                   setIsModelMenuOpen(false);
                   navigate("/settings");
                 }}
               >
-                <Settings className="w-4 h-4 mr-2" />
-                <span>Tools and Settings</span>
+                <Settings className="w-5 h-5 mr-2" />
+                <span className="text-sm">Tools and Settings</span>
               </div>
             </div>
           </div>
