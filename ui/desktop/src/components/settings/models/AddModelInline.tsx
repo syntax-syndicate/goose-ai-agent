@@ -86,9 +86,42 @@ export function AddModelInline() {
                     styles={{
                         control: (base) => ({
                             ...base,
-                            minWidth: "200px", // Set minimum width for provider dropdown
+                            minWidth: "200px",
+                            backgroundColor: "var(--background)",
+                            borderColor: "var(--border)",
+                        }),
+                        menu: (base) => ({
+                            ...base,
+                            backgroundColor: "var(--background)",
+                            color: "var(--foreground)",
+                        }),
+                        option: (base, state) => ({
+                            ...base,
+                            backgroundColor: state.isFocused ? "var(--accent)" : "var(--background)",
+                            color: "var(--foreground)",
+                            ':active': {
+                                backgroundColor: "var(--accent)",
+                            },
+                        }),
+                        singleValue: (base) => ({
+                            ...base,
+                            color: "var(--foreground)",
+                        }),
+                        input: (base) => ({
+                            ...base,
+                            color: "var(--foreground)",
                         }),
                     }}
+                    theme={(theme) => ({
+                        ...theme,
+                        colors: {
+                            ...theme.colors,
+                            neutral0: 'var(--background)',
+                            neutral20: 'var(--border)',
+                            neutral30: 'var(--border-hover)',
+                            neutral80: 'var(--foreground)',
+                        },
+                    })}
                 />
                 <div className="relative" style={{ minWidth: "150px", maxWidth: "250px" }}>
                     <Input
@@ -99,11 +132,11 @@ export function AddModelInline() {
                         onBlur={handleBlur}
                     />
                     {showSuggestions && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
                             {filteredModels.map((model) => (
                                 <div
                                     key={model.id}
-                                    className="p-2 cursor-pointer hover:bg-gray-100"
+                                    className="p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white"
                                     onClick={() => handleSelectSuggestion(model)}
                                 >
                                     {model.name}
