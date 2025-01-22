@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useModel } from "./settings/models/ModelContext";
 import { useRecentModels } from "./settings/models/RecentModels"; // Hook for recent models
 import { ChevronUp, ChevronDown, Settings } from "lucide-react";
@@ -10,6 +10,24 @@ export default function BottomMenu({ hasMessages }) {
   const { currentModel } = useModel();
   const { recentModels } = useRecentModels(); // Get recent models
   const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Add effect to handle clicks outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsModelMenuOpen(false);
+      }
+    };
+    
+    if (isModelMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isModelMenuOpen]);
 
   // Add effect to handle Escape key
   useEffect(() => {
@@ -46,7 +64,7 @@ export default function BottomMenu({ hasMessages }) {
       </span>
 
       {/* Model Selector Dropdown */}
-      <div className="relative flex items-center ml-auto mr-4">
+      <div className="relative flex items-center ml-auto mr-4" ref={dropdownRef}>
         <div
           className="flex items-center cursor-pointer"
           onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
