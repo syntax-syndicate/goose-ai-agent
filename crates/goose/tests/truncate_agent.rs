@@ -19,9 +19,14 @@ async fn test_truncate_agent_truncates_messages_when_context_exceeded() -> Resul
     // 130,000 tokens cause we know context window is 128,000
     let large_message_content = "hello ".repeat(130_000);
     let messages = vec![
-        Message::user().with_text("hi there"),
-        Message::assistant().with_text("hey! how are you? did you have a question for me?"),
+        Message::user().with_text("hi there. what is 2 + 2?"),
+        Message::assistant().with_text("hey! i think its 4."),
         Message::user().with_text(&large_message_content),
+        // messages before this mark should be truncated
+        Message::user().with_text("what's the meaning of life?"),
+        Message::assistant().with_text("the meaning of life is 42"),
+        Message::user()
+            .with_text("did i ask you what's 2+2 in this msg history? you can answer yes or no"),
     ];
 
     // Invoke the reply method
@@ -35,7 +40,6 @@ async fn test_truncate_agent_truncates_messages_when_context_exceeded() -> Resul
     while let Some(response_result) = reply_stream.next().await {
         match response_result {
             Ok(response) => {
-                // println!("Response: {:?}", response);
                 responses.push(response);
             }
             Err(e) => {
@@ -47,21 +51,11 @@ async fn test_truncate_agent_truncates_messages_when_context_exceeded() -> Resul
 
     println!("Responses: {:?}", responses);
 
-    // Assert that truncation occurred by checking the number of messages
-    // The agent should have truncated the messages and provided a response
-    // Depending on your truncation logic, adjust the expected number of messages
-
-    // For example, after truncation, the total tokens should be <= context_window
-    // Since each message contributes 1 token, expect at most 128,000 messages
-
-    // Here, we simulate that after truncation, the agent successfully processed the messages
-    // and returned the mock response
-
-    // Since our mock provider immediately returns an error if tokens exceed the limit,
-    // and the agent truncates and retries, we expect one truncation and one response
-
     assert_eq!(responses.len(), 1);
     assert_eq!(responses[0].content.len(), 1);
+
+    let response_text = responses[0].content[0].as_text().unwrap();
+    assert!(response_text.to_lowercase().contains("no"));
 
     Ok(())
 }

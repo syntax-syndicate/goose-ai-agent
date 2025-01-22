@@ -79,8 +79,6 @@ impl OpenAiProvider {
             .await
             .unwrap();
 
-        println!("Response: {:?}", response);
-
         handle_response_openai_compat(payload, response).await
     }
 }

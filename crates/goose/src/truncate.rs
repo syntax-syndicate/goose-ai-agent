@@ -2,6 +2,7 @@ use crate::message::Message;
 use anyhow::{anyhow, Result};
 use mcp_core::Role;
 use std::collections::HashSet;
+use tracing::debug;
 
 /// Trait representing a truncation strategy
 pub trait TruncationStrategy {
@@ -42,7 +43,7 @@ impl TruncationStrategy for OldestFirstTruncation {
             // Remove the message
             indices_to_remove.insert(i);
             total_tokens -= token_counts[i];
-            println!(
+            debug!(
                 "OldestFirst: Removing message at index {}. Tokens removed: {}",
                 i, token_counts[i]
             );
@@ -121,7 +122,7 @@ impl TruncationStrategy for MiddleOutTruncation {
             // Remove the message
             indices_to_remove.insert(i);
             total_tokens -= token_counts[i];
-            println!(
+            debug!(
                 "MiddleOut: Removing message at index {}. Tokens removed: {}",
                 i, token_counts[i]
             );
@@ -174,7 +175,7 @@ pub fn truncate_messages(
 
     // Step 1: Calculate total tokens
     let mut total_tokens: usize = token_counts.iter().sum();
-    println!("Total tokens before truncation: {}", total_tokens);
+    debug!("Total tokens before truncation: {}", total_tokens);
 
     // Check if any individual message is larger than the context limit
     let min_user_msg_tokens = messages
@@ -206,28 +207,20 @@ pub fn truncate_messages(
 
     for &index in &indices_to_remove {
         if index < messages.len() {
-            let removed = messages.remove(index);
+            let _ = messages.remove(index);
             let removed_tokens = token_counts.remove(index);
             total_tokens -= removed_tokens;
-            println!(
-                "Removed message at index {}. Tokens removed: {}. Role: {:?}",
-                index, removed_tokens, removed.role
-            );
         }
     }
 
     // Step 4: Ensure the last message is a user message with TextContent only
     while let Some(last_msg) = messages.last() {
         if last_msg.role != Role::User || !last_msg.has_only_text_content() {
-            let removed = messages.pop().ok_or(anyhow!("Failed to pop message"))?;
+            let _ = messages.pop().ok_or(anyhow!("Failed to pop message"))?;
             let removed_tokens = token_counts
                 .pop()
                 .ok_or(anyhow!("Failed to pop token count"))?;
             total_tokens -= removed_tokens;
-            println!(
-                "Removed non-user or non-text message from end. Tokens removed: {}. Role: {:?}",
-                removed_tokens, removed.role
-            );
         } else {
             break;
         }
@@ -236,19 +229,15 @@ pub fn truncate_messages(
     // Step 5: Check first msg is a User message with TextContent only
     while let Some(first_msg) = messages.first() {
         if first_msg.role != Role::User || !first_msg.has_only_text_content() {
-            let removed = messages.remove(0);
+            let _ = messages.remove(0);
             let removed_tokens = token_counts.remove(0);
             total_tokens -= removed_tokens;
-            println!(
-                "Removed non-user or non-text message from the start. Tokens removed: {}. Role: {:?}",
-                removed_tokens, removed.role
-            );
         } else {
             break;
         }
     }
 
-    println!("Total tokens after truncation: {}", total_tokens);
+    debug!("Total tokens after truncation: {}", total_tokens);
 
     // Ensure we have at least one message remaining and it's within context limit
     if messages.is_empty() {
@@ -263,7 +252,7 @@ pub fn truncate_messages(
         ));
     }
 
-    println!("Truncation complete. Total tokens: {}", total_tokens);
+    debug!("Truncation complete. Total tokens: {}", total_tokens);
     Ok(())
 }
 
@@ -685,8 +674,6 @@ mod tests {
             context_limit,
             &MiddleOutTruncation,
         )?;
-
-        println!("messages_clone: {:?}", messages_clone);
 
         // Verify basic requirements
         assert!(!messages_clone.is_empty());

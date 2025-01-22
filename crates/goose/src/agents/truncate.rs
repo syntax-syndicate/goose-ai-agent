@@ -37,7 +37,6 @@ impl TruncateAgent {
     /// Truncates the messages to fit within the model's context window
     /// Ensures the last message is a user message and removes tool call-response pairs
     async fn truncate_messages(&self, messages: &mut Vec<Message>) -> anyhow::Result<()> {
-        println!("Truncating messages to fit within the model's context window");
         let context_limit = self
             .capabilities
             .lock()
@@ -58,6 +57,7 @@ impl TruncateAgent {
             context_limit,
             &OldestFirstTruncation,
         );
+
         Ok(())
     }
 }
@@ -210,7 +210,6 @@ impl Agent for TruncateAgent {
                     Err(ProviderError::ContextLengthExceeded(_)) => {
                         // Trigger truncation logic
                         debug!("Context length exceeded. Initiating truncation.");
-                        println!("Context length exceeded. Initiating truncation.");
 
                         // release the lock before truncation to prevent deadlock
                         drop(capabilities);
