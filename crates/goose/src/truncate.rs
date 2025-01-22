@@ -15,8 +15,8 @@ pub trait TruncationStrategy {
     /// Returns a vector of indices to remove.
     fn determine_indices_to_remove(
         &self,
-        messages: &Vec<Message>,
-        token_counts: &Vec<usize>,
+        messages: &[Message],
+        token_counts: &[usize],
         context_limit: usize,
     ) -> Result<HashSet<usize>>;
 }
@@ -27,8 +27,8 @@ pub struct OldestFirstTruncation;
 impl TruncationStrategy for OldestFirstTruncation {
     fn determine_indices_to_remove(
         &self,
-        messages: &Vec<Message>,
-        token_counts: &Vec<usize>,
+        messages: &[Message],
+        token_counts: &[usize],
         context_limit: usize,
     ) -> Result<HashSet<usize>> {
         let mut indices_to_remove = HashSet::new();
@@ -62,7 +62,7 @@ impl TruncationStrategy for OldestFirstTruncation {
                 // the other part of the pair has same tool_id but different message index
                 if tool_ids_to_remove
                     .iter()
-                    .any(|&(idx, ref id)| id == &tool_id && idx != i)
+                    .any(|&(idx, ref id)| id == tool_id && idx != i)
                 {
                     indices_to_remove.insert(i);
                     total_tokens -= token_counts[i];
@@ -80,8 +80,8 @@ pub struct MiddleOutTruncation;
 impl TruncationStrategy for MiddleOutTruncation {
     fn determine_indices_to_remove(
         &self,
-        messages: &Vec<Message>,
-        token_counts: &Vec<usize>,
+        messages: &[Message],
+        token_counts: &[usize],
         context_limit: usize,
     ) -> Result<HashSet<usize>> {
         let mut total_tokens: usize = token_counts.iter().sum();
@@ -91,11 +91,11 @@ impl TruncationStrategy for MiddleOutTruncation {
         // Much easier to have user messages on the left
         // and assistant messages on the right
         if left > 0 && messages[left].role == Role::Assistant {
-            left = left - 1; // guaranteed to be user since we alternate
+            left -= 1; // guaranteed to be user since we alternate
         }
 
         if right < messages.len() - 1 && messages[right].role == Role::User {
-            right = right + 1; // guaranteed to be assistant
+            right += 1; // guaranteed to be assistant
         }
 
         // If after removing tokens between 1/4 and 3/4, we would still exceed the context limit,
@@ -142,7 +142,7 @@ impl TruncationStrategy for MiddleOutTruncation {
                 // the other part of the pair has same tool_id but different message index
                 if tool_ids_to_remove
                     .iter()
-                    .any(|&(idx, ref id)| id == &tool_id && idx != i)
+                    .any(|&(idx, ref id)| id == tool_id && idx != i)
                 {
                     indices_to_remove.insert(i);
                     total_tokens -= token_counts[i];
@@ -198,7 +198,7 @@ pub fn truncate_messages(
 
     // Step 2: Determine indices to remove based on strategy
     let indices_to_remove =
-        strategy.determine_indices_to_remove(messages, &token_counts, context_limit)?;
+        strategy.determine_indices_to_remove(messages, token_counts, context_limit)?;
 
     // Step 3: Remove the marked messages
     // Vectorize the set and sort in reverse order to avoid shifting indices when removing

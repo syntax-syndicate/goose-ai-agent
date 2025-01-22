@@ -30,7 +30,7 @@ impl TruncateAgent {
         let token_counter = TokenCounter::new(provider.get_model_config().tokenizer_name());
         Self {
             capabilities: Mutex::new(Capabilities::new(provider)),
-            token_counter: token_counter,
+            token_counter,
         }
     }
 
