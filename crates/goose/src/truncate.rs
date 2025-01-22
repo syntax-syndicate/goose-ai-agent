@@ -192,6 +192,19 @@ pub fn truncate_messages(
         }
     }
 
+    // Step 5: Check first msg is not an Assistant msg
+    if let Some(first_msg) = messages.first() {
+        if first_msg.role != Role::User {
+            let removed = messages.remove(0);
+            let removed_tokens = token_counts.remove(0);
+            total_tokens -= removed_tokens;
+            println!(
+                "Removed non-user message from beginning. Tokens removed: {}. Role: {:?}",
+                removed_tokens, removed.role
+            );
+        }
+    }
+
     println!("Total tokens after truncation: {}", total_tokens);
 
     if total_tokens > context_limit {
@@ -287,7 +300,11 @@ mod tests {
     // Test OldestFirstTruncation: Truncate oldest messages first
     #[test]
     fn test_oldest_first_truncation() -> Result<()> {
-        let (messages, token_counts) = create_messages_with_counts(2, 10, false);
+        // 6 msgs - (u, a, u, a, u, a) 
+        // first 3 will be removed, leaving us with (a, u, a)
+        // but that's an invalid state so we trim a from both sides to get (u) - index 4
+        let (messages, token_counts) = create_messages_with_counts(3, 10, false);
+
         let context_limit = 25; // Need to remove at least two messages
 
         let mut messages_clone = messages.clone();
@@ -299,12 +316,11 @@ mod tests {
             &OldestFirstTruncation,
         )?;
 
-        // Expect the first two messages to be removed
+        // Expect only the last user msg to be left (index 4)
         let expected_messages = vec![
-            user_text(1, 10).0,
-            assistant_text(2, 10).0,
+            messages[4].clone(),
         ];
-        let expected_token_counts = vec![10, 10];
+        let expected_token_counts = vec![10];
         assert_eq!(messages_clone, expected_messages);
         assert_eq!(token_counts_clone, expected_token_counts);
         Ok(())
@@ -313,6 +329,9 @@ mod tests {
     // Test MiddleOutTruncation: Truncate from the middle
     #[test]
     fn test_middle_out_truncation() -> Result<()> {
+        // 6 msgs - (u, a, u, a, u, a) 
+        // middle 3 will be removed, leaving us with (u, a, a)
+        // but that's an invalid state so we trim a from both sides to get (u) - index 1
         let (messages, token_counts) = create_messages_with_counts(6, 10, true);
         let context_limit = 30; // Need to remove two messages
 
@@ -325,15 +344,11 @@ mod tests {
             &MiddleOutTruncation,
         )?;
 
-        // Expect the middle message(s) to be removed first
+        // Expect only the first user msg to be left (index 0)
         let expected_messages = vec![
-            user_text(1, 10).0,
-            assistant_text(2, 10).0,
-            // 3 is removed
-            assistant_text(4, 10).0,
-            user_text(5, 10).0,
+            messages[0].clone(),
         ];
-        let expected_token_counts = vec![10, 10, 10, 10];
+        let expected_token_counts = vec![10];
         assert_eq!(messages_clone, expected_messages);
         assert_eq!(token_counts_clone, expected_token_counts);
         Ok(())
