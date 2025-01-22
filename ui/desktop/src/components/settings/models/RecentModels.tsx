@@ -80,13 +80,11 @@ export function RecentModelsRadio() {
 
     return (
         <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Recent Models</h2>
+            <h2 className="text-2xl font-semibold">Recent Models</h2>
             {recentModels.map((model) => (
                 <label
                     key={model.name}
-                    className={`flex items-center justify-between p-4 rounded-lg bg-background hover:bg-muted/50 transition-colors cursor-pointer ${
-                        selectedModel === model.name ? "bg-indigo-100" : ""
-                    }`}
+                    className="flex items-center justify-between p-4 cursor-pointer"
                 >
                     <div className="space-y-1">
                         <p className="font-medium">{model.name}</p>
@@ -97,7 +95,7 @@ export function RecentModelsRadio() {
                         name="recentModels"
                         value={model.name}
                         checked={selectedModel === model.name}
-                        onChange={() => handleRadioChange(model)} // Trigger model selection on change
+                        onChange={() => handleRadioChange(model)}
                         className="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out focus:ring-0 focus:outline-none"
                     />
                 </label>
