@@ -96,9 +96,9 @@ const model_docs_link = [
     { name: "Anthropic", href: "https://docs.anthropic.com/en/docs/about-claude/models" },
     { name: "Google", href: "https://ai.google/get-started/our-models/" },
     { name: "Groq", href: "https://console.groq.com/docs/models" },
-    { name: "Databricks", href: "https://aws.amazon.com/bedrock/models" },
-    { name: "OpenRouter", href: "https://azure.microsoft.com/en-us/products/cognitive-services/openai-service" },
-    { name: "Ollama", href: "https://azure.microsoft.com/en-us/products/cognitive-services/openai-service" },
+    { name: "Databricks", href: "https://docs.databricks.com/en/generative-ai/external-models/index.html" },
+    { name: "OpenRouter", href: "https://openrouter.ai/models" },
+    { name: "Ollama", href: "https://ollama.com/library" },
 ]
 
 export const provider_aliases = [
