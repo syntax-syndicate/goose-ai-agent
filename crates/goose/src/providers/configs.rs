@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 const DEFAULT_CONTEXT_LIMIT: usize = 200_000;
-const DEFAULT_ESTIMATE_FACTOR: f32 = 0.8;
+const DEFAULT_ESTIMATE_FACTOR: f32 = 0.9;
 
 // Tokenizer names, used to infer from model name
 pub const GPT_4O_TOKENIZER: &str = "Xenova--gpt-4o";
@@ -23,7 +23,7 @@ pub struct ModelConfig {
     /// Optional maximum tokens to generate
     pub max_tokens: Option<i32>,
     /// Factor used to estimate safe context window size (0.0 - 1.0)
-    /// Defaults to 0.8 (80%) of the context limit to leave headroom for responses
+    /// Defaults to 0.9 (90%) of the context limit to leave headroom for responses
     pub estimate_factor: Option<f32>,
 }
 
@@ -120,7 +120,7 @@ impl ModelConfig {
     /// # Returns
     /// The estimate factor with the following precedence:
     /// 1. Explicit estimate_factor if provided in config
-    /// 2. Default value (0.8)
+    /// 2. Default value (0.9)
     pub fn estimate_factor(&self) -> f32 {
         self.estimate_factor.unwrap_or(DEFAULT_ESTIMATE_FACTOR)
     }
