@@ -29,6 +29,44 @@ export function useRecentModels() {
     return { recentModels, addRecentModel }
 }
 
+function getRelativeTimeString(date: string | Date): string {
+    const now = new Date();
+    const then = new Date(date);
+    const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+        return 'Just now';
+    }
+
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+        return `${diffInMinutes}m ago`;
+    }
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+        return `${diffInHours}h ago`;
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+        return `${diffInDays}d ago`;
+    }
+
+    if (diffInDays < 30) {
+        const weeks = Math.floor(diffInDays / 7);
+        return `${weeks}w ago`;
+    }
+
+    const months = Math.floor(diffInDays / 30);
+    if (months < 12) {
+        return `${months}mo ago`;
+    }
+
+    const years = Math.floor(months / 12);
+    return `${years}y ago`;
+}
+
 export function RecentModels() {
     const { recentModels } = useRecentModels();
     const { currentModel } = useModel();
@@ -86,7 +124,7 @@ export function RecentModels() {
                         </div>
                         <div className="flex items-center text-sm text-muted-foreground">
                             <Clock className="w-4 h-4 mr-2" />
-                            {model.lastUsed ? new Date(model.lastUsed).toLocaleString() : "N/A"}
+                            {model.lastUsed ? getRelativeTimeString(model.lastUsed) : "N/A"}
                         </div>
                     </div>
                 </label>
