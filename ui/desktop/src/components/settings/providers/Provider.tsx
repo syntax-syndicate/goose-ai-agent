@@ -8,6 +8,7 @@ import {Button} from "../../ui/button";
 import {getApiUrl, getSecretKey} from "../../../config";
 import {getActiveProviders} from "../api_keys/utils";
 import {toast} from "react-toastify";
+import {useModel} from "../models/ModelContext";
 
 function ConfirmationModal({ message, onConfirm, onCancel }) {
     return (
@@ -160,6 +161,7 @@ export function Providers() {
     const [selectedProvider, setSelectedProvider] = React.useState(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [isConfirmationOpen, setIsConfirmationOpen] = React.useState(false);
+    const { currentModel } = useModel();
 
     const handleEdit = (provider) => {
         setSelectedProvider(provider);
@@ -258,6 +260,15 @@ export function Providers() {
         }
 
         try {
+            // Check if the selected provider is currently active
+            if (currentModel?.provider === provider) {
+                toast.error(
+                    `Cannot delete the API key for ${provider} because it's the provider of the current model (${currentModel.name}). Please switch to a different model first.`
+                );
+                setIsConfirmationOpen(false);
+                return;
+            }
+
             // Delete old key logic
             const deleteResponse = await fetch(getApiUrl("/secrets/delete"), {
                 method: "DELETE",

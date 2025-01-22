@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsType, Model, Extension, Key } from "./types";
+import { Settings as SettingsType, Model, Key } from "./types";
 import { ToggleableItem } from "./ToggleableItem";
 import { KeyItem } from "./KeyItem";
 import { AddModelDialog } from "./modals/AddModelDialog";
