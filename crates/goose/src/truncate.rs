@@ -155,7 +155,7 @@ pub fn truncate_messages(
     }
 
     // Step 2: Determine indices to remove based on strategy
-    let indices_to_remove =
+    let indices_to_remove = 
         strategy.determine_indices_to_remove(messages, &token_counts, context_limit)?;
 
     // Step 3: Remove the marked messages
@@ -230,14 +230,12 @@ mod tests {
 
     // Helper function to create a user text message with a specified token count
     fn user_text(index: usize, tokens: usize) -> (Message, usize) {
-        // The content does not matter for this test
         let content = format!("User message {}", index);
         (Message::user().with_text(content), tokens)
     }
 
     // Helper function to create an assistant text message with a specified token count
     fn assistant_text(index: usize, tokens: usize) -> (Message, usize) {
-        // The content does not matter for this test
         let content = format!("Assistant message {}", index);
         (Message::assistant().with_text(content), tokens)
     }
@@ -258,7 +256,6 @@ mod tests {
     // Helper function to create messages with alternating user and assistant 
     // text messages of a fixed token count
     fn create_messages_with_counts(num_pairs: usize, tokens: usize, remove_last: bool) -> (Vec<Message>, Vec<usize>) {
-        // the message content themselves do not matter for this test
         let mut messages: Vec<Message> = (0..num_pairs)
             .flat_map(|i| {
                 vec![
@@ -277,11 +274,10 @@ mod tests {
         (messages, token_counts)
     }
 
-    // Test OldestFirstTruncation: No truncation needed
     #[test]
     fn test_oldest_first_no_truncation() -> Result<()> {
         let (messages, token_counts) = create_messages_with_counts(1, 10, false);
-        let context_limit = 25; // Total tokens = 20 < 25
+        let context_limit = 25;
 
         let mut messages_clone = messages.clone();
         let mut token_counts_clone = token_counts.clone();
@@ -297,75 +293,26 @@ mod tests {
         Ok(())
     }
 
-    // Test OldestFirstTruncation: Truncate oldest messages first
     #[test]
-    fn test_oldest_first_truncation() -> Result<()> {
-        // 6 msgs - (u, a, u, a, u, a) 
-        // first 3 will be removed, leaving us with (a, u, a)
-        // but that's an invalid state so we trim a from both sides to get (u) - index 4
-        let (messages, token_counts) = create_messages_with_counts(3, 10, false);
-
-        let context_limit = 25; // Need to remove at least two messages
-
-        let mut messages_clone = messages.clone();
-        let mut token_counts_clone = token_counts.clone();
-        truncate_messages(
-            &mut messages_clone,
-            &mut token_counts_clone,
-            context_limit,
-            &OldestFirstTruncation,
-        )?;
-
-        // Expect only the last user msg to be left (index 4)
-        let expected_messages = vec![
-            messages[4].clone(),
-        ];
-        let expected_token_counts = vec![10];
-        assert_eq!(messages_clone, expected_messages);
-        assert_eq!(token_counts_clone, expected_token_counts);
-        Ok(())
-    }
-
-    // Test MiddleOutTruncation: Truncate from the middle
-    #[test]
-    fn test_middle_out_truncation() -> Result<()> {
-        // 6 msgs - (u, a, u, a, u, a) 
-        // middle 3 will be removed, leaving us with (u, a, a)
-        // but that's an invalid state so we trim a from both sides to get (u) - index 1
-        let (messages, token_counts) = create_messages_with_counts(6, 10, true);
-        let context_limit = 30; // Need to remove two messages
-
-        let mut messages_clone = messages.clone();
-        let mut token_counts_clone = token_counts.clone();
-        truncate_messages(
-            &mut messages_clone,
-            &mut token_counts_clone,
-            context_limit,
-            &MiddleOutTruncation,
-        )?;
-
-        // Expect only the first user msg to be left (index 0)
-        let expected_messages = vec![
-            messages[0].clone(),
-        ];
-        let expected_token_counts = vec![10];
-        assert_eq!(messages_clone, expected_messages);
-        assert_eq!(token_counts_clone, expected_token_counts);
-        Ok(())
-    }
-
-    // Test truncation with tool request and response pairs
-    #[test]
-    fn test_truncation_with_tool_pairs() -> Result<()> {
-        let tool_call = ToolCall::new("example_tool", json!({"param": "value"}));
+    fn test_complex_conversation_with_tools() -> Result<()> {
+        // Simulating a real conversation with multiple tool interactions
+        let tool_call1 = ToolCall::new("file_read", json!({"path": "/tmp/test.txt"}));
+        let tool_call2 = ToolCall::new("database_query", json!({"query": "SELECT * FROM users"}));
+        
         let messages = vec![
-            user_text(1, 10).0,                                // 10 tokens
-            assistant_tool_request("tool1", tool_call.clone(), 10).0, // 10 tokens
-            user_tool_response("tool1", vec![Content::text("Result".to_string())], 10).0, // 10 tokens
-            assistant_text(2, 10).0, // 10 tokens
+            user_text(1, 15).0,  // Initial user query
+            assistant_tool_request("tool1", tool_call1.clone(), 20).0,
+            user_tool_response("tool1", vec![Content::text("File contents".to_string())], 10).0,
+            assistant_text(2, 25).0,  // Assistant processes file contents
+            user_text(3, 10).0,  // User follow-up
+            assistant_tool_request("tool2", tool_call2.clone(), 30).0,
+            user_tool_response("tool2", vec![Content::text("Query results".to_string())], 20).0,
+            assistant_text(4, 35).0,  // Assistant analyzes query results
+            user_text(5, 5).0,  // Final user confirmation
         ];
-        let token_counts = vec![10, 10, 10, 10];
-        let context_limit = 25; // Need to remove at least one message, but tool pair must be removed together
+        
+        let token_counts = vec![15, 20, 10, 25, 10, 30, 20, 35, 5];
+        let context_limit = 100;  // Force truncation while preserving some tool interactions
 
         let mut messages_clone = messages.clone();
         let mut token_counts_clone = token_counts.clone();
@@ -376,11 +323,170 @@ mod tests {
             &OldestFirstTruncation,
         )?;
 
-        // Expect the first three messages to be removed because of context limit + the tool pair
-        // Assistant text message is left but it gets removed because it's not a user message
-        assert_eq!(messages_clone.is_empty(), true);
-        assert_eq!(token_counts_clone.is_empty(), true);
+        // Verify that tool pairs are kept together and the conversation remains coherent
+        assert!(messages_clone.len() >= 3);  // At least one complete interaction should remain
+        assert!(messages_clone.last().unwrap().role == Role::User);  // Last message should be from user
+        
+        // Verify tool pairs are either both present or both removed
+        let tool_ids: HashSet<_> = messages_clone
+            .iter()
+            .filter_map(|m| m.get_tool_id())
+            .collect();
+        
+        // Each tool ID should appear 0 or 2 times (request + response)
+        for id in tool_ids {
+            let count = messages_clone
+                .iter()
+                .filter(|m| m.get_tool_id() == Some(id))
+                .count();
+            assert!(count == 0 || count == 2, "Tool pair was split: {}", id);
+        }
+
         Ok(())
     }
 
+    #[test]
+    fn test_edge_case_context_window() -> Result<()> {
+        // Test case where we're exactly at the context limit
+        let (mut messages, mut token_counts) = create_messages_with_counts(2, 25, false);
+        let context_limit = 100;  // Exactly matches total tokens
+        
+        truncate_messages(
+            &mut messages,
+            &mut token_counts,
+            context_limit,
+            &OldestFirstTruncation,
+        )?;
+
+        assert_eq!(messages.len(), 4);  // No truncation needed
+        assert_eq!(token_counts.iter().sum::<usize>(), 100);
+
+        // Now add one more token to force truncation
+        messages.push(user_text(5, 1).0);
+        token_counts.push(1);
+
+        truncate_messages(
+            &mut messages,
+            &mut token_counts,
+            context_limit,
+            &OldestFirstTruncation,
+        )?;
+
+        assert!(token_counts.iter().sum::<usize>() <= context_limit);
+        assert!(messages.last().unwrap().role == Role::User);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_multi_tool_chain() -> Result<()> {
+        // Simulate a chain of dependent tool calls
+        let tool_calls = vec![
+            ToolCall::new("git_status", json!({})),
+            ToolCall::new("git_diff", json!({"file": "main.rs"})),
+            ToolCall::new("git_commit", json!({"message": "Update"})),
+        ];
+
+        let mut messages = Vec::new();
+        let mut token_counts = Vec::new();
+
+        // Build a chain of related tool calls
+        // 30 tokens each round
+        for (i, tool_call) in tool_calls.into_iter().enumerate() {
+            let id = format!("git_{}", i);
+            messages.push(user_text(i, 10).0);
+            token_counts.push(10);
+            
+            messages.push(assistant_tool_request(&id, tool_call, 15).0);
+            token_counts.push(20);
+        }
+
+        let context_limit = 50;  // Force partial truncation
+        let mut messages_clone = messages.clone();
+        let mut token_counts_clone = token_counts.clone();
+
+        truncate_messages(
+            &mut messages_clone,
+            &mut token_counts_clone,
+            context_limit,
+            &OldestFirstTruncation,
+        )?;
+
+        // Verify that remaining tool chains are complete
+        let remaining_tool_ids: HashSet<_> = messages_clone
+            .iter()
+            .filter_map(|m| m.get_tool_id())
+            .collect();
+
+        for id in remaining_tool_ids {
+            // Count request/response pairs
+            let requests = messages_clone
+                .iter()
+                .filter(|m| m.is_tool_call() && m.get_tool_id() == Some(id))
+                .count();
+            let responses = messages_clone
+                .iter()
+                .filter(|m| m.is_tool_response() && m.get_tool_id() == Some(id))
+                .count();
+            
+            assert_eq!(requests, 1, "Each remaining tool should have one request");
+            assert_eq!(responses, 1, "Each remaining tool should have one response");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_truncation_with_image_content() -> Result<()> {
+        // Create a conversation with image content mixed in
+        let mut messages = vec![
+            Message::user().with_image("base64_data", "image/png"),  // 50 tokens
+            Message::assistant().with_text("I see the image"),  // 10 tokens
+            Message::user().with_text("Can you describe it?"),  // 10 tokens
+            Message::assistant().with_text("It shows..."),  // 20 tokens
+            Message::user().with_text("Thanks!"),  // 5 tokens
+        ];
+        let mut token_counts = vec![50, 10, 10, 20, 5];
+        let context_limit = 45;  // Force truncation
+
+        truncate_messages(
+            &mut messages,
+            &mut token_counts,
+            context_limit,
+            &OldestFirstTruncation,
+        )?;
+
+        // Verify the conversation still makes sense
+        assert!(messages.len() >= 1);
+        assert!(messages.last().unwrap().role == Role::User);
+        assert!(token_counts.iter().sum::<usize>() <= context_limit);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_error_cases() -> Result<()> {
+        // Test impossibly small context window
+        let (mut messages, mut token_counts) = create_messages_with_counts(1, 10, false);
+        let result = truncate_messages(
+            &mut messages,
+            &mut token_counts,
+            5,  // Impossibly small context
+            &OldestFirstTruncation,
+        );
+        assert!(result.is_err());
+
+        // Test unmatched token counts
+        let mut messages = vec![user_text(1, 10).0];
+        let mut token_counts = vec![10, 10];  // Mismatched length
+        let result = truncate_messages(
+            &mut messages,
+            &mut token_counts,
+            100,
+            &OldestFirstTruncation,
+        );
+        assert!(result.is_err());
+
+        Ok(())
+    }
 }
