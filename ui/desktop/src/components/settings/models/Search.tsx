@@ -106,6 +106,7 @@ export function SearchBar() {
                                     <span className="ml-2 text-xs text-gray-500 dark:text-gray-400 italic">{model.provider}</span>
                                 </div>
                                 <Switch
+                                    variant="mono"
                                     checked={model.id === currentModel?.id}
                                     onCheckedChange={() => handleModelSelection(model, "SearchBar")}
                                 />
