@@ -175,4 +175,13 @@ impl Message {
     ) -> Self {
         self.with_content(MessageContent::tool_response(id, result))
     }
+
+    /// Get the concatenated text content of the message, separated by newlines
+    pub fn as_concat_text(&self) -> String {
+        self.content
+            .iter()
+            .filter_map(|c| c.as_text())
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
 }

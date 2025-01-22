@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use super::base::{Provider, ProviderUsage, Usage};
 use super::configs::ModelConfig;
+use super::errors::ProviderError;
 use super::formats::openai::{
     create_request, get_usage, is_context_length_error, response_to_message,
 };
@@ -108,21 +109,22 @@ impl DatabricksProvider {
         }
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!(
             "{}/serving-endpoints/{}/invocations",
             self.host.trim_end_matches('/'),
             self.model.model_name
         );
 
-        let auth_header = self.ensure_auth_header().await?;
+        let auth_header = self.ensure_auth_header().await.unwrap();
         let response = self
             .client
             .post(&url)
             .header("Authorization", auth_header)
             .json(&payload)
             .send()
-            .await?;
+            .await
+            .unwrap();
 
         handle_response(payload, response).await
     }
@@ -143,8 +145,9 @@ impl Provider for DatabricksProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
-        let mut payload = create_request(&self.model, system, messages, tools, &self.image_format)?;
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
+        let mut payload =
+            create_request(&self.model, system, messages, tools, &self.image_format).unwrap();
         // Remove the model key which is part of the url with databricks
         payload
             .as_object_mut()
@@ -156,14 +159,14 @@ impl Provider for DatabricksProvider {
         // Raise specific error if context length is exceeded
         if let Some(error) = response.get("error") {
             if let Some(err) = is_context_length_error(error) {
-                return Err(err.into());
+                return Err(ProviderError::ContextLengthExceeded(err.to_string()));
             }
-            return Err(anyhow!("Databricks API error: {}", error));
+            return Err(ProviderError::RequestFailed(error.to_string()));
         }
 
         // Parse response
-        let message = response_to_message(response.clone())?;
-        let usage = self.get_usage(&response)?;
+        let message = response_to_message(response.clone()).unwrap();
+        let usage = self.get_usage(&response).unwrap();
         let model = get_model(&response);
         super::utils::emit_debug_trace(self, &payload, &response, &usage);
 

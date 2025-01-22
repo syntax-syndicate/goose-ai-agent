@@ -2,7 +2,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::configs::ModelConfig;
+use super::{configs::ModelConfig, errors::ProviderError};
 use crate::message::Message;
 use mcp_core::tool::Tool;
 
@@ -61,7 +61,7 @@ pub trait Provider: Send + Sync {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)>;
+    ) -> Result<(Message, ProviderUsage), ProviderError>;
 
     fn get_usage(&self, data: &Value) -> Result<Usage>;
 }

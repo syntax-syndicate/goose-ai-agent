@@ -519,6 +519,7 @@ mod tests {
     use crate::message::Message;
     use crate::providers::base::{Provider, ProviderUsage, Usage};
     use crate::providers::configs::ModelConfig;
+    use crate::providers::errors::ProviderError;
     use mcp_client::client::Error;
     use mcp_client::client::McpClientTrait;
     use mcp_core::protocol::{
@@ -543,7 +544,7 @@ mod tests {
             _system: &str,
             _messages: &[Message],
             _tools: &[Tool],
-        ) -> anyhow::Result<(Message, ProviderUsage)> {
+        ) -> Result<(Message, ProviderUsage), ProviderError> {
             Ok((
                 Message::assistant().with_text("Mock response"),
                 ProviderUsage::new("mock".to_string(), Usage::default()),

@@ -1,5 +1,5 @@
 use super::base::Usage;
-use anyhow::{Error, Result};
+use anyhow::Result;
 use regex::Regex;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
@@ -55,12 +55,12 @@ pub async fn non_ok_response_to_provider_error(
     }
 }
 
-pub async fn handle_response(payload: Value, response: Response) -> Result<Value, Error> {
+pub async fn handle_response(payload: Value, response: Response) -> Result<Value, ProviderError> {
     match response.status() {
-        StatusCode::OK => Ok(response.json().await?),
+        StatusCode::OK => Ok(response.json().await.unwrap()),
         _ => {
             let provider_error = non_ok_response_to_provider_error(payload, response).await;
-            Err(anyhow::anyhow!(provider_error.to_string()))
+            Err(provider_error)
         }
     }
 }
