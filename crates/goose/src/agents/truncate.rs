@@ -2,6 +2,7 @@
 /// It makes no attempt to handle context limits, and cannot read resources
 use async_trait::async_trait;
 use futures::stream::BoxStream;
+use mcp_core::Role;
 use tokio::sync::Mutex;
 use tracing::{debug, instrument};
 
@@ -35,6 +36,7 @@ impl TruncateAgent {
 
     /// Truncates the messages to fit within the model's context window
     async fn truncate_messages(&self, messages: &mut Vec<Message>) -> anyhow::Result<()> {
+        println!("Truncating messages to fit within the model's context window");
         let model_limit = self
             .capabilities
             .lock()
@@ -48,6 +50,7 @@ impl TruncateAgent {
         for message in messages.iter() {
             total_tokens += self.token_counter.count_tokens(&message.as_concat_text());
         }
+        println!("Total tokens (before): {}", total_tokens);
 
         // Truncate messages from the start until within the limit
         while total_tokens > model_limit && !messages.is_empty() {
@@ -55,9 +58,13 @@ impl TruncateAgent {
                 total_tokens -= self.token_counter.count_tokens(&removed.as_concat_text());
             }
         }
+        println!("Total tokens (after): {}", total_tokens);
 
         // TODO: need to add more checks around making last msg is a user msg
         // and we remove matching tool calls and tool responses
+        while messages.last().unwrap().role != Role::User {
+            messages.pop();
+        }
 
         if total_tokens > model_limit {
             return Err(anyhow::anyhow!(
@@ -217,7 +224,15 @@ impl Agent for TruncateAgent {
                     Err(ProviderError::ContextLengthExceeded(_)) => {
                         // Trigger truncation logic
                         debug!("Context length exceeded. Initiating truncation.");
+                        println!("Context length exceeded. Initiating truncation.");
+
+                        // release the lock before truncation to prevent deadlock
+                        drop(capabilities);
+
                         self.truncate_messages(&mut messages).await?;
+
+                        // Re-acquire the lock
+                        capabilities = self.capabilities.lock().await;
 
                         // Retry the loop after truncation
                         continue;
@@ -225,7 +240,9 @@ impl Agent for TruncateAgent {
                     Err(e) => {
                         // TODO: not sure if this is the best way to handle this
                         // Pass through other errors as user messages
-                        yield Message::user().with_text(format!("Error: {}", e));
+                        // yield Message::user().with_text(format!("Error: {}", e));
+                        println!("Error: {:?}", e);
+                        break;
                     }
                 }
 
