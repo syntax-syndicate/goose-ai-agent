@@ -146,9 +146,25 @@ pub fn truncate_messages(
     context_limit: usize,
     strategy: &dyn TruncationStrategy,
 ) -> Result<()> {
+    if messages.len() != token_counts.len() {
+        return Err(anyhow!("Messages and token counts must have same length"));
+    }
+
     // Step 1: Calculate total tokens
     let mut total_tokens: usize = token_counts.iter().sum();
     println!("Total tokens before truncation: {}", total_tokens);
+
+    // Check if any individual message is larger than the context limit
+    let min_user_msg_tokens = messages.iter()
+        .zip(token_counts.iter())
+        .filter(|(msg, _)| msg.role == Role::User && msg.has_only_text_content())
+        .map(|(_, &tokens)| tokens)
+        .min();
+
+    // If there are no valid user messages, or the smallest one is too big for the context
+    if min_user_msg_tokens.is_none() || min_user_msg_tokens.unwrap() > context_limit {
+        return Err(anyhow!("Context limit too small to maintain conversation coherence"));
+    }
 
     if total_tokens <= context_limit {
         return Ok(()); // No truncation needed
@@ -206,6 +222,11 @@ pub fn truncate_messages(
     }
 
     println!("Total tokens after truncation: {}", total_tokens);
+
+    // Ensure we have at least one message remaining and it's within context limit
+    if messages.is_empty() {
+        return Err(anyhow!("Unable to preserve any messages within context limit"));
+    }
 
     if total_tokens > context_limit {
         return Err(anyhow!(
