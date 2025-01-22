@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "../../ui/button"
+import { Switch } from "../../ui/switch"
 import { useActiveKeys } from "../api_keys/ActiveKeysContext";
 import { model_docs_link, goose_models } from "./hardcoded_stuff"
+import { useModel } from "./ModelContext";
+import { useHandleModelSelection } from "./utils";
 
 // Create a mapping from provider name to href
 const providerLinks = model_docs_link.reduce((acc, { name, href }) => {
@@ -12,6 +15,8 @@ const providerLinks = model_docs_link.reduce((acc, { name, href }) => {
 export function ProviderButtons() {
     const { activeKeys } = useActiveKeys();
     const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+    const { currentModel } = useModel();
+    const handleModelSelection = useHandleModelSelection();
 
     // Handle Escape key press
     useEffect(() => {
@@ -64,9 +69,14 @@ export function ProviderButtons() {
                                 key={model.id}
                                 className="py-2 px-1 cursor-pointer text-gray-600 
                                     dark:text-gray-300 hover:text-gray-900 
-                                    dark:hover:text-white transition-colors"
+                                    dark:hover:text-white transition-colors
+                                    flex justify-between items-center"
                             >
-                                {model.name}
+                                <span>{model.name}</span>
+                                <Switch
+                                    checked={model.id === currentModel?.id}
+                                    onCheckedChange={() => handleModelSelection(model, "ProviderButtons")}
+                                />
                             </div>
                         ))}
                     </div>
