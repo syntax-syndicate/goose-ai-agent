@@ -440,8 +440,11 @@ mod tests {
     use super::*;
     use goose::{
         agents::AgentFactory,
-        providers::base::{Provider, ProviderUsage, Usage},
-        providers::configs::ModelConfig,
+        providers::{
+            base::{Provider, ProviderUsage, Usage},
+            configs::ModelConfig,
+            errors::ProviderError,
+        },
     };
     use mcp_core::tool::Tool;
 
@@ -462,7 +465,7 @@ mod tests {
             _system: &str,
             _messages: &[Message],
             _tools: &[Tool],
-        ) -> anyhow::Result<(Message, ProviderUsage)> {
+        ) -> Result<(Message, ProviderUsage), ProviderError> {
             Ok((
                 Message::assistant().with_text("Mock response"),
                 ProviderUsage::new("mock".to_string(), Usage::default()),

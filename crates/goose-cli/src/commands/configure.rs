@@ -6,11 +6,7 @@ use goose::message::Message;
 use goose::providers::anthropic::ANTHROPIC_DEFAULT_MODEL;
 use goose::providers::databricks::DATABRICKS_DEFAULT_MODEL;
 use goose::providers::factory;
-use goose::providers::google::GOOGLE_DEFAULT_MODEL;
-use goose::providers::groq::GROQ_DEFAULT_MODEL;
-use goose::providers::ollama::OLLAMA_MODEL;
 use goose::providers::openai::OPEN_AI_DEFAULT_MODEL;
-use goose::providers::openrouter::OPENROUTER_DEFAULT_MODEL;
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -203,11 +199,7 @@ pub fn get_recommended_model(provider_name: &str) -> &str {
     match provider_name {
         "openai" => OPEN_AI_DEFAULT_MODEL,
         "databricks" => DATABRICKS_DEFAULT_MODEL,
-        "ollama" => OLLAMA_MODEL,
         "anthropic" => ANTHROPIC_DEFAULT_MODEL,
-        "google" => GOOGLE_DEFAULT_MODEL,
-        "groq" => GROQ_DEFAULT_MODEL,
-        "openrouter" => OPENROUTER_DEFAULT_MODEL,
         _ => panic!("Invalid provider name"),
     }
 }
@@ -216,11 +208,7 @@ pub fn get_required_keys(provider_name: &str) -> Vec<&'static str> {
     match provider_name {
         "openai" => vec!["OPENAI_API_KEY"],
         "databricks" => vec!["DATABRICKS_HOST"],
-        "ollama" => vec!["OLLAMA_HOST"],
         "anthropic" => vec!["ANTHROPIC_API_KEY"],
-        "google" => vec!["GOOGLE_API_KEY"],
-        "groq" => vec!["GROQ_API_KEY"],
-        "openrouter" => vec!["OPENROUTER_API_KEY"],
         _ => panic!("Invalid provider name"),
     }
 }
