@@ -118,8 +118,8 @@ export function RecentModels() {
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <p className="font-medium">{model.name}</p>
-                                <p className="text-sm text-muted-foreground">{model.provider}</p>
+                                <p className="text-sm text-muted-foreground">{model.name}</p>
+                                <p className="font-medium">{model.provider}</p>
                             </div>
                         </div>
                         <div className="flex items-center text-sm text-muted-foreground">
@@ -166,8 +166,8 @@ export function RecentModelsRadio() {
                     className="flex items-center justify-between p-4 cursor-pointer"
                 >
                     <div className="space-y-1">
-                        <p className="font-medium">{model.name}</p>
-                        <p className="text-sm text-muted-foreground">{model.provider}</p>
+                        <p className="text-sm text-muted-foreground">{model.name}</p>
+                        <p className="font-medium">{model.provider}</p>
                     </div>
                     <div className="relative">
                         <input
