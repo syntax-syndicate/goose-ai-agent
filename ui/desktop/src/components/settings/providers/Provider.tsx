@@ -135,7 +135,7 @@ function ProviderItem({ provider, activeKeys, onEdit, onDelete, onAdd }) {
         <AccordionItem
             key={provider.id}
             value={provider.id}
-            className="border rounded-lg px-6 bg-white dark:bg-gray-800 shadow-sm"
+            className="px-6 bg-white dark:bg-gray-800"
         >
             <AccordionTrigger className="hover:no-underline py-4">
                 <div className="flex items-center justify-between w-full">
@@ -312,7 +312,7 @@ export function Providers() {
                 Configure your AI model providers by adding their API keys. Your keys are stored securely and encrypted locally.
             </div>
 
-            <Accordion type="single" collapsible className="w-full space-y-4">
+            <Accordion type="single" collapsible className="w-full space-y-2">
                 {providers.map((provider) => (
                     <ProviderItem
                         key={provider.id}
