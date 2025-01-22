@@ -1,6 +1,6 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use reqwest::{Client, StatusCode};
+use reqwest::Client;
 use serde_json::Value;
 use std::time::Duration;
 
@@ -10,7 +10,7 @@ use super::errors::ProviderError;
 use super::formats::openai::{
     create_request, get_usage, is_context_length_error, response_to_message,
 };
-use super::utils::{emit_debug_trace, get_model, ImageFormat};
+use super::utils::{emit_debug_trace, get_model, handle_response_openai_compat, ImageFormat};
 use crate::message::Message;
 use mcp_core::tool::Tool;
 
@@ -81,28 +81,7 @@ impl OpenAiProvider {
 
         println!("Response: {:?}", response);
 
-        // https://docs.anthropic.com/en/api/errors
-        match response.status() {
-            StatusCode::OK => Ok(response.json().await.unwrap()),
-            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
-                Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
-                    Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
-            }
-            StatusCode::BAD_REQUEST => {
-                let status = response.status();
-                let payload: Value = response.json().await.unwrap();
-                if let Some(error) = payload.get("error") {
-                    if let Some(err) = is_context_length_error(error) {
-                        return Err(ProviderError::ContextLengthExceeded(err.to_string()));
-                    }
-                }
-                Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", status, payload)))
-            }
-            StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
-                Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
-            }
-            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", response.status(), payload)))
-        }
+        handle_response_openai_compat(payload, response).await
     }
 }
 

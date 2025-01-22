@@ -1,6 +1,7 @@
 use super::base::{Provider, ProviderUsage, Usage};
 use super::configs::ModelConfig;
-use super::utils::{get_model, handle_response};
+use super::errors::ProviderError;
+use super::utils::{get_model, handle_response_openai_compat};
 use crate::message::Message;
 use crate::providers::formats::openai::{create_request, get_usage, response_to_message};
 use anyhow::Result;
@@ -41,12 +42,15 @@ impl OllamaProvider {
         })
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!("{}/v1/chat/completions", self.host.trim_end_matches('/'));
 
-        let response = self.client.post(&url).json(&payload).send().await?;
+        let response = self.client.post(&url).json(&payload).send().await.unwrap();
 
-        handle_response(payload, response).await
+        // https://github.com/ollama/ollama/blob/main/docs/openai.md
+        // Ollama silently truncates the messages if it exceeds the max token limit
+        // so we don't need to check for context length errors
+        handle_response_openai_compat(payload, response).await
     }
 }
 
@@ -65,20 +69,21 @@ impl Provider for OllamaProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
         let payload = create_request(
             &self.model,
             system,
             messages,
             tools,
             &super::utils::ImageFormat::OpenAi,
-        )?;
+        )
+        .unwrap();
 
         let response = self.post(payload.clone()).await?;
 
         // Parse response
-        let message = response_to_message(response.clone())?;
-        let usage = self.get_usage(&response)?;
+        let message = response_to_message(response.clone()).unwrap();
+        let usage = self.get_usage(&response).unwrap();
         let model = get_model(&response);
         super::utils::emit_debug_trace(self, &payload, &response, &usage);
         Ok((message, ProviderUsage::new(model, usage)))

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use tracing::debug;
 
+use super::formats::openai::is_context_length_error;
 use crate::providers::errors::ProviderError;
 use mcp_core::content::ImageContent;
 
@@ -35,33 +36,33 @@ pub fn convert_image(image: &ImageContent, image_format: &ImageFormat) -> Value 
     }
 }
 
-// Maps a non-ok response status to a ProviderError
-pub async fn non_ok_response_to_provider_error(
+/// Handle response from OpenAI compatible endpoints
+/// Error codes: https://platform.openai.com/docs/guides/error-codes
+/// Context window exceeded: https://community.openai.com/t/help-needed-tackling-context-length-limits-in-openai-models/617543
+pub async fn handle_response_openai_compat(
     payload: Value,
     response: Response,
-) -> ProviderError {
-    match response.status() {
-        StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
-            ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
-                Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default()))
-        }
-        StatusCode::TOO_MANY_REQUESTS => {
-            ProviderError::RateLimitExceeded(format!("Rate limit exceeded. Please retry after some time. Status: {}", response.status()))
-        }
-        StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
-            ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status()))
-        }
-        _ => ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", response.status(), payload))
-    }
-}
-
-pub async fn handle_response(payload: Value, response: Response) -> Result<Value, ProviderError> {
+) -> Result<Value, ProviderError> {
     match response.status() {
         StatusCode::OK => Ok(response.json().await.unwrap()),
-        _ => {
-            let provider_error = non_ok_response_to_provider_error(payload, response).await;
-            Err(provider_error)
+        StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+            Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
         }
+        StatusCode::BAD_REQUEST => {
+            let status = response.status();
+            let payload: Value = response.json().await.unwrap();
+            if let Some(error) = payload.get("error") {
+                if let Some(err) = is_context_length_error(error) {
+                    return Err(ProviderError::ContextLengthExceeded(err.to_string()));
+                }
+            }
+            Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", status, payload)))
+        }
+        StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
+            Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
+        }
+        _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", response.status(), payload)))
     }
 }
 

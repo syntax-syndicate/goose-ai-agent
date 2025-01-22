@@ -12,7 +12,7 @@ use super::formats::openai::{
     create_request, get_usage, is_context_length_error, response_to_message,
 };
 use super::oauth;
-use super::utils::{get_model, handle_response, ImageFormat};
+use super::utils::{get_model, handle_response_openai_compat, ImageFormat};
 use crate::message::Message;
 use mcp_core::tool::Tool;
 
@@ -126,7 +126,8 @@ impl DatabricksProvider {
             .await
             .unwrap();
 
-        handle_response(payload, response).await
+        // https://docs.databricks.com/en/machine-learning/foundation-model-apis/index.html#use-foundation-model-apis
+        handle_response_openai_compat(payload, response).await
     }
 }
 

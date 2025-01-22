@@ -1,16 +1,18 @@
+use super::errors::ProviderError;
 use crate::message::Message;
 use crate::providers::base::{Provider, ProviderUsage, Usage};
 use crate::providers::configs::ModelConfig;
 use crate::providers::formats::google::{create_request, get_usage, response_to_message};
-use crate::providers::utils::{emit_debug_trace, handle_response, unescape_json_values};
+use crate::providers::utils::{emit_debug_trace, unescape_json_values};
 use anyhow::Result;
 use async_trait::async_trait;
 use mcp_core::tool::Tool;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde_json::Value;
 use std::time::Duration;
 
-pub const GOOGLE_API_HOST: &str = "https://generativelanguage.googleapis.com";
+/// TODO: consider using Gemini's OpenAI compatible endpoint: https://ai.google.dev/gemini-api/docs/openai
+pub const GOOGLE_API_HOST: &str = "https://generativelanguage.googleapis.com/v1beta/openai/";
 pub const GOOGLE_DEFAULT_MODEL: &str = "gemini-2.0-flash-exp";
 
 #[derive(Debug, serde::Serialize)]
@@ -41,7 +43,7 @@ impl GoogleProvider {
         })
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!(
             "{}/v1beta/models/{}:generateContent?key={}",
             self.host.trim_end_matches('/'),
@@ -55,9 +57,27 @@ impl GoogleProvider {
             .header("CONTENT_TYPE", "application/json")
             .json(&payload)
             .send()
-            .await?;
+            .await
+            .unwrap();
 
-        handle_response(payload, response).await
+        // https://ai.google.dev/gemini-api/docs/troubleshooting?lang=python#error-codes
+        match response.status() {
+            StatusCode::OK => Ok(response.json().await.unwrap()),
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+                Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                    Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+            }
+            StatusCode::TOO_MANY_REQUESTS => {
+                Err(ProviderError::RateLimitExceeded(format!("Rate limit exceeded. Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+            }
+            StatusCode::INTERNAL_SERVER_ERROR => {
+                Err(ProviderError::ContextLengthExceeded(format!("Context length exceeded. Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+            }
+            StatusCode::SERVICE_UNAVAILABLE => {
+                Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
+            }
+            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", response.status(), payload)))
+        }
     }
 }
 
@@ -76,15 +96,14 @@ impl Provider for GoogleProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
-        let payload = create_request(&self.model, system, messages, tools)?;
-
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
+        let payload = create_request(&self.model, system, messages, tools).unwrap();
         // Make request
         let response = self.post(payload.clone()).await?;
 
         // Parse response
-        let message = response_to_message(unescape_json_values(&response))?;
-        let usage = self.get_usage(&response)?;
+        let message = response_to_message(unescape_json_values(&response)).unwrap();
+        let usage = self.get_usage(&response).unwrap();
         let model = match response.get("modelVersion") {
             Some(model_version) => model_version.as_str().unwrap_or_default().to_string(),
             None => self.model.model_name.clone(),

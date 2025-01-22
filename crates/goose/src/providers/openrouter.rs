@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result};
 use async_trait::async_trait;
 use reqwest::Client;
 use serde_json::{json, Value};
@@ -6,11 +6,10 @@ use std::time::Duration;
 
 use super::base::{Provider, ProviderUsage, Usage};
 use super::configs::ModelConfig;
-use super::utils::{emit_debug_trace, get_model, handle_response};
+use super::errors::ProviderError;
+use super::utils::{emit_debug_trace, get_model, handle_response_openai_compat};
 use crate::message::Message;
-use crate::providers::formats::openai::{
-    create_request, get_usage, is_context_length_error, response_to_message,
-};
+use crate::providers::formats::openai::{create_request, get_usage, response_to_message};
 use mcp_core::tool::Tool;
 
 pub const OPENROUTER_DEFAULT_MODEL: &str = "anthropic/claude-3.5-sonnet";
@@ -46,7 +45,7 @@ impl OpenRouterProvider {
         })
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!(
             "{}/api/v1/chat/completions",
             self.host.trim_end_matches('/')
@@ -61,9 +60,13 @@ impl OpenRouterProvider {
             .header("X-Title", "Goose")
             .json(&payload)
             .send()
-            .await?;
+            .await
+            .unwrap();
 
-        handle_response(payload, response).await
+        // OpenRouter is close to OpenAI and by default, it truncates messages in the middle
+        // Read more: https://openrouter.ai/docs/requests,  https://openrouter.ai/docs/transforms
+        // So we will use the OpenAI response handling here
+        handle_response_openai_compat(payload, response).await
     }
 }
 
@@ -162,24 +165,16 @@ impl Provider for OpenRouterProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
         // Create the base payload
-        let payload = create_request_based_on_model(&self.model, system, messages, tools)?;
+        let payload = create_request_based_on_model(&self.model, system, messages, tools).unwrap();
 
         // Make request
         let response = self.post(payload.clone()).await?;
 
-        // Raise specific error if context length is exceeded
-        if let Some(error) = response.get("error") {
-            if let Some(err) = is_context_length_error(error) {
-                return Err(err.into());
-            }
-            return Err(anyhow!("OpenRouter API error: {}", error));
-        }
-
         // Parse response
-        let message = response_to_message(response.clone())?;
-        let usage = self.get_usage(&response)?;
+        let message = response_to_message(response.clone()).unwrap();
+        let usage = self.get_usage(&response).unwrap();
         let model = get_model(&response);
         emit_debug_trace(self, &payload, &response, &usage);
         Ok((message, ProviderUsage::new(model, usage)))
