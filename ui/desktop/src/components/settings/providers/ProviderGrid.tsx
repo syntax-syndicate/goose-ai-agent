@@ -271,16 +271,18 @@ export function ProviderGrid({ onSubmit }: ProviderGridProps) {
       />
 
       {showSetupModal && selectedId && (
-        <ProviderSetupModal
-          provider={providers.find((p) => p.id === selectedId)?.name}
-          model="Example Model"
-          endpoint="Example Endpoint"
-          onSubmit={handleModalSubmit}
-          onCancel={() => {
-            setShowSetupModal(false);
-            setSelectedId(null);
-          }}
-        />
+        <div className="relative z-[9999]">
+          <ProviderSetupModal
+            provider={providers.find((p) => p.id === selectedId)?.name}
+            model="Example Model"
+            endpoint="Example Endpoint"
+            onSubmit={handleModalSubmit}
+            onCancel={() => {
+              setShowSetupModal(false);
+              setSelectedId(null);
+            }}
+          />
+        </div>
       )}
     </div>
   );
