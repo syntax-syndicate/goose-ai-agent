@@ -115,8 +115,7 @@ impl Agent for ReferenceAgent {
             tools.push(list_resources_tool);
         }
 
-        let extension_prompt = capabilities.get_extension_prompt().await;
-        let _estimated_limit = capabilities.provider().get_model_config();
+        let system_prompt = capabilities.get_system_prompt().await;
 
         // Set the user_message field in the span instead of creating a new event
         if let Some(content) = messages
@@ -127,15 +126,13 @@ impl Agent for ReferenceAgent {
             debug!("user_message" = &content);
         }
 
-        // Update conversation history for the start of the reply
-        let _resources = capabilities.get_resources().await?;
 
         Ok(Box::pin(async_stream::try_stream! {
             let _reply_guard = reply_span.enter();
             loop {
                 // Get completion from provider
                 let (response, usage) = capabilities.provider().complete(
-                    &extension_prompt,
+                    &system_prompt,
                     &messages,
                     &tools,
                 ).await?;
