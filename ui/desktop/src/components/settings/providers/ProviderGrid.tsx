@@ -15,6 +15,7 @@ import { toast } from 'react-toastify';
 import { getActiveProviders } from '../api_keys/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/Tooltip';
 import { useNavigate } from 'react-router-dom';
+import { BaseProviderGrid } from './BaseProviderGrid';
 
 interface ProviderCardProps {
   name: string;
@@ -261,20 +262,13 @@ export function ProviderGrid({ onSubmit }: ProviderGridProps) {
         settings.
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 auto-rows-fr max-w-full">
-        {providers.map((provider) => (
-          <ProviderCard
-            key={provider.id}
-            name={provider.name}
-            description={provider.description}
-            isConfigured={provider.isConfigured}
-            isSelected={selectedId === provider.id}
-            onSelect={() => handleSelect(provider.id)}
-            onConfigure={() => handleConfigure(provider)}
-            onAddKeys={() => handleAddKeys(provider)}
-          />
-        ))}
-      </div>
+      <BaseProviderGrid
+        providers={providers}
+        isSelectable={true}
+        selectedId={selectedId}
+        onSelect={handleSelect}
+        onAddKeys={handleAddKeys}
+      />
 
       {showSetupModal && selectedId && (
         <ProviderSetupModal
