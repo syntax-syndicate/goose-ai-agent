@@ -87,7 +87,7 @@ async fn create_agent(
     let model = payload.model.unwrap_or_else(|| {
         config
             .get("GOOSE_MODEL")
-            .expect("Did not find a model on payload or in GOOSE_PROVIDER")
+            .expect("Did not find a model on payload or in env")
     });
     let model_config = ModelConfig::new(model);
     let provider =
