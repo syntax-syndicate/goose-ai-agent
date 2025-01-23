@@ -18,7 +18,7 @@ use mcp_core::tool::Tool;
 const DEFAULT_CLIENT_ID: &str = "databricks-cli";
 const DEFAULT_REDIRECT_URL: &str = "http://localhost:8020";
 const DEFAULT_SCOPES: &[&str] = &["all-apis"];
-pub const DATABRICKS_DEFAULT_MODEL: &str = "claude-3-5-sonnet-2";
+pub const DATABRICKS_DEFAULT_MODEL: &str = "databricks-meta-llama-3-3-70b-instruct";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DatabricksAuth {
