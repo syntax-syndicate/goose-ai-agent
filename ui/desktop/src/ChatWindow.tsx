@@ -409,43 +409,6 @@ export default function ChatWindow() {
     return response;
   };
 
-  const handleModalSubmit = async (apiKey: string) => {
-    try {
-      const trimmedKey = apiKey.trim();
-
-      if (!selectedProvider) {
-        throw new Error('No provider selected');
-      }
-
-      // Store the API key
-      const secretKey = `${selectedProvider.id.toUpperCase()}_API_KEY`;
-      await storeSecret(secretKey, trimmedKey);
-
-      // Initialize the system with the selected provider
-      await initializeSystem(selectedProvider.id, null);
-
-      // get the default model
-      const modelName = getDefaultModel(selectedProvider.id);
-
-      // create model object
-      const model = createSelectedModel(selectedProvider.id, modelName);
-
-      // Call the context's switchModel to track the set model state in the front end
-      switchModel(model);
-
-      // Keep track of the recently used models
-      addRecentModel(model);
-
-      // Save provider selection and close modal
-      localStorage.setItem('GOOSE_PROVIDER', selectedProvider.id);
-      console.log('set up provider with default model', selectedProvider.id, modelName);
-      setShowWelcomeModal(false);
-    } catch (error) {
-      console.error('Failed to setup provider:', error);
-      throw error;
-    }
-  };
-
   // Initialize system on load if we have a stored provider
   useEffect(() => {
     const setupStoredProvider = async () => {
@@ -498,13 +461,7 @@ export default function ChatWindow() {
               working={working}
           />
           */}
-        {showWelcomeModal && (
-          <WelcomeModal
-            selectedProvider={selectedProvider}
-            setSelectedProvider={setSelectedProvider}
-            onSubmit={handleModalSubmit}
-          />
-        )}
+        {showWelcomeModal && <WelcomeModal />}
       </ChatLayout>
     </div>
   );

@@ -13,7 +13,7 @@ export function WelcomeModal() {
             <div className="flex-1 px-16 py-8 pt-[20px]">
               <div className="max-w-3xl space-y-12">
                 <div className="flex items-center gap-4 mb-8">
-                  <h1 className="text-2xl font-semibold tracking-tight">Configure Providers</h1>
+                  <h1 className="text-2xl font-semibold tracking-tight">Select a Provider</h1>
                 </div>
                 <ProviderGrid />
               </div>

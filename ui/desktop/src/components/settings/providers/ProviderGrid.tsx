@@ -25,6 +25,10 @@ interface ProviderCardProps {
   onSelect: () => void;
 }
 
+function getArticle(word: string): string {
+  return 'aeiouAEIOU'.indexOf(word[0]) >= 0 ? 'an' : 'a';
+}
+
 function ProviderCard({
   name,
   description,
@@ -61,7 +65,9 @@ function ProviderCard({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>You have a {name} API Key set in your environment</p>
+                  <p>
+                    You have {getArticle(name)} {name} API Key set in your environment
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -69,7 +75,7 @@ function ProviderCard({
         </div>
       </div>
 
-      <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-1.5 mb-3 leading-relaxed overflow-y-auto max-h-[48px] pr-1">
+      <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-1.5 mb-3 leading-normal overflow-y-auto max-h-[48px] pr-1">
         {description}
       </p>
 
@@ -85,7 +91,7 @@ function ProviderCard({
             className="rounded-full h-7 px-3 min-w-[90px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 text-xs"
           >
             <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Add Keys
+            Add Key
           </Button>
         )}
       </div>
