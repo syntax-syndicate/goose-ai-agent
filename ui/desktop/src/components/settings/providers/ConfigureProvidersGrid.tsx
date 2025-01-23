@@ -7,12 +7,35 @@ import { ProviderSetupModal } from '../ProviderSetupModal';
 import { getApiUrl, getSecretKey } from '../../../config';
 import { toast } from 'react-toastify';
 import { getActiveProviders } from '../api_keys/utils';
+import { useModel } from '../models/ModelContext';
+import { Button } from '../../ui/button';
+
+function ConfirmationModal({ message, onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9999]">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <p className="text-gray-800 dark:text-gray-200 mb-6">{message}</p>
+        <div className="flex justify-end gap-4">
+          <Button variant="ghost" onClick={onCancel} className="text-gray-500">
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Confirm
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Settings version - non-selectable cards with settings gear
 export function ConfigureProvidersGrid() {
   const { activeKeys, setActiveKeys } = useActiveKeys();
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [selectedForSetup, setSelectedForSetup] = useState<string | null>(null);
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [providerToDelete, setProviderToDelete] = useState(null);
+  const { currentModel } = useModel();
 
   const providers = useMemo(() => {
     return supported_providers.map((providerName) => {
@@ -109,13 +132,29 @@ export function ConfigureProvidersGrid() {
   };
 
   const handleDelete = async (provider) => {
-    const keyName = required_keys[provider.name]?.[0];
+    setProviderToDelete(provider);
+    setIsConfirmationOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!providerToDelete) return;
+
+    const keyName = required_keys[providerToDelete.name]?.[0];
     if (!keyName) {
-      console.error(`No key found for provider ${provider.name}`);
+      console.error(`No key found for provider ${providerToDelete.name}`);
       return;
     }
 
     try {
+      // Check if the selected provider is currently active
+      if (currentModel?.provider === providerToDelete.name) {
+        toast.error(
+          `Cannot delete the API key for ${providerToDelete.name} because it's the provider of the current model (${currentModel.name}). Please switch to a different model first.`
+        );
+        setIsConfirmationOpen(false);
+        return;
+      }
+
       const deleteResponse = await fetch(getApiUrl('/secrets/delete'), {
         method: 'DELETE',
         headers: {
@@ -126,16 +165,21 @@ export function ConfigureProvidersGrid() {
       });
 
       if (!deleteResponse.ok) {
+        const errorText = await deleteResponse.text();
+        console.error('Delete response error:', errorText);
         throw new Error('Failed to delete key');
       }
 
+      console.log('Key deleted successfully.');
+      toast.success(`Successfully deleted API key for ${providerToDelete.name}`);
+
       const updatedKeys = await getActiveProviders();
       setActiveKeys(updatedKeys);
-      toast.success(`Removed API key for ${provider.name}`);
     } catch (error) {
       console.error('Error deleting key:', error);
-      toast.error(`Failed to remove API key for ${provider.name}`);
+      toast.error(`Unable to delete API key for ${providerToDelete.name}`);
     }
+    setIsConfirmationOpen(false);
   };
 
   return (
@@ -161,6 +205,14 @@ export function ConfigureProvidersGrid() {
             }}
           />
         </div>
+      )}
+
+      {isConfirmationOpen && providerToDelete && (
+        <ConfirmationModal
+          message={`Are you sure you want to delete the API key for ${providerToDelete.name}? This action cannot be undone.`}
+          onConfirm={confirmDelete}
+          onCancel={() => setIsConfirmationOpen(false)}
+        />
       )}
     </div>
   );
