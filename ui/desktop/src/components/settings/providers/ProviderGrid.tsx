@@ -48,17 +48,16 @@ function ProviderCard({
       `}
     >
       <div className="space-y-1">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
-          {name}
-        </h3>
-        {isConfigured && (
-          <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate mr-2">
+            {name}
+          </h3>
+          {isConfigured && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1 text-green-600 dark:text-green-500">
-                    <Check className="h-3.5 w-3.5" />
-                    <span className="text-xs">Ready</span>
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 shrink-0">
+                    <Check className="h-3 w-3 text-green-600 dark:text-green-500" />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -66,8 +65,8 @@ function ProviderCard({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-1.5 mb-3 leading-relaxed overflow-y-auto max-h-[48px] pr-1">
@@ -221,7 +220,7 @@ export function ProviderGrid() {
   }, []);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-[1400px] mx-auto">
       <div className="h-[52px]">
         {selectedId && (
           <div className="flex justify-end">
@@ -246,7 +245,7 @@ export function ProviderGrid() {
         settings.
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 auto-rows-fr">
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 auto-rows-fr max-w-full">
         {providers.map((provider) => (
           <ProviderCard
             key={provider.id}
