@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import { ModelProvider } from './components/settings/models/ModelContext';
 import { ActiveKeysProvider } from './components/settings/api_keys/ActiveKeysContext';
-import { loadStoredExtensionConfigs } from './extensions';
+import { loadAndAddStoredExtensions } from './extensions';
 
 export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export default function App() {
     // delay this by a few seconds
     setTimeout(() => {
       window.electron.logInfo('App.tsx: Loading stored extension configs');
-      loadStoredExtensionConfigs().catch((error) => {
+      loadAndAddStoredExtensions().catch((error) => {
         console.error('Failed to load stored extension configs:', error);
         window.electron.logInfo('App.tsx: Failed to load stored extension configs ' + error);
       });

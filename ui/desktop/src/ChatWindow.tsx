@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Message, useChat } from './ai-sdk-fork/useChat';
 import { getApiUrl, getSecretKey } from './config';
-import { extendGoosedFromUrl } from './extensions';
+import { addExtensionFromDeepLink } from './extensions';
 import { useNavigate } from 'react-router-dom';
 import BottomMenu from './components/BottomMenu';
 import FlappyGoose from './components/FlappyGoose';
@@ -342,10 +342,8 @@ export default function ChatWindow() {
   useEffect(() => {
     // Listen for goose:// deep links
     window.electron.on('add-extension', (_, link) => {
-      window.electron.logInfo('Received message for add-extension: ' + link);
-      console.log('Received message for add-extension:', link);
-      extendGoosedFromUrl(link, navigate);
-      window.electron.logInfo('extended called: ' + link);
+      window.electron.logInfo(`Adding extension from deep link ${link}`);
+      addExtensionFromDeepLink(link, navigate);
     });
   }, [navigate]);
 
