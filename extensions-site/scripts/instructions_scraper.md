@@ -31,8 +31,10 @@ Please remember to try two links for each extension: if the link https://github.
 
 DO THIS ONE BY ONE AND MAKE SURE TO ADD AS MUCH INFORMATION AS POSSIBLE FOUND FOR EACH EXTENSION.
 
+Write to `input/goose_installation_instructions.json` in the following format:
 ```json
-{
+[
+  {
   "link": "https://github.com/squareup/mcp/tree/main/mcp-codesearch",
   "is_internal": true,
   "instructions": "The installation instructions for the extension.",
@@ -48,6 +50,8 @@ DO THIS ONE BY ONE AND MAKE SURE TO ADD AS MUCH INFORMATION AS POSSIBLE FOUND FO
       "description": "The description of the environment variable",
       "required": false
     }
-  ]
-}
+    ]
+  },
+  ...
+]
 ```
