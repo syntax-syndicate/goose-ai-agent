@@ -47,10 +47,7 @@ pub async fn handle_configure() -> Result<(), Box<dyn Error>> {
                 style("Warning").yellow().italic(),
                 style("goose configure").cyan()
             );
-
         }
-
-
 
         Ok(())
     } else {
