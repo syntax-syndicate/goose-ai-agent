@@ -23,6 +23,7 @@ interface BaseProviderCardProps {
   onConfigure?: () => void;
   showSettings?: boolean;
   onDelete?: () => void;
+  showDelete?: boolean;
 }
 
 function getArticle(word: string): string {
@@ -40,6 +41,7 @@ function BaseProviderCard({
   onConfigure,
   showSettings,
   onDelete,
+  showDelete = false,
 }: BaseProviderCardProps) {
   return (
     <div
@@ -75,28 +77,30 @@ function BaseProviderCard({
             </Tooltip>
           </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-4 w-4 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete?.();
-                  }}
-                >
-                  <X className="h-2.5 w-2.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400" />
-                </Button>
-              </TooltipTrigger>
-              <Portal>
-                <TooltipContent side="top" align="center" className="z-[9999]">
-                  <p>Remove {name} API Key</p>
-                </TooltipContent>
-              </Portal>
-            </Tooltip>
-          </TooltipProvider>
+          {showDelete && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete?.();
+                    }}
+                  >
+                    <X className="h-2.5 w-2.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400" />
+                  </Button>
+                </TooltipTrigger>
+                <Portal>
+                  <TooltipContent side="top" align="center" className="z-[9999]">
+                    <p>Remove {name} API Key</p>
+                  </TooltipContent>
+                </Portal>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       )}
 
@@ -157,6 +161,7 @@ interface BaseProviderGridProps {
   providers: Provider[];
   isSelectable?: boolean;
   showSettings?: boolean;
+  showDelete?: boolean;
   selectedId?: string | null;
   onSelect?: (providerId: string) => void;
   onAddKeys?: (provider: Provider) => void;
@@ -168,6 +173,7 @@ export function BaseProviderGrid({
   providers,
   isSelectable = false,
   showSettings = false,
+  showDelete = false,
   selectedId = null,
   onSelect,
   onAddKeys,
@@ -189,6 +195,7 @@ export function BaseProviderGrid({
           onConfigure={() => onConfigure?.(provider)}
           onDelete={() => onDelete?.(provider)}
           showSettings={showSettings}
+          showDelete={showDelete}
         />
       ))}
     </div>

@@ -13,15 +13,24 @@ import { Button } from '../../ui/button';
 function ConfirmationModal({ message, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9999]">
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <p className="text-gray-800 dark:text-gray-200 mb-6">{message}</p>
-        <div className="flex justify-end gap-4">
-          <Button variant="ghost" onClick={onCancel} className="text-gray-500">
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={onConfirm}>
-            Confirm
-          </Button>
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Confirm Delete
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{message}</p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={onCancel} className="rounded-full px-4">
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={onConfirm}
+              className="rounded-full px-4 bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -33,6 +42,7 @@ export function ConfigureProvidersGrid() {
   const { activeKeys, setActiveKeys } = useActiveKeys();
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [selectedForSetup, setSelectedForSetup] = useState<string | null>(null);
+  const [modalMode, setModalMode] = useState<'edit' | 'setup'>('setup');
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState(null);
   const { currentModel } = useModel();
@@ -55,6 +65,13 @@ export function ConfigureProvidersGrid() {
 
   const handleAddKeys = (provider) => {
     setSelectedForSetup(provider.id);
+    setModalMode('setup');
+    setShowSetupModal(true);
+  };
+
+  const handleConfigure = (provider) => {
+    setSelectedForSetup(provider.id);
+    setModalMode('edit');
     setShowSetupModal(true);
   };
 
@@ -62,15 +79,18 @@ export function ConfigureProvidersGrid() {
     if (!selectedForSetup) return;
 
     const provider = providers.find((p) => p.id === selectedForSetup)?.name;
-    const keyName = required_keys[provider]?.[0];
+    if (!provider) return;
 
+    const keyName = required_keys[provider]?.[0];
     if (!keyName) {
       console.error(`No key found for provider ${provider}`);
       return;
     }
 
     try {
-      if (selectedForSetup && providers.find((p) => p.id === selectedForSetup)?.isConfigured) {
+      // Delete existing key if provider is already configured
+      const isUpdate = providers.find((p) => p.id === selectedForSetup)?.isConfigured;
+      if (isUpdate) {
         const deleteResponse = await fetch(getApiUrl('/secrets/delete'), {
           method: 'DELETE',
           headers: {
@@ -87,6 +107,7 @@ export function ConfigureProvidersGrid() {
         }
       }
 
+      // Store new key
       const storeResponse = await fetch(getApiUrl('/secrets/store'), {
         method: 'POST',
         headers: {
@@ -105,8 +126,6 @@ export function ConfigureProvidersGrid() {
         throw new Error('Failed to store new key');
       }
 
-      const isUpdate =
-        selectedForSetup && providers.find((p) => p.id === selectedForSetup)?.isConfigured;
       toast.success(
         isUpdate
           ? `Successfully updated API key for ${provider}`
@@ -121,14 +140,9 @@ export function ConfigureProvidersGrid() {
     } catch (error) {
       console.error('Error handling modal submit:', error);
       toast.error(
-        `Failed to ${selectedForSetup && providers.find((p) => p.id === selectedForSetup)?.isConfigured ? 'update' : 'add'} API key for ${provider}`
+        `Failed to ${providers.find((p) => p.id === selectedForSetup)?.isConfigured ? 'update' : 'add'} API key for ${provider}`
       );
     }
-  };
-
-  const handleConfigure = (provider) => {
-    // Handle opening provider-specific settings
-    // This could navigate to a settings page or open a modal
   };
 
   const handleDelete = async (provider) => {
@@ -187,6 +201,7 @@ export function ConfigureProvidersGrid() {
       <BaseProviderGrid
         providers={providers}
         showSettings={true}
+        showDelete={true}
         onAddKeys={handleAddKeys}
         onConfigure={handleConfigure}
         onDelete={handleDelete}
@@ -198,6 +213,11 @@ export function ConfigureProvidersGrid() {
             provider={providers.find((p) => p.id === selectedForSetup)?.name}
             model="Example Model"
             endpoint="Example Endpoint"
+            title={
+              modalMode === 'edit'
+                ? `Edit ${providers.find((p) => p.id === selectedForSetup)?.name} API Key`
+                : undefined
+            }
             onSubmit={handleModalSubmit}
             onCancel={() => {
               setShowSetupModal(false);
