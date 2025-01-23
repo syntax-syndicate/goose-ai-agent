@@ -91,7 +91,8 @@ impl ExtensionManager {
     /// Get all extensions and their configurations
     pub fn get_all() -> Result<Vec<ExtensionEntry>> {
         let config = Config::global();
-        Ok(config.get("extensions").unwrap_or_else(|_| Vec::new()))
+        let extensions: HashMap<String, ExtensionEntry> = config.get("extensions").unwrap_or(HashMap::new());
+        Ok(Vec::from_iter(extensions.values().cloned()))
     }
 
     /// Get all extension names
