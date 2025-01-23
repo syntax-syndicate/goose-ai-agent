@@ -19,6 +19,8 @@ use indoc::indoc;
 use mcp_core::tool::Tool;
 use serde_json::{json, Value};
 
+const MAX_TRUNCATION_ATTEMPTS: usize = 5;
+
 /// Truncate implementation of an Agent
 pub struct TruncateAgent {
     capabilities: Mutex<Capabilities>,
@@ -99,6 +101,8 @@ impl Agent for TruncateAgent {
         let reply_span = tracing::Span::current();
         let mut capabilities = self.capabilities.lock().await;
         let mut tools = capabilities.get_prefixed_tools().await?;
+        let mut truncation_attempt = 0;
+
         // we add in the read_resource tool by default
         // TODO: make sure there is no collision with another extension's tool name
         let read_resource_tool = Tool::new(
@@ -208,8 +212,15 @@ impl Agent for TruncateAgent {
                         messages.push(message_tool_response);
                     },
                     Err(ProviderError::ContextLengthExceeded(_)) => {
-                        // Trigger truncation logic
-                        debug!("Context length exceeded. Initiating truncation.");
+                        if truncation_attempt >= MAX_TRUNCATION_ATTEMPTS {
+                            // Create a user-facing error message & terminate the stream
+                            let error_message = Message::user().with_text("Error: Context length exceeds limits even after multiple attempts to truncate.");
+                            yield error_message;
+                            break;
+                        }
+
+                        truncation_attempt += 1;
+                        debug!("Context length exceeded. Initiating truncation attempt {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
 
                         // release the lock before truncation to prevent deadlock
                         drop(capabilities);
