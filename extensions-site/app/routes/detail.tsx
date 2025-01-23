@@ -16,6 +16,10 @@ interface Server {
   name: string;
   description: string;
   command: string;
+  link: string;
+  installation_notes: string;
+  is_extension: boolean;
+  endorsed: boolean
   githubStars: number;
   environmentVariables: {
     name: string;
@@ -132,6 +136,9 @@ export default function DetailPage() {
               <p className="text-xl text-textSubtle">{server.description}</p>
               {/* <Button className="mt-4">Download Goose for desktop</Button> */}
             </div>
+            <div>
+              <p className="text-md text-textSubtle">{server.installation_notes}</p>
+            </div>
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-textStandard">
@@ -139,7 +146,7 @@ export default function DetailPage() {
                 <h4 className="font-medium">Command</h4>
               </div>
               <code className="block bg-gray-100 dark:bg-gray-900 p-2 rounded text-sm dark:text-gray-300">
-                goose session --with-system "{server.command}"
+                {server.is_extension ? `goose session --with-builtin "${server.id}"` : `goose session --with-extension "${server.command}"`}
               </code>
             </div>
 

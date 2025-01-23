@@ -15,10 +15,10 @@ Please follow the instructions below to convert the Goose Extension Converter so
 
 1. Read the input files and take note of the fields and contents. Each row represents a single MCP extension.
 2. For each MCP extension, convert the following JSON to the server.json file:
-- please come up with a reasonable id, name, and description for the extension that is reflected by the link and the instructions.
+- please come up with a reasonable id, name, and description for the extension that is reflected by the link and the instructions. Use underscore _ instead of - dash to separate words in the id field.
 - The command should be the installation command for the extension.
 - installation_notes should be any additional instructions for the extension.
-- is_extension should be true if the extension is in the block/goose repo, false otherwise. (hint: developer, nondeveloper, memory, jetbrains, and google drive are extensions)
+- is_extension should be true if the extension is in the block/goose repo, false otherwise. (hint: developer, nondeveloper, memory, jetbrains, and google_drive are extensions)
 - endorsed: Only put true if the extension runs without error and is recommended by the Goose team according to input/goose_extensions_curated.csv. 
 - githubStars should be the github stars for the extension.
 - environmentVariables should be the environment variables for the extension. Please do not hallucinate environment variables. Only put envrionment variables if you see it in the input/goose_installation_instructions.json file. If you don't see any, please leave it empty.
@@ -30,7 +30,7 @@ Only include endorsed extensions in the output/servers.json file.
 ```json
 [
     {
-    "id": "aws-kb-retrieval",
+    "id": "aws_kb_retrieval",
     "name": "AWS KB Retrieval",
     "description": "Retrieval from AWS Knowledge Base using Bedrock Agent Runtime",
     "command": "npx -y @modelcontextprotocol/server-aws-kb-retrieval",

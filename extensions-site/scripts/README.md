@@ -8,11 +8,11 @@ This script converts the Goose Extension Converter to the server.json file.
 
 2. Open Goose and set the directory to `goose/extensions-site/scripts`.
 
-3. Run the `instructions_scraper.md` script.
+3. Have Goose run the instructions in `instructions_scraper.md`.
 
-4. Run the `instructions_github_stars.md` script.
+4. Have Goose run the instructions in `instructions_github_stars.md`.
 
-5. Run the `instructions.md` script.
+5. Have Goose run the instructions in `instructions.md`.
 
 6. Validate the `output/servers.json` contents.
 

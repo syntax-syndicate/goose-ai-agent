@@ -24,7 +24,7 @@
       "environmentVariables": []
     },
     {
-      "id": "google-drive",
+      "id": "google_drive",
       "name": "Google Drive",
       "description": "Built-in Google Drive integration for file management and access",
       "command": "",
@@ -60,7 +60,7 @@
       "environmentVariables": []
     },
     {
-      "id": "block-codesearch",
+      "id": "block_codesearch",
       "name": "Block Codesearch",
       "description": "Internal code search functionality for Block repositories",
       "command": "uvx mcp-codesearch",
@@ -72,7 +72,7 @@
       "environmentVariables": []
     },
     {
-      "id": "knowledge-graph-memory",
+      "id": "knowledge_graph_memory",
       "name": "Knowledge Graph Memory",
       "description": "Graph-based memory system for persistent knowledge storage",
       "command": "npx -y @modelcontextprotocol/server-memory",
