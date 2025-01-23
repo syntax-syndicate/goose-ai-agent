@@ -237,16 +237,6 @@ export default function MoreMenu() {
                 Provider Settings (alpha)
               </button>
             )}
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/settings/configure-providers')}
-              className="h-8 w-8"
-              title="Configure Providers"
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
           </div>
         </PopoverContent>
       </PopoverPortal>

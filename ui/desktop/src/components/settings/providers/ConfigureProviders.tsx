@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProviderGrid } from './ProviderGrid';
+import { Providers } from './Provider';
 import { ScrollArea } from '../../ui/scroll-area';
 import BackButton from '../../ui/BackButton';
 
@@ -15,7 +15,7 @@ export default function ConfigureProviders() {
                 <div className="flex items-center gap-4 mb-8">
                   <h1 className="text-2xl font-semibold tracking-tight">Configure Providers</h1>
                 </div>
-                <ProviderGrid />
+                <Providers />
               </div>
             </div>
           </div>
