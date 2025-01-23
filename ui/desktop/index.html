@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -13,18 +13,18 @@
   </head>
   <script>
     // On page load or when changing themes, best to add inline in `head` to avoid FOUC
-    const useSystemTheme = localStorage.getItem("use_system_theme") === "true";
-    const savedTheme = localStorage.getItem("theme");
+    const useSystemTheme = localStorage.getItem('use_system_theme') === 'true';
+    const savedTheme = localStorage.getItem('theme');
 
     document.documentElement.classList.toggle(
-      "dark",
+      'dark',
       useSystemTheme
-        ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        : savedTheme === "dark"
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+        : savedTheme === 'dark'
     );
   </script>
   <body>
-    <div id="root" class="inter-app-type"></div>
+    <div id="root"></div>
     <script type="module" src="/src/renderer.tsx"></script>
   </body>
 </html>

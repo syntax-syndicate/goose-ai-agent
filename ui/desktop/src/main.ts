@@ -105,8 +105,9 @@ const createLauncher = () => {
   const launcherWindow = new BrowserWindow({
     width: 600,
     height: 60,
+    hasShadow: false,
     frame: false,
-    transparent: true,
+    transparent: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       additionalArguments: [JSON.stringify(appConfig)],
@@ -159,11 +160,12 @@ const createChat = async (app, query?: string, dir?: string, version?: string) =
     titleBarStyle: 'hidden',
     trafficLightPosition: { x: 16, y: 10 },
     vibrancy: 'window',
+    hasShadow: false,
     width: 750,
     height: 800,
     minWidth: 650,
     minHeight: 800,
-    transparent: true,
+    transparent: false,
     useContentSize: true,
     icon: path.join(__dirname, '../images/icon'),
     webPreferences: {
@@ -457,6 +459,8 @@ app.whenReady().then(async () => {
             const win = new BrowserWindow({
               width: 800,
               height: 120,
+              hasShadow: false,
+              transparent: false,
               resizable: false,
               minimizable: false,
               maximizable: false,

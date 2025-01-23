@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useModel } from './settings/models/ModelContext';
 import { useRecentModels } from './settings/models/RecentModels'; // Hook for recent models
-import { ChevronUp, ChevronDown, Sliders } from 'lucide-react';
+import { Sliders } from 'lucide-react';
 import { ModelRadioList } from './settings/models/ModelRadioList';
 import { useNavigate } from 'react-router-dom';
+import { Document, ChevronUp, ChevronDown } from './icons';
 
 export default function BottomMenu({ hasMessages }) {
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
@@ -47,10 +48,10 @@ export default function BottomMenu({ hasMessages }) {
   }, [isModelMenuOpen]);
 
   return (
-    <div className="flex justify-between relative border-t dark:border-gray-700 text-bottom-menu dark:text-bottom-menu-dark pl-[15px] text-[10px] h-[30px] leading-[30px] align-middle bg-bottom-menu-background dark:bg-bottom-menu-background-dark rounded-b-2xl">
+    <div className="flex justify-between items-center text-textSubtle relative bg-bgSubtle border-t border-borderSubtle text-xs pl-4 h-[40px] align-middle rounded-b-2xl">
       {/* Directory Chooser - Always visible */}
       <span
-        className="cursor-pointer"
+        className="cursor-pointer flex items-center [&>svg]:size-4"
         onClick={async () => {
           console.log('Opening directory chooser');
           if (hasMessages) {
@@ -60,7 +61,9 @@ export default function BottomMenu({ hasMessages }) {
           }
         }}
       >
+        <Document className="mr-1" />
         Working in {window.appConfig.get('GOOSE_WORKING_DIR')}
+        <ChevronUp className="ml-1" />
       </span>
 
       {/* Model Selector Dropdown - Only in development */}
@@ -71,9 +74,9 @@ export default function BottomMenu({ hasMessages }) {
         >
           <span>{currentModel?.name || 'Select Model'}</span>
           {isModelMenuOpen ? (
-            <ChevronUp className="w-4 h-4 ml-1" />
-          ) : (
             <ChevronDown className="w-4 h-4 ml-1" />
+          ) : (
+            <ChevronUp className="w-4 h-4 ml-1" />
           )}
         </div>
 

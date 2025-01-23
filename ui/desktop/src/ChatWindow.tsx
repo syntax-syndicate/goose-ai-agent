@@ -233,15 +233,15 @@ export function ChatContent({
   };
 
   return (
-    <div className="chat-content flex flex-col w-full h-screen items-center justify-center">
-      <div className="relative flex items-center h-[36px] w-full">
+    <div className="flex flex-col w-full h-screen items-center justify-center">
+      <div className="relative flex items-center h-[36px] w-full bg-bgSubtle">
         <MoreMenu />
       </div>
-      <Card className="flex flex-col flex-1 rounded-none h-[calc(100vh-95px)] w-full bg-card-gradient dark:bg-dark-card-gradient mt-0 border-none relative">
+      <Card className="flex flex-col flex-1 rounded-none h-[calc(100vh-95px)] w-full bg-bgApp mt-0 border-none relative">
         {messages.length === 0 ? (
           <Splash append={append} />
         ) : (
-          <ScrollArea className="flex-1 px-[10px]" id="chat-scroll-area">
+          <ScrollArea className="flex-1 px-4" id="chat-scroll-area">
             <div className="pt-4">
               {messages.map((message) => (
                 <div key={message.id}>
@@ -257,13 +257,12 @@ export function ChatContent({
                   )}
                 </div>
               ))}
-              {isLoading && (
+              {/* {isLoading && (
                 <div className="flex items-center justify-center p-4">
                   <div onClick={() => setShowGame(true)} style={{ cursor: 'pointer' }}>
-                    <LoadingGoose />
                   </div>
                 </div>
-              )}
+              )} */}
               {error && (
                 <div className="flex flex-col items-center justify-center p-4">
                   <div className="text-red-700 dark:text-red-300 bg-red-400/50 p-3 rounded-lg mb-2">
@@ -295,13 +294,16 @@ export function ChatContent({
           </ScrollArea>
         )}
 
-        <Input
-          handleSubmit={handleSubmit}
-          disabled={isLoading}
-          isLoading={isLoading}
-          onStop={onStopGoose}
-        />
-        <BottomMenu hasMessages={hasMessages} />
+        <div className="relative">
+          {isLoading && <LoadingGoose />}
+          <Input
+            handleSubmit={handleSubmit}
+            disabled={isLoading}
+            isLoading={isLoading}
+            onStop={onStopGoose}
+          />
+          <BottomMenu hasMessages={hasMessages} />
+        </div>
       </Card>
 
       {showGame && <FlappyGoose onClose={() => setShowGame(false)} />}

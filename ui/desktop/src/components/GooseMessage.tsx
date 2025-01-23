@@ -23,9 +23,9 @@ export default function GooseMessage({ message, metadata, messages, append }: Go
   const urls = !message.toolInvocations ? extractUrls(message.content, previousUrls) : [];
 
   return (
-    <div className="flex justify-start mb-[16px]">
+    <div className="flex justify-start mb-[16px] opacity-0 animate-[appear_150ms_ease-in_forwards]">
       <div className="flex-col w-[90%]">
-        <div className="flex flex-col bg-goose-bubble dark:bg-goose-bubble-dark rounded-2xl p-4">
+        <div className="flex flex-col bg-bgSubtle rounded-2xl rounded-bl-none p-4">
           {message.content && <MarkdownContent content={message.content} />}
           {message.toolInvocations && (
             <div className="mt-1">
