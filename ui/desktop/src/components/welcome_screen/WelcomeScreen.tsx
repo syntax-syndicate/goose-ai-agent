@@ -9,8 +9,11 @@ interface WelcomeScreenProps {
 
 export function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
   return (
-    <div className="h-screen w-full pt-[36px]">
-      <div className="h-full w-full bg-white dark:bg-gray-800 overflow-hidden p-2 pt-0">
+    <div className="h-screen w-full">
+      {/* Add draggable title bar region */}
+      <div className="h-[36px] w-full bg-transparent window-drag" />
+
+      <div className="h-[calc(100vh-36px)] w-full bg-white dark:bg-gray-800 overflow-hidden p-2 pt-0">
         <ScrollArea className="h-full w-full">
           <div className="flex min-h-full">
             {/* Content Area */}
