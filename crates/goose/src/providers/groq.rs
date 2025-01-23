@@ -1,8 +1,9 @@
+use super::errors::ProviderError;
 use crate::message::Message;
 use crate::model::ModelConfig;
 use crate::providers::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
 use crate::providers::formats::openai::{create_request, get_usage, response_to_message};
-use crate::providers::utils::{get_model, handle_response};
+use crate::providers::utils::{get_model, handle_response_openai_compat};
 use anyhow::Result;
 use async_trait::async_trait;
 use mcp_core::Tool;
@@ -49,7 +50,7 @@ impl GroqProvider {
         })
     }
 
-    async fn post(&self, payload: Value) -> anyhow::Result<Value> {
+    async fn post(&self, payload: Value) -> anyhow::Result<Value, ProviderError> {
         let url = format!(
             "{}/openai/v1/chat/completions",
             self.host.trim_end_matches('/')
@@ -63,7 +64,7 @@ impl GroqProvider {
             .send()
             .await?;
 
-        handle_response(payload, response).await
+        handle_response_openai_compat(payload, response).await
     }
 }
 
@@ -95,7 +96,7 @@ impl Provider for GroqProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> anyhow::Result<(Message, ProviderUsage)> {
+    ) -> anyhow::Result<(Message, ProviderUsage), ProviderError> {
         let payload = create_request(
             &self.model,
             system,

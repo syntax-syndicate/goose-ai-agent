@@ -1,16 +1,15 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_trait::async_trait;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::time::Duration;
 
 use super::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
-use super::formats::openai::{
-    create_request, get_usage, is_context_length_error, response_to_message,
-};
+use super::errors::ProviderError;
+use super::formats::openai::{create_request, get_usage, response_to_message};
 use super::oauth;
-use super::utils::{get_model, handle_response, ImageFormat};
+use super::utils::{get_model, ImageFormat};
 use crate::message::Message;
 use crate::model::ModelConfig;
 use mcp_core::tool::Tool;
@@ -109,7 +108,7 @@ impl DatabricksProvider {
         }
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!(
             "{}/serving-endpoints/{}/invocations",
             self.host.trim_end_matches('/'),
@@ -125,7 +124,21 @@ impl DatabricksProvider {
             .send()
             .await?;
 
-        handle_response(payload, response).await
+        match response.status() {
+            StatusCode::OK => Ok(response.json().await.unwrap()),
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+                Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                    Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+            }
+            StatusCode::BAD_REQUEST => {
+                // Databricks responds "Received error from openai" for context limit errors
+                return Err(ProviderError::ContextLengthExceeded(response.text().await.unwrap_or_default()));
+            }
+            StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
+                Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
+            }
+            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+        }
     }
 }
 
@@ -157,7 +170,7 @@ impl Provider for DatabricksProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
         let mut payload = create_request(&self.model, system, messages, tools, &self.image_format)?;
         // Remove the model key which is part of the url with databricks
         payload
@@ -166,14 +179,6 @@ impl Provider for DatabricksProvider {
             .remove("model");
 
         let response = self.post(payload.clone()).await?;
-
-        // Raise specific error if context length is exceeded
-        if let Some(error) = response.get("error") {
-            if let Some(err) = is_context_length_error(error) {
-                return Err(err.into());
-            }
-            return Err(anyhow!("Databricks API error: {}", error));
-        }
 
         // Parse response
         let message = response_to_message(response.clone())?;

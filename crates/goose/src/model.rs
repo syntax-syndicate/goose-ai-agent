@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-const DEFAULT_CONTEXT_LIMIT: usize = 200_000;
-const DEFAULT_ESTIMATE_FACTOR: f32 = 0.8;
+const DEFAULT_CONTEXT_LIMIT: usize = 128_000;
 
 // Tokenizer names, used to infer from model name
 pub const GPT_4O_TOKENIZER: &str = "Xenova--gpt-4o";
@@ -22,9 +21,6 @@ pub struct ModelConfig {
     pub temperature: Option<f32>,
     /// Optional maximum tokens to generate
     pub max_tokens: Option<i32>,
-    /// Factor used to estimate safe context window size (0.0 - 1.0)
-    /// Defaults to 0.8 (80%) of the context limit to leave headroom for responses
-    pub estimate_factor: Option<f32>,
 }
 
 impl ModelConfig {
@@ -44,7 +40,6 @@ impl ModelConfig {
             context_limit,
             temperature: None,
             max_tokens: None,
-            estimate_factor: None,
         }
     }
 
@@ -98,12 +93,6 @@ impl ModelConfig {
         self
     }
 
-    /// Set the estimate factor
-    pub fn with_estimate_factor(mut self, factor: Option<f32>) -> Self {
-        self.estimate_factor = factor;
-        self
-    }
-
     // Get the tokenizer name
     pub fn tokenizer_name(&self) -> &str {
         &self.tokenizer_name
@@ -113,22 +102,6 @@ impl ModelConfig {
     /// If none are defined, use the DEFAULT_CONTEXT_LIMIT
     pub fn context_limit(&self) -> usize {
         self.context_limit.unwrap_or(DEFAULT_CONTEXT_LIMIT)
-    }
-
-    /// Get the estimate factor for the current model configuration
-    ///
-    /// # Returns
-    /// The estimate factor with the following precedence:
-    /// 1. Explicit estimate_factor if provided in config
-    /// 2. Default value (0.8)
-    pub fn estimate_factor(&self) -> f32 {
-        self.estimate_factor.unwrap_or(DEFAULT_ESTIMATE_FACTOR)
-    }
-
-    /// Get the estimated limit of the context size, this is defined as
-    /// context_limit * estimate_factor
-    pub fn get_estimated_limit(&self) -> usize {
-        (self.context_limit() as f32 * self.estimate_factor()) as usize
     }
 }
 
@@ -156,27 +129,14 @@ mod tests {
     }
 
     #[test]
-    fn test_estimate_factor() {
-        // Test default value
-        let config = ModelConfig::new("test-model".to_string());
-        assert_eq!(config.estimate_factor(), DEFAULT_ESTIMATE_FACTOR);
-
-        // Test explicit value
-        let config = ModelConfig::new("test-model".to_string()).with_estimate_factor(Some(0.9));
-        assert_eq!(config.estimate_factor(), 0.9);
-    }
-
-    #[test]
     fn test_model_config_settings() {
         let config = ModelConfig::new("test-model".to_string())
             .with_temperature(Some(0.7))
             .with_max_tokens(Some(1000))
-            .with_context_limit(Some(50_000))
-            .with_estimate_factor(Some(0.9));
+            .with_context_limit(Some(50_000));
 
         assert_eq!(config.temperature, Some(0.7));
         assert_eq!(config.max_tokens, Some(1000));
         assert_eq!(config.context_limit, Some(50_000));
-        assert_eq!(config.estimate_factor, Some(0.9));
     }
 }

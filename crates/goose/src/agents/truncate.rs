@@ -1,21 +1,28 @@
+/// A truncate agent that truncates the conversation history when it exceeds the model's context limit
+/// It makes no attempt to handle context limits, and cannot read resources
 use async_trait::async_trait;
 use futures::stream::BoxStream;
-use std::collections::VecDeque;
 use tokio::sync::Mutex;
-use tracing::{debug, instrument};
+use tracing::{debug, error, instrument};
 
 use super::Agent;
-use crate::agents::capabilities::{Capabilities, ResourceItem};
-use crate::agents::extension::{ExtensionConfig, ExtensionError, ExtensionResult};
+use crate::agents::capabilities::Capabilities;
+use crate::agents::extension::{ExtensionConfig, ExtensionResult};
 use crate::message::{Message, ToolRequest};
 use crate::providers::base::Provider;
 use crate::providers::base::ProviderUsage;
+use crate::providers::errors::ProviderError;
 use crate::register_agent;
 use crate::token_counter::TokenCounter;
-use mcp_core::{Role, Tool};
-use serde_json::Value;
+use crate::truncate::{truncate_messages, OldestFirstTruncation};
+use indoc::indoc;
+use mcp_core::tool::Tool;
+use serde_json::{json, Value};
 
-/// Agent impl. that truncates oldest messages when payload over LLM ctx-limit
+const MAX_TRUNCATION_ATTEMPTS: usize = 3;
+const ESTIMATE_FACTOR_DECAY: f32 = 0.9;
+
+/// Truncate implementation of an Agent
 pub struct TruncateAgent {
     capabilities: Mutex<Capabilities>,
     token_counter: TokenCounter,
@@ -30,196 +37,44 @@ impl TruncateAgent {
         }
     }
 
-    async fn enforce_ctx_limit(
+    /// Truncates the messages to fit within the model's context window
+    /// Ensures the last message is a user message and removes tool call-response pairs
+    async fn truncate_messages(
         &self,
-        extension_prompt: &str,
-        tools: &[Tool],
-        messages: &[Message],
-        target_limit: usize,
-        resource_items: &mut [ResourceItem],
-    ) -> ExtensionResult<Vec<Message>> {
-        // Flatten all resource content into a vector of strings
-        let resources: Vec<String> = resource_items
+        messages: &mut Vec<Message>,
+        estimate_factor: f32,
+    ) -> anyhow::Result<()> {
+        // Model's actual context limit
+        let context_limit = self
+            .capabilities
+            .lock()
+            .await
+            .provider()
+            .get_model_config()
+            .context_limit();
+
+        // Our conservative estimate of the context limit
+        let context_limit = (context_limit as f32 * estimate_factor) as usize;
+
+        // Calculate current token count
+        let mut token_counts: Vec<usize> = messages
             .iter()
-            .map(|item| item.content.clone())
+            .map(|msg| self.token_counter.count_tokens(&msg.as_concat_text()))
             .collect();
 
-        let approx_count =
-            self.token_counter
-                .count_everything(extension_prompt, messages, tools, &resources);
-
-        let mut new_messages = messages.to_vec();
-        if approx_count > target_limit {
-            new_messages = self.drop_messages(messages, approx_count, target_limit);
-            if new_messages.is_empty() {
-                return Err(ExtensionError::ContextLimit);
-            }
-        }
-
-        Ok(new_messages)
-    }
-
-    fn text_content_size(&self, message: Option<&Message>) -> usize {
-        if let Some(msg) = message {
-            let mut approx_count = 0;
-            for content in msg.content.iter() {
-                if let Some(content_text) = content.as_text() {
-                    approx_count += self.token_counter.count_tokens(content_text);
-                }
-            }
-            return approx_count;
-        }
-
-        0
-    }
-
-    fn drop_messages(
-        &self,
-        messages: &[Message],
-        approx_count: usize,
-        target_limit: usize,
-    ) -> Vec<Message> {
-        debug!(
-            "[WARNING] Conversation history has size: {} exceeding the token budget of {}. \
-            Dropping oldest messages.",
-            approx_count,
-            approx_count - target_limit
+        let _ = truncate_messages(
+            messages,
+            &mut token_counts,
+            context_limit,
+            &OldestFirstTruncation,
         );
 
-        let user_msg_size = self.text_content_size(messages.last());
-        if messages.last().unwrap().role == Role::User && user_msg_size > target_limit {
-            debug!(
-                "[WARNING] User message {} exceeds token budget {}.",
-                user_msg_size,
-                user_msg_size - target_limit
-            );
-            return Vec::new();
-        }
-
-        let mut truncated_conv: VecDeque<Message> = VecDeque::from(messages.to_vec());
-        let mut current_tokens = approx_count;
-
-        while current_tokens > target_limit && truncated_conv.len() > 1 {
-            let user_msg = truncated_conv.pop_front().unwrap();
-            let user_msg_size = self.text_content_size(Some(&user_msg));
-            let assistant_msg = truncated_conv.pop_front().unwrap();
-            let assistant_msg_size = self.text_content_size(Some(&assistant_msg));
-
-            current_tokens = current_tokens.saturating_sub(user_msg_size + assistant_msg_size);
-        }
-
-        Vec::from(truncated_conv)
+        Ok(())
     }
 }
 
 #[async_trait]
 impl Agent for TruncateAgent {
-    #[instrument(skip(self, messages), fields(user_message))]
-    async fn reply(
-        &self,
-        messages: &[Message],
-    ) -> anyhow::Result<BoxStream<'_, anyhow::Result<Message>>> {
-        let reply_span = tracing::Span::current();
-        let mut capabilities = self.capabilities.lock().await;
-        let tools = capabilities.get_prefixed_tools().await?;
-        let extension_prompt = capabilities.get_extension_prompt().await;
-        let estimated_limit = capabilities
-            .provider()
-            .get_model_config()
-            .get_estimated_limit();
-
-        if let Some(content) = messages
-            .last()
-            .and_then(|msg| msg.content.first())
-            .and_then(|c| c.as_text())
-        {
-            debug!("user_message" = &content);
-        }
-
-        let mut messages = self
-            .enforce_ctx_limit(
-                &extension_prompt,
-                &tools,
-                messages,
-                estimated_limit,
-                &mut capabilities.get_resources().await?,
-            )
-            .await?;
-
-        Ok(Box::pin(async_stream::try_stream! {
-            let _reply_guard = reply_span.enter();
-
-            loop {
-                messages = self
-                    .enforce_ctx_limit(
-                        &extension_prompt,
-                        &tools,
-                        &messages,
-                        estimated_limit,
-                        &mut capabilities.get_resources().await?,
-                    )
-                    .await?;
-
-                // Get completion from provider
-                let (response, usage) = capabilities.provider().complete(
-                    &extension_prompt,
-                    &messages,
-                    &tools,
-                ).await?;
-                capabilities.record_usage(usage).await;
-
-                // Yield the assistant's response
-                yield response.clone();
-
-                tokio::task::yield_now().await;
-
-                // First collect any tool requests
-                let tool_requests: Vec<&ToolRequest> = response.content
-                    .iter()
-                    .filter_map(|content| content.as_tool_request())
-                    .collect();
-
-                if tool_requests.is_empty() {
-                    break;
-                }
-
-                // Then dispatch each in parallel
-                let futures: Vec<_> = tool_requests
-                    .iter()
-                    .filter_map(|request| request.tool_call.clone().ok())
-                    .map(|tool_call| capabilities.dispatch_tool_call(tool_call))
-                    .collect();
-
-                // Process all the futures in parallel but wait until all are finished
-                let outputs = futures::future::join_all(futures).await;
-
-                // Create a message with the responses
-                let mut message_tool_response = Message::user();
-                // Now combine these into MessageContent::ToolResponse using the original ID
-                for (request, output) in tool_requests.iter().zip(outputs.into_iter()) {
-                    message_tool_response = message_tool_response.with_tool_response(
-                        request.id.clone(),
-                        output,
-                    );
-                }
-
-                let tool_resp_size = self.text_content_size(
-                    Some(&message_tool_response),
-                );
-                if tool_resp_size > estimated_limit {
-                    // don't push assistant response or tool_response into history
-                    // last message is `user message => tool call`, remove it from history too
-                    messages.pop();
-                    continue;
-                }
-
-                yield message_tool_response.clone();
-                messages.push(response);
-                messages.push(message_tool_response);
-            }
-        }))
-    }
-
     async fn add_extension(&mut self, extension: ExtensionConfig) -> ExtensionResult<()> {
         let mut capabilities = self.capabilities.lock().await;
         capabilities.add_extension(extension).await
@@ -246,6 +101,166 @@ impl Agent for TruncateAgent {
         Ok(Value::Null)
     }
 
+    #[instrument(skip(self, messages), fields(user_message))]
+    async fn reply(
+        &self,
+        messages: &[Message],
+    ) -> anyhow::Result<BoxStream<'_, anyhow::Result<Message>>> {
+        let mut messages = messages.to_vec();
+        let reply_span = tracing::Span::current();
+        let mut capabilities = self.capabilities.lock().await;
+        let mut tools = capabilities.get_prefixed_tools().await?;
+        let mut truncation_attempt: usize = 0;
+
+        // we add in the read_resource tool by default
+        // TODO: make sure there is no collision with another extension's tool name
+        let read_resource_tool = Tool::new(
+            "platform__read_resource".to_string(),
+            indoc! {r#"
+                Read a resource from an extension.
+
+                Resources allow extensions to share data that provide context to LLMs, such as
+                files, database schemas, or application-specific information. This tool searches for the
+                resource URI in the provided extension, and reads in the resource content. If no extension
+                is provided, the tool will search all extensions for the resource.
+            "#}.to_string(),
+            json!({
+                "type": "object",
+                "required": ["uri"],
+                "properties": {
+                    "uri": {"type": "string", "description": "Resource URI"},
+                    "extension_name": {"type": "string", "description": "Optional extension name"}
+                }
+            }),
+        );
+
+        let list_resources_tool = Tool::new(
+            "platform__list_resources".to_string(),
+            indoc! {r#"
+                List resources from an extension(s).
+
+                Resources allow extensions to share data that provide context to LLMs, such as
+                files, database schemas, or application-specific information. This tool lists resources
+                in the provided extension, and returns a list for the user to browse. If no extension
+                is provided, the tool will search all extensions for the resource.
+            "#}.to_string(),
+            json!({
+                "type": "object",
+                "properties": {
+                    "extension_name": {"type": "string", "description": "Optional extension name"}
+                }
+            }),
+        );
+
+        if capabilities.supports_resources() {
+            tools.push(read_resource_tool);
+            tools.push(list_resources_tool);
+        }
+
+        let system_prompt = capabilities.get_extension_prompt().await;
+
+        // Set the user_message field in the span instead of creating a new event
+        if let Some(content) = messages
+            .last()
+            .and_then(|msg| msg.content.first())
+            .and_then(|c| c.as_text())
+        {
+            debug!("user_message" = &content);
+        }
+
+        Ok(Box::pin(async_stream::try_stream! {
+            let _reply_guard = reply_span.enter();
+            loop {
+                // Attempt to get completion from provider
+                match capabilities.provider().complete(
+                    &system_prompt,
+                    &messages,
+                    &tools,
+                ).await {
+                    Ok((response, usage)) => {
+                        capabilities.record_usage(usage).await;
+
+                        // Yield the assistant's response
+                        yield response.clone();
+
+                        tokio::task::yield_now().await;
+
+                        // First collect any tool requests
+                        let tool_requests: Vec<&ToolRequest> = response.content
+                            .iter()
+                            .filter_map(|content| content.as_tool_request())
+                            .collect();
+
+                        if tool_requests.is_empty() {
+                            break;
+                        }
+
+                        // Then dispatch each in parallel
+                        let futures: Vec<_> = tool_requests
+                            .iter()
+                            .filter_map(|request| request.tool_call.clone().ok())
+                            .map(|tool_call| capabilities.dispatch_tool_call(tool_call))
+                            .collect();
+
+                        // Process all the futures in parallel but wait until all are finished
+                        let outputs = futures::future::join_all(futures).await;
+
+                        // Create a message with the responses
+                        let mut message_tool_response = Message::user();
+                        // Now combine these into MessageContent::ToolResponse using the original ID
+                        for (request, output) in tool_requests.iter().zip(outputs.into_iter()) {
+                            message_tool_response = message_tool_response.with_tool_response(
+                                request.id.clone(),
+                                output,
+                            );
+                        }
+
+                        yield message_tool_response.clone();
+
+                        messages.push(response);
+                        messages.push(message_tool_response);
+                    },
+                    Err(ProviderError::ContextLengthExceeded(_)) => {
+                        if truncation_attempt >= MAX_TRUNCATION_ATTEMPTS {
+                            // Create a user-facing error message & terminate the stream
+                            let error_message = Message::user().with_text("Error: Context length exceeds limits even after multiple attempts to truncate.");
+                            yield error_message;
+                            break;
+                        }
+
+                        truncation_attempt += 1;
+                        debug!("Context length exceeded. Initiating truncation attempt {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
+
+                        // Decay the estimate factor as we make more truncation attempts
+                        // Estimate factor decays like this over time: 0.9, 0.81, 0.729, ...
+                        let estimate_factor: f32 = ESTIMATE_FACTOR_DECAY.powi(truncation_attempt as i32);
+
+                        // release the lock before truncation to prevent deadlock
+                        drop(capabilities);
+
+                        self.truncate_messages(&mut messages, estimate_factor).await?;
+
+                        // Re-acquire the lock
+                        capabilities = self.capabilities.lock().await;
+
+                        // Retry the loop after truncation
+                        continue;
+                    },
+                    Err(e) => {
+                        // Create a user-facing error message & terminate the stream
+                        error!("Error: {}", e);
+                        let error_message = Message::user().with_text(format!("Error: {}", e));
+                        yield error_message;
+                        break;
+                    }
+                }
+
+                // Yield control back to the scheduler to prevent blocking
+                tokio::task::yield_now().await;
+            }
+        }))
+    }
+
     async fn usage(&self) -> Vec<ProviderUsage> {
         let capabilities = self.capabilities.lock().await;
         capabilities.get_usage().await
@@ -253,145 +268,3 @@ impl Agent for TruncateAgent {
 }
 
 register_agent!("truncate", TruncateAgent);
-
-#[cfg(test)]
-mod tests {
-    use crate::agents::truncate::TruncateAgent;
-    use crate::message::Message;
-    use crate::model::ModelConfig;
-    use crate::providers::base::{Provider, ProviderMetadata, ProviderUsage, Usage};
-    use mcp_core::{Content, Tool};
-    use std::iter;
-
-    // Mock Provider implementation for testing
-    #[derive(Clone)]
-    struct MockProvider {
-        model_config: ModelConfig,
-    }
-
-    #[async_trait::async_trait]
-    impl Provider for MockProvider {
-        fn metadata() -> ProviderMetadata {
-            ProviderMetadata::empty()
-        }
-
-        fn get_model_config(&self) -> ModelConfig {
-            self.model_config.clone()
-        }
-
-        async fn complete(
-            &self,
-            _extension: &str,
-            _messages: &[Message],
-            _tools: &[Tool],
-        ) -> anyhow::Result<(Message, ProviderUsage)> {
-            Ok((
-                Message::assistant().with_text("Mock response"),
-                ProviderUsage::new("mock".to_string(), Usage::default()),
-            ))
-        }
-    }
-
-    const SMALL_MESSAGE: &str = "This is a test, this is just a test, this is only a test.\n";
-
-    async fn call_enforce_ctx_limit(conversation: &[Message]) -> anyhow::Result<Vec<Message>> {
-        let mock_model_config =
-            ModelConfig::new("test-model".to_string()).with_context_limit(200_000.into());
-        let provider = Box::new(MockProvider {
-            model_config: mock_model_config,
-        });
-        let agent = TruncateAgent::new(provider);
-
-        let mut capabilities = agent.capabilities.lock().await;
-        let tools = capabilities.get_prefixed_tools().await?;
-        let extension_prompt = capabilities.get_extension_prompt().await;
-        let estimated_limit = capabilities
-            .provider()
-            .get_model_config()
-            .get_estimated_limit();
-
-        let messages = agent
-            .enforce_ctx_limit(
-                &extension_prompt,
-                &tools,
-                conversation,
-                estimated_limit,
-                &mut capabilities.get_resources().await?,
-            )
-            .await?;
-
-        Ok(messages)
-    }
-
-    fn create_basic_valid_conversation(
-        interactions_count: usize,
-        is_tool_use: bool,
-    ) -> Vec<Message> {
-        let mut conversation = Vec::<Message>::new();
-
-        if is_tool_use {
-            (0..interactions_count).for_each(|i| {
-                let tool_output = format!("{:?}{}", SMALL_MESSAGE, i);
-                conversation.push(
-                    Message::user()
-                        .with_tool_response("id:0", Ok(vec![Content::text(tool_output)])),
-                );
-                conversation.push(Message::assistant().with_text(format!(
-                    "{:?}{}",
-                    SMALL_MESSAGE,
-                    i + 1
-                )));
-            });
-        } else {
-            (0..interactions_count).for_each(|i| {
-                conversation.push(Message::user().with_text(format!("{:?}{}", SMALL_MESSAGE, i)));
-                conversation.push(Message::assistant().with_text(format!(
-                    "{:?}{}",
-                    SMALL_MESSAGE,
-                    i + 1
-                )));
-            });
-        }
-
-        conversation
-    }
-    #[tokio::test]
-    async fn test_simple_conversation_no_truncation() -> anyhow::Result<()> {
-        let conversation = create_basic_valid_conversation(1, false);
-        let messages = call_enforce_ctx_limit(&conversation).await?;
-        assert_eq!(messages.len(), conversation.len());
-        Ok(())
-    }
-    #[tokio::test]
-    async fn test_truncation_when_conversation_history_too_big() -> anyhow::Result<()> {
-        let conversation = create_basic_valid_conversation(5000, false);
-        let messages = call_enforce_ctx_limit(&conversation).await?;
-        assert!(conversation.len() > messages.len());
-        assert!(!messages.is_empty());
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_truncation_when_single_user_message_too_big() -> anyhow::Result<()> {
-        let oversized_message: String = iter::repeat(SMALL_MESSAGE)
-            .take(10000)
-            .collect::<Vec<&str>>()
-            .join("");
-        let mut conversation = create_basic_valid_conversation(3, false);
-        conversation.push(Message::user().with_text(oversized_message));
-
-        let messages = call_enforce_ctx_limit(&conversation).await;
-
-        assert!(messages.is_err());
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_truncation_when_tool_response_set_too_big() -> anyhow::Result<()> {
-        let conversation = create_basic_valid_conversation(5000, true);
-        let messages = call_enforce_ctx_limit(&conversation).await?;
-        assert!(conversation.len() > messages.len());
-        assert!(!messages.is_empty());
-        Ok(())
-    }
-}

@@ -116,10 +116,7 @@ impl Agent for ReferenceAgent {
         }
 
         let extension_prompt = capabilities.get_extension_prompt().await;
-        let _estimated_limit = capabilities
-            .provider()
-            .get_model_config()
-            .get_estimated_limit();
+        let _estimated_limit = capabilities.provider().get_model_config();
 
         // Set the user_message field in the span instead of creating a new event
         if let Some(content) = messages

@@ -1,5 +1,5 @@
 use super::base::Usage;
-use anyhow::{Error, Result};
+use anyhow::Result;
 use regex::Regex;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
@@ -35,38 +35,41 @@ pub fn convert_image(image: &ImageContent, image_format: &ImageFormat) -> Value 
     }
 }
 
-// Maps a non-ok response status to a ProviderError
-pub async fn non_ok_response_to_provider_error(
-    payload: Value,
+/// Handle response from OpenAI compatible endpoints
+/// Error codes: https://platform.openai.com/docs/guides/error-codes
+/// Context window exceeded: https://community.openai.com/t/help-needed-tackling-context-length-limits-in-openai-models/617543
+pub async fn handle_response_openai_compat(
+    _payload: Value,
     response: Response,
-) -> ProviderError {
+) -> Result<Value, ProviderError> {
     match response.status() {
+        StatusCode::OK => Ok(response.json().await.unwrap()),
         StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
-            ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
-                Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default()))
+            Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
         }
-        StatusCode::TOO_MANY_REQUESTS => {
-            ProviderError::RateLimitExceeded(format!("Rate limit exceeded. Please retry after some time. Status: {}", response.status()))
+        StatusCode::BAD_REQUEST => {
+            let status = response.status();
+            let payload: Value = response.json().await.unwrap();
+            if let Some(error) = payload.get("error") {
+                debug!("Bad Request Error: {error:?}");
+                if let Some(code) = error.get("code").and_then(|c| c.as_str()) {
+                    if code == "context_length_exceeded" || code == "string_above_max_length" {
+                        let message = error
+                          .get("message")
+                          .and_then(|m| m.as_str())
+                          .unwrap_or("Unknown error")
+                          .to_string();
+                        return Err(ProviderError::ContextLengthExceeded(message));
+                    }
+                }
+            }
+            Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
         }
         StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
-            ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status()))
+            Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
         }
-        _ => {
-            tracing::debug!(
-                "{}", format!("Provider request failed with status: {}. Payload: {}", response.status(), payload)
-            );
-            ProviderError::RequestFailed(format!("Request failed with status: {}.", response.status()))
-        }
-    }
-}
-
-pub async fn handle_response(payload: Value, response: Response) -> Result<Value, Error> {
-    match response.status() {
-        StatusCode::OK => Ok(response.json().await?),
-        _ => {
-            let provider_error = non_ok_response_to_provider_error(payload, response).await;
-            Err(anyhow::anyhow!(provider_error.to_string()))
-        }
+        _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
     }
 }
 

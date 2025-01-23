@@ -1,14 +1,13 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde_json::Value;
 use std::time::Duration;
 
 use super::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
-use super::formats::openai::{
-    create_request, get_usage, is_context_length_error, response_to_message,
-};
-use super::utils::{emit_debug_trace, get_model, handle_response, ImageFormat};
+use super::errors::ProviderError;
+use super::formats::openai::{create_request, get_usage, response_to_message};
+use super::utils::{emit_debug_trace, get_model, handle_response_openai_compat, ImageFormat};
 use crate::message::Message;
 use crate::model::ModelConfig;
 use mcp_core::tool::Tool;
@@ -50,7 +49,7 @@ impl OpenAiProvider {
         })
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!("{}/v1/chat/completions", self.host.trim_end_matches('/'));
 
         let response = self
@@ -61,7 +60,7 @@ impl OpenAiProvider {
             .send()
             .await?;
 
-        handle_response(payload, response).await
+        handle_response_openai_compat(payload, response).await
     }
 }
 
@@ -93,19 +92,11 @@ impl Provider for OpenAiProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
         let payload = create_request(&self.model, system, messages, tools, &ImageFormat::OpenAi)?;
 
         // Make request
         let response = self.post(payload.clone()).await?;
-
-        // Raise specific error if context length is exceeded
-        if let Some(error) = response.get("error") {
-            if let Some(err) = is_context_length_error(error) {
-                return Err(err.into());
-            }
-            return Err(anyhow!("OpenAI API error: {}", error));
-        }
 
         // Parse response
         let message = response_to_message(response.clone())?;

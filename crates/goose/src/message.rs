@@ -175,4 +175,46 @@ impl Message {
     ) -> Self {
         self.with_content(MessageContent::tool_response(id, result))
     }
+
+    /// Get the concatenated text content of the message, separated by newlines
+    pub fn as_concat_text(&self) -> String {
+        self.content
+            .iter()
+            .filter_map(|c| c.as_text())
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    /// Check if the message is a tool call
+    pub fn is_tool_call(&self) -> bool {
+        self.content
+            .iter()
+            .any(|c| matches!(c, MessageContent::ToolRequest(_)))
+    }
+
+    /// Check if the message is a tool response
+    pub fn is_tool_response(&self) -> bool {
+        self.content
+            .iter()
+            .any(|c| matches!(c, MessageContent::ToolResponse(_)))
+    }
+
+    /// Retrieve the `id` if the message is a tool call or response
+    pub fn get_tool_id(&self) -> Option<&str> {
+        for content in &self.content {
+            match content {
+                MessageContent::ToolRequest(req) => return Some(&req.id),
+                MessageContent::ToolResponse(res) => return Some(&res.id),
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// Check if the message has only TextContent
+    pub fn has_only_text_content(&self) -> bool {
+        self.content
+            .iter()
+            .all(|c| matches!(c, MessageContent::Text(_)))
+    }
 }
