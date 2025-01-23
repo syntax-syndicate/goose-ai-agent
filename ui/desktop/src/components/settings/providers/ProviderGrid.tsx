@@ -21,6 +21,8 @@ interface ProviderCardProps {
   isConfigured: boolean;
   onConfigure: () => void;
   onAddKeys: () => void;
+  isSelected: boolean;
+  onSelect: () => void;
 }
 
 function ProviderCard({
@@ -29,9 +31,22 @@ function ProviderCard({
   isConfigured,
   onConfigure,
   onAddKeys,
+  isSelected,
+  onSelect,
 }: ProviderCardProps) {
   return (
-    <div className="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow h-[160px] overflow-hidden">
+    <div
+      onClick={() => isConfigured && onSelect()}
+      className={`relative bg-white dark:bg-gray-800 rounded-lg border 
+        ${
+          isSelected
+            ? 'border-blue-500 dark:border-blue-400 shadow-[0_0_0_1px] shadow-blue-500/50'
+            : 'border-gray-200 dark:border-gray-700'
+        } 
+        p-4 transition-all duration-200 h-[180px] overflow-hidden
+        ${isConfigured ? 'cursor-pointer hover:border-blue-400 dark:hover:border-blue-300' : ''}
+      `}
+    >
       <div className="space-y-1.5">
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
           {name}
@@ -55,25 +70,33 @@ function ProviderCard({
         )}
       </div>
 
-      <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-2 mb-4 line-clamp-2 leading-relaxed">
+      <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-2 mb-4 leading-relaxed overflow-y-auto max-h-[60px] pr-1">
         {description}
       </p>
 
       <div className="absolute bottom-3 right-3">
         {isConfigured ? (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onConfigure}
-            className="rounded-full h-7 px-3 min-w-[110px] bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white dark:text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
-          >
-            Select Provider
-          </Button>
+          isSelected ? (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onConfigure();
+              }}
+              className="rounded-full h-7 px-3 min-w-[110px] bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white dark:text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
+            >
+              Select Provider
+            </Button>
+          ) : null
         ) : (
           <Button
             variant="default"
             size="sm"
-            onClick={onAddKeys}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddKeys();
+            }}
             className="rounded-full h-7 px-3 min-w-[90px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 text-xs"
           >
             <Plus className="h-3.5 w-3.5 mr-1.5" />
@@ -87,7 +110,7 @@ function ProviderCard({
 
 export function ProviderGrid() {
   const { activeKeys, setActiveKeys } = useActiveKeys();
-  const [selectedProvider, setSelectedProvider] = React.useState<any>(null);
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [showSetupModal, setShowSetupModal] = React.useState(false);
   const { switchModel } = useModel();
   const { addRecentModel } = useRecentModels();
@@ -112,33 +135,25 @@ export function ProviderGrid() {
     const providerId = provider.id.toLowerCase();
     await initializeSystem(providerId, null);
 
-    // get the default model
     const modelName = getDefaultModel(providerId);
-
-    // create model object
     const model = createSelectedModel(providerId, modelName);
 
-    // Switch to the selected model
     switchModel(model);
-
-    // Keep track of recently used models
     addRecentModel(model);
-
-    // Save provider selection
     localStorage.setItem('GOOSE_PROVIDER', providerId);
 
     toast.success(`Switched to ${provider.name} provider`);
   };
 
   const handleAddKeys = (provider) => {
-    setSelectedProvider(provider);
+    setSelectedId(provider.id);
     setShowSetupModal(true);
   };
 
   const handleModalSubmit = async (apiKey: string) => {
-    if (!selectedProvider) return;
+    if (!selectedId) return;
 
-    const provider = selectedProvider.name;
+    const provider = providers.find((p) => p.id === selectedId)?.name;
     const keyName = required_keys[provider]?.[0];
 
     if (!keyName) {
@@ -147,8 +162,7 @@ export function ProviderGrid() {
     }
 
     try {
-      if (selectedProvider.isConfigured) {
-        // Delete existing key logic if configured
+      if (selectedId && providers.find((p) => p.id === selectedId)?.isConfigured) {
         const deleteResponse = await fetch(getApiUrl('/secrets/delete'), {
           method: 'DELETE',
           headers: {
@@ -163,11 +177,8 @@ export function ProviderGrid() {
           console.error('Delete response error:', errorText);
           throw new Error('Failed to delete old key');
         }
-
-        console.log('Old key deleted successfully.');
       }
 
-      // Store new key logic
       const storeResponse = await fetch(getApiUrl('/secrets/store'), {
         method: 'POST',
         headers: {
@@ -186,27 +197,28 @@ export function ProviderGrid() {
         throw new Error('Failed to store new key');
       }
 
-      console.log('Key stored successfully.');
-
-      // Show success toast
+      const isUpdate = selectedId && providers.find((p) => p.id === selectedId)?.isConfigured;
       toast.success(
-        selectedProvider.isConfigured
+        isUpdate
           ? `Successfully updated API key for ${provider}`
           : `Successfully added API key for ${provider}`
       );
 
-      // Update active keys
       const updatedKeys = await getActiveProviders();
       setActiveKeys(updatedKeys);
 
       setShowSetupModal(false);
-      setSelectedProvider(null);
+      setSelectedId(null);
     } catch (error) {
       console.error('Error handling modal submit:', error);
       toast.error(
-        `Failed to ${selectedProvider.isConfigured ? 'update' : 'add'} API key for ${provider}`
+        `Failed to ${selectedId && providers.find((p) => p.id === selectedId)?.isConfigured ? 'update' : 'add'} API key for ${provider}`
       );
     }
+  };
+
+  const handleSelect = (providerId: string) => {
+    setSelectedId(selectedId === providerId ? null : providerId);
   };
 
   return (
@@ -223,21 +235,23 @@ export function ProviderGrid() {
             name={provider.name}
             description={provider.description}
             isConfigured={provider.isConfigured}
+            isSelected={selectedId === provider.id}
+            onSelect={() => handleSelect(provider.id)}
             onConfigure={() => handleConfigure(provider)}
             onAddKeys={() => handleAddKeys(provider)}
           />
         ))}
       </div>
 
-      {showSetupModal && selectedProvider && (
+      {showSetupModal && selectedId && (
         <ProviderSetupModal
-          provider={selectedProvider.name}
+          provider={providers.find((p) => p.id === selectedId)?.name}
           model="Example Model"
           endpoint="Example Endpoint"
           onSubmit={handleModalSubmit}
           onCancel={() => {
             setShowSetupModal(false);
-            setSelectedProvider(null);
+            setSelectedId(null);
           }}
         />
       )}
