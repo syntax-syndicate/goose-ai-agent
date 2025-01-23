@@ -4,6 +4,9 @@ import { FaMoon, FaSun } from 'react-icons/fa';
 import VertDots from './ui/VertDots';
 import { useNavigate } from 'react-router-dom';
 import { More } from './icons';
+import { Settings, Grid, MessageSquare } from 'lucide-react';
+import { Button } from './ui/button';
+
 interface VersionInfo {
   current_version: string;
   available_versions: string[];
@@ -234,6 +237,16 @@ export default function MoreMenu() {
                 Provider Settings (alpha)
               </button>
             )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/settings/configure-providers')}
+              className="h-8 w-8"
+              title="Configure Providers"
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
           </div>
         </PopoverContent>
       </PopoverPortal>

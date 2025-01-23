@@ -1,7 +1,7 @@
 import React from 'react';
-import { Providers } from './Provider';
 import { ScrollArea } from '../../ui/scroll-area';
 import BackButton from '../../ui/BackButton';
+import { ProviderGrid } from './ProviderGrid';
 
 export default function ConfigureProviders() {
   return (
@@ -18,11 +18,11 @@ export default function ConfigureProviders() {
 
             {/* Content Area */}
             <div className="flex-1 px-16 py-8 pt-[20px]">
-              <div className="max-w-3xl space-y-12">
+              <div className="max-w-6xl space-y-12">
                 <div className="flex items-center gap-4 mb-8">
                   <h1 className="text-2xl font-semibold tracking-tight">Configure Providers</h1>
                 </div>
-                <Providers />
+                <ProviderGrid />
               </div>
             </div>
           </div>
