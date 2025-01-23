@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use futures::stream::BoxStream;
 use tokio::sync::Mutex;
-use tracing::{debug, instrument};
+use tracing::{debug, error, instrument};
 
 use super::Agent;
 use crate::agents::capabilities::Capabilities;
@@ -223,15 +223,15 @@ impl Agent for TruncateAgent {
                         continue;
                     },
                     Err(e) => {
-                        // TODO: not sure if this is the best way to handle this
-                        // Pass through other errors as user messages
-                        // yield Message::user().with_text(format!("Error: {}", e));
-                        println!("Error: {:?}", e);
+                        // Create a user-facing error message & terminate the stream
+                        error!("Error: {}", e);
+                        let error_message = Message::user().with_text(format!("Error: {}", e));
+                        yield error_message;
                         break;
                     }
                 }
 
-                // Yield control to prevent tight loop
+                // Yield control back to the scheduler to prevent blocking
                 tokio::task::yield_now().await;
             }
         }))
