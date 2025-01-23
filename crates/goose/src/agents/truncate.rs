@@ -158,7 +158,7 @@ impl Agent for TruncateAgent {
             tools.push(list_resources_tool);
         }
 
-        let extension_prompt = capabilities.get_extension_prompt().await;
+        let system_prompt = capabilities.get_system_prompt().await;
 
         // Set the user_message field in the span instead of creating a new event
         if let Some(content) = messages
@@ -174,7 +174,7 @@ impl Agent for TruncateAgent {
             loop {
                 // Attempt to get completion from provider
                 match capabilities.provider().complete(
-                    &extension_prompt,
+                    &system_prompt,
                     &messages,
                     &tools,
                 ).await {

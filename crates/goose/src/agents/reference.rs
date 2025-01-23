@@ -115,7 +115,7 @@ impl Agent for ReferenceAgent {
             tools.push(list_resources_tool);
         }
 
-        let extension_prompt = capabilities.get_extension_prompt().await;
+        let system_prompt = capabilities.get_system_prompt().await;
 
         // Set the user_message field in the span instead of creating a new event
         if let Some(content) = messages
@@ -131,7 +131,7 @@ impl Agent for ReferenceAgent {
             loop {
                 // Get completion from provider
                 let (response, usage) = capabilities.provider().complete(
-                    &extension_prompt,
+                    &system_prompt,
                     &messages,
                     &tools,
                 ).await?;
