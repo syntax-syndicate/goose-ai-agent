@@ -391,6 +391,7 @@ pub fn configure_extensions_dialog() -> Result<(), Box<dyn Error>> {
                 ExtensionEntry {
                     enabled: true,
                     config: ExtensionConfig::Stdio {
+                        name: name.clone(),
                         cmd,
                         args,
                         envs: Envs::new(envs),
@@ -455,6 +456,7 @@ pub fn configure_extensions_dialog() -> Result<(), Box<dyn Error>> {
                 ExtensionEntry {
                     enabled: true,
                     config: ExtensionConfig::Sse {
+                        name: name.clone(),
                         uri,
                         envs: Envs::new(envs),
                     },

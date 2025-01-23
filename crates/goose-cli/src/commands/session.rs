@@ -43,20 +43,28 @@ pub async fn build_session(
     // Setup extensions for the agent
     for (name, extension) in ExtensionManager::get_all().expect("should load extensions") {
         if extension.enabled {
-            agent
-                .add_extension(extension.config.clone())
-                .await
-                .unwrap_or_else(|e| {
-                    let err = match e {
-                        ExtensionError::Transport(McpClientError::StdioProcessError(inner)) => {
-                            inner
-                        }
-                        _ => e.to_string(),
-                    };
-                    println!("Failed to start extension: {}, {:?}", name, err);
-                    println!("Please check extension configuration for {}.", name);
-                    process::exit(1);
-                });
+            let mut config = extension.config.clone();
+            // Ensure extension name matches the key
+            match &mut config {
+                goose::agents::extension::ExtensionConfig::Sse { name: n, .. } => {
+                    *n = name.clone();
+                }
+                goose::agents::extension::ExtensionConfig::Stdio { name: n, .. } => {
+                    *n = name.clone();
+                }
+                goose::agents::extension::ExtensionConfig::Builtin { name: n } => {
+                    *n = name.clone();
+                }
+            }
+            agent.add_extension(config).await.unwrap_or_else(|e| {
+                let err = match e {
+                    ExtensionError::Transport(McpClientError::StdioProcessError(inner)) => inner,
+                    _ => e.to_string(),
+                };
+                println!("Failed to start extension: {}, {:?}", name, err);
+                println!("Please check extension configuration for {}.", name);
+                process::exit(1);
+            });
         }
     }
 

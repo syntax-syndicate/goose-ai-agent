@@ -55,6 +55,33 @@ impl ExtensionManager {
     pub fn set(name: &str, entry: ExtensionEntry) -> Result<()> {
         let config = Config::global();
 
+        // Ensure the extension's name matches the key
+        let mut entry = entry;
+        match &entry.config {
+            ExtensionConfig::Sse { uri, envs, .. } => {
+                entry.config = ExtensionConfig::Sse {
+                    name: name.to_string(),
+                    uri: uri.clone(),
+                    envs: envs.clone(),
+                };
+            }
+            ExtensionConfig::Stdio {
+                cmd, args, envs, ..
+            } => {
+                entry.config = ExtensionConfig::Stdio {
+                    name: name.to_string(),
+                    cmd: cmd.clone(),
+                    args: args.clone(),
+                    envs: envs.clone(),
+                };
+            }
+            ExtensionConfig::Builtin { .. } => {
+                entry.config = ExtensionConfig::Builtin {
+                    name: name.to_string(),
+                };
+            }
+        }
+
         let mut extensions: HashMap<String, ExtensionEntry> =
             config.get("extensions").unwrap_or_else(|_| HashMap::new());
 
