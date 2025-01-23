@@ -3,6 +3,7 @@ import { Check, Plus, Settings, X } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/Tooltip';
 import { Portal } from '@radix-ui/react-portal';
+import { required_keys } from '../models/hardcoded_stuff';
 
 // Common interfaces and helper functions
 interface Provider {
@@ -24,6 +25,7 @@ interface BaseProviderCardProps {
   showSettings?: boolean;
   onDelete?: () => void;
   showDelete?: boolean;
+  hasRequiredKeys?: boolean;
 }
 
 function getArticle(word: string): string {
@@ -42,7 +44,11 @@ function BaseProviderCard({
   showSettings,
   onDelete,
   showDelete = false,
+  hasRequiredKeys = false,
 }: BaseProviderCardProps) {
+  const numRequiredKeys = required_keys[name]?.length || 0;
+  const tooltipText = numRequiredKeys === 1 ? `Add ${name} API Key` : `Add ${name} API Keys`;
+
   return (
     <div
       onClick={() => isSelectable && isConfigured && onSelect?.()}
@@ -70,14 +76,16 @@ function BaseProviderCard({
               <Portal>
                 <TooltipContent side="top" align="center" className="z-[9999]">
                   <p>
-                    You have {getArticle(name)} {name} API Key set in your environment
+                    {hasRequiredKeys
+                      ? `You have ${getArticle(name)} ${name} API Key set in your environment`
+                      : `${name} has no required API keys`}
                   </p>
                 </TooltipContent>
               </Portal>
             </Tooltip>
           </TooltipProvider>
 
-          {showDelete && (
+          {showDelete && hasRequiredKeys && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -115,20 +123,31 @@ function BaseProviderCard({
       </p>
 
       <div className="absolute bottom-2 right-3">
-        {!isConfigured && onAddKeys && (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddKeys();
-            }}
-            className="rounded-full h-6 w-6 p-0 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
+        {!isConfigured && onAddKeys && hasRequiredKeys && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddKeys();
+                  }}
+                  className="rounded-full h-6 w-6 p-0 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <Portal>
+                <TooltipContent side="top" align="center" className="z-[9999]">
+                  <p>{tooltipText}</p>
+                </TooltipContent>
+              </Portal>
+            </Tooltip>
+          </TooltipProvider>
         )}
-        {isConfigured && showSettings && (
+        {isConfigured && showSettings && hasRequiredKeys && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -182,22 +201,26 @@ export function BaseProviderGrid({
 }: BaseProviderGridProps) {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 auto-rows-fr max-w-full [&_*]:z-20">
-      {providers.map((provider) => (
-        <BaseProviderCard
-          key={provider.id}
-          name={provider.name}
-          description={provider.description}
-          isConfigured={provider.isConfigured}
-          isSelected={selectedId === provider.id}
-          isSelectable={isSelectable}
-          onSelect={() => onSelect?.(provider.id)}
-          onAddKeys={() => onAddKeys?.(provider)}
-          onConfigure={() => onConfigure?.(provider)}
-          onDelete={() => onDelete?.(provider)}
-          showSettings={showSettings}
-          showDelete={showDelete}
-        />
-      ))}
+      {providers.map((provider) => {
+        const hasRequiredKeys = required_keys[provider.name]?.length > 0;
+        return (
+          <BaseProviderCard
+            key={provider.id}
+            name={provider.name}
+            description={provider.description}
+            isConfigured={provider.isConfigured}
+            isSelected={selectedId === provider.id}
+            isSelectable={isSelectable}
+            onSelect={() => onSelect?.(provider.id)}
+            onAddKeys={() => onAddKeys?.(provider)}
+            onConfigure={() => onConfigure?.(provider)}
+            onDelete={() => onDelete?.(provider)}
+            showSettings={showSettings}
+            showDelete={showDelete}
+            hasRequiredKeys={hasRequiredKeys}
+          />
+        );
+      })}
     </div>
   );
 }
