@@ -1,76 +1,134 @@
 import csv
 import json
+import re
 import requests
+import time
 from urllib.parse import urlparse
 
-def get_repo_info(url):
-    """Extract owner and repo from GitHub URL and get stars."""
-    # Extract owner/repo from URL
-    if not url or 'github.com' not in url:
+def extract_github_repo(url):
+    """Extract the GitHub repository owner and name from a URL."""
+    if 'github.com' not in url:
         return None
     
-    path = urlparse(url).path.strip('/')
-    parts = path.split('/')
+    # Clean the URL
+    url = url.strip().rstrip('/')
     
-    # Handle tree/blob paths
+    # Handle tree/blob paths and get base repository
+    parts = url.replace('https://github.com/', '').split('/')
     if len(parts) >= 2:
-        owner = parts[0]
-        repo = parts[1]
-        
-        # Make GitHub API request
-        api_url = f"https://api.github.com/repos/{owner}/{repo}"
-        try:
-            response = requests.get(api_url)
-            if response.status_code == 200:
-                return response.json().get('stargazers_count')
-        except Exception as e:
-            print(f"Error fetching stars for {owner}/{repo}: {str(e)}")
-    
+        # The first two parts are owner/repo
+        return f"{parts[0]}/{parts[1]}"
     return None
 
-def main():
-    results = []
-    row_number = 0
+def get_github_stars(repo):
+    """Get the number of GitHub stars for a repository."""
+    if not repo:
+        return None
     
-    with open('input/goose_extensions_curated.csv', 'r') as csvfile:
-        reader = csv.DictReader(csvfile)
-        next(reader)  # Skip the first empty row
+    api_url = f"https://api.github.com/repos/{repo}"
+    headers = {
+        'Accept': 'application/vnd.github.v3+json',
+    }
+    
+    try:
+        print(f"Fetching stars for {repo}...")
+        response = requests.get(api_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            stars = data['stargazers_count']
+            print(f"Found {stars} stars for {repo}")
+            return stars
+        else:
+            print(f"Error {response.status_code} for {repo}: {response.text}")
+    except Exception as e:
+        print(f"Error fetching stars for {repo}: {e}")
+    return None
+
+def extract_links(text):
+    """Extract all GitHub links from a text field."""
+    if not text:
+        return []
+    
+    # Split by common separators (numbers with dots, commas, newlines)
+    parts = re.split(r'\d\.\s*|\n|,', text)
+    links = []
+    
+    for part in parts:
+        # Find GitHub URLs in the text
+        matches = re.findall(r'https://github\.com/[^\s\'"]+', part)
+        links.extend(matches)
+    
+    return [link.strip() for link in links if link.strip()]
+
+def process_csv():
+    results = []
+    repo_stars_cache = {}  # Cache for repository star counts
+    
+    with open('input/goose_extensions_curated.csv', 'r', encoding='utf-8') as csvfile:
+        print("Reading CSV file...")
+        content = csvfile.readlines()
+        
+        # Skip the first few header rows and find where the actual data starts
+        start_idx = 0
+        for i, line in enumerate(content):
+            if 'Extension,Info,Link,Tester' in line:
+                start_idx = i
+                break
+        
+        # Process the CSV starting from the actual header row
+        reader = csv.DictReader(content[start_idx:])
         
         for row in reader:
-            row_number += 1
-            if not row.get('Link'):
+            if not row.get('Link') or not row.get('Extension'):
                 continue
                 
-            extension_name = row.get('Extension', '')
-            link = row.get('Link', '').strip()
+            print(f"\nProcessing extension: {row['Extension']}")
+            print(f"Link: {row['Link']}")
             
-            # Handle multiple links (take the first GitHub link)
-            if '\n' in link:
-                links = [l.strip() for l in link.split('\n')]
-                github_links = [l for l in links if 'github.com' in l]
-                link = github_links[0] if github_links else links[0]
+            # Get the first GitHub link from the Link field
+            links = extract_links(row['Link'])
+            if not links:
+                print(f"No GitHub links found for {row['Extension']}")
+                continue
             
-            # Clean up the link
-            link = link.split('1.')[0].strip()  # Remove numbered lists
-            link = link.strip('2.')  # Remove numbered lists
+            link = links[0]  # Use the first link for the extension
+            repo = extract_github_repo(link)
             
-            # Get GitHub stars
-            stars = get_repo_info(link)
-            
-            result = {
-                "row": row_number,
-                "link": link,
-                "extension_name": extension_name,
-                "githubStars": stars
-            }
-            
-            print(f"Processing {extension_name}: {stars} stars")
-            results.append(result)
+            if repo:
+                # Use cached star count if available
+                if repo in repo_stars_cache:
+                    stars = repo_stars_cache[repo]
+                    print(f"Using cached star count for {repo}: {stars}")
+                else:
+                    stars = get_github_stars(repo)
+                    if stars is not None:
+                        repo_stars_cache[repo] = stars
+                        time.sleep(1)  # Rate limiting
+                
+                if stars is not None:
+                    result = {
+                        "link": link,
+                        "extension_name": row['Extension'],
+                        "githubStars": stars
+                    }
+                    results.append(result)
+                    print(f"Added result for {row['Extension']}: {stars} stars")
     
-    # Write results to JSON file
-    with open('input/goose_github_stars.json', 'w') as jsonfile:
-        json.dump(results, jsonfile, indent=2)
-        print(f"\nProcessed {len(results)} extensions")
+    return results
+
+def main():
+    print("Starting GitHub stars scraper...")
+    
+    try:
+        results = process_csv()
+        
+        # Write results to JSON file
+        with open('input/goose_github_stars.json', 'w') as jsonfile:
+            json.dump(results, jsonfile, indent=2)
+            print(f"\nWrote {len(results)} results to goose_github_stars.json")
+            
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     main()

@@ -22,11 +22,24 @@ Your job is to scrape the github stars for each extension and output the results
 
 ## Output Format 
 
+For example the first extension in the input/goose_extensions_curated.csv file is the Developer extension. Do this for each extension in the input/goose_extensions_curated.csv file even if they come from the same link.
 ```json
-{
-  "row": 1,
-  "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/developer",
-  "extension_name": "Developer",
-  "githubStars": 1000
-}
+[
+  {
+    "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/developer",
+    "extension_name": "Developer",
+    "githubStars": 356
+  },
+  {
+    "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/nondeveloper",
+    "extension_name": "Non-developer",
+    "githubStars": 356
+  },
+  ...
+  {
+    "link": "https://github.com/modelcontextprotocol/servers/tree/main/src/sqlite",
+    "extension_name": "SQLite",
+    "githubStars": 7270
+  }
+]
 ```
