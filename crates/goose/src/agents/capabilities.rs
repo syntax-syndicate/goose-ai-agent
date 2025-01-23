@@ -600,22 +600,22 @@ mod tests {
 
         // Add some mock clients
         capabilities.clients.insert(
-            "test_client".to_string(),
+            sanitize("test_client".to_string()),
             Arc::new(Mutex::new(Box::new(MockClient {}))),
         );
 
         capabilities.clients.insert(
-            "__client".to_string(),
+            sanitize("__client".to_string()),
             Arc::new(Mutex::new(Box::new(MockClient {}))),
         );
 
         capabilities.clients.insert(
-            "__cli__ent__".to_string(),
+            sanitize("__cli__ent__".to_string()),
             Arc::new(Mutex::new(Box::new(MockClient {}))),
         );
 
         capabilities.clients.insert(
-            "client_".to_string(),
+            sanitize("client 🚀".to_string()),
             Arc::new(Mutex::new(Box::new(MockClient {}))),
         );
 
@@ -649,17 +649,17 @@ mod tests {
 
         // Add some mock clients
         capabilities.clients.insert(
-            "test_client".to_string(),
+            sanitize("test_client".to_string()),
             Arc::new(Mutex::new(Box::new(MockClient {}))),
         );
 
         capabilities.clients.insert(
-            "__cli__ent__".to_string(),
+            sanitize("__cli__ent__".to_string()),
             Arc::new(Mutex::new(Box::new(MockClient {}))),
         );
 
         capabilities.clients.insert(
-            "client_".to_string(),
+            sanitize("client 🚀".to_string()),
             Arc::new(Mutex::new(Box::new(MockClient {}))),
         );
 
