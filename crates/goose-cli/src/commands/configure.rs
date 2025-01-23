@@ -128,8 +128,12 @@ pub async fn configure_provider_dialog() -> Result<bool, Box<dyn Error>> {
 
         match from_env {
             Some(env_value) => {
-                let _ = cliclack::log::info(format!("{} is set via environment variable", key.name));
-                if cliclack::confirm("Would you like to save this value to your config file?").initial_value(true).interact()? {
+                let _ =
+                    cliclack::log::info(format!("{} is set via environment variable", key.name));
+                if cliclack::confirm("Would you like to save this value to your config file?")
+                    .initial_value(true)
+                    .interact()?
+                {
                     if key.secret {
                         config.set_secret(&key.name, Value::String(env_value))?;
                     } else {
@@ -155,7 +159,8 @@ pub async fn configure_provider_dialog() -> Result<bool, Box<dyn Error>> {
                                     .mask('▪')
                                     .interact()?
                             } else {
-                                cliclack::input(format!("Enter new value for {}", key.name)).interact()?
+                                cliclack::input(format!("Enter new value for {}", key.name))
+                                    .interact()?
                             };
 
                             if key.secret {
@@ -193,7 +198,9 @@ pub async fn configure_provider_dialog() -> Result<bool, Box<dyn Error>> {
     }
 
     // Select model, defaulting to the provider's recommended model
-    let default_model = config.get("GOOSE_MODEL").unwrap_or(provider_meta.default_model.clone());
+    let default_model = config
+        .get("GOOSE_MODEL")
+        .unwrap_or(provider_meta.default_model.clone());
     let model: String = cliclack::input("Enter a model from that provider:")
         .default_input(&default_model)
         .interact()?;
