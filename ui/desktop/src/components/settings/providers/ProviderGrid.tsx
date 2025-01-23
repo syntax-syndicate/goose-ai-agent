@@ -14,6 +14,7 @@ import { getApiUrl, getSecretKey } from '../../../config';
 import { toast } from 'react-toastify';
 import { getActiveProviders } from '../api_keys/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/Tooltip';
+import { useNavigate } from 'react-router-dom';
 
 interface ProviderCardProps {
   name: string;
@@ -99,12 +100,17 @@ function ProviderCard({
   );
 }
 
-export function ProviderGrid() {
+interface ProviderGridProps {
+  onSubmit?: () => void;
+}
+
+export function ProviderGrid({ onSubmit }: ProviderGridProps) {
   const { activeKeys, setActiveKeys } = useActiveKeys();
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [showSetupModal, setShowSetupModal] = React.useState(false);
   const { switchModel } = useModel();
   const { addRecentModel } = useRecentModels();
+  const navigate = useNavigate();
 
   const providers = React.useMemo(() => {
     return supported_providers.map((providerName) => {
@@ -133,7 +139,11 @@ export function ProviderGrid() {
     addRecentModel(model);
     localStorage.setItem('GOOSE_PROVIDER', providerId);
 
-    toast.success(`Switched to ${provider.name} provider`);
+    toast.success(
+      `Selected ${provider.name} provider. Starting Goose with default model: ${getDefaultModel(provider.name.toLowerCase())}.`
+    );
+
+    onSubmit?.();
   };
 
   const handleAddKeys = (provider) => {

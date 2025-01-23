@@ -9,7 +9,6 @@ import GooseMessage from './components/GooseMessage';
 import Input from './components/Input';
 import LoadingGoose from './components/LoadingGoose';
 import MoreMenu from './components/MoreMenu';
-import Splash from './components/Splash';
 import { Card } from './components/ui/card';
 import { ScrollArea } from './components/ui/scroll-area';
 import UserMessage from './components/UserMessage';
@@ -18,12 +17,13 @@ import { askAi } from './utils/askAI';
 import { getStoredModel, Provider } from './utils/providerUtils';
 import { ChatLayout } from './components/chat_window/ChatLayout';
 import { ChatRoutes } from './components/chat_window/ChatRoutes';
-import { WelcomeModal } from './components/welcome_screen/WelcomeModal';
+import { WelcomeScreen } from './components/welcome_screen/WelcomeScreen';
 import { getStoredProvider, initializeSystem } from './utils/providerUtils';
 import { useModel } from './components/settings/models/ModelContext';
 import { useRecentModels } from './components/settings/models/RecentModels';
 import { createSelectedModel } from './components/settings/models/utils';
 import { getDefaultModel } from './components/settings/models/hardcoded_stuff';
+import Splash from './components/Splash';
 
 declare global {
   interface Window {
@@ -380,6 +380,11 @@ export default function ChatWindow() {
 
   window.electron.logInfo('ChatWindow loaded');
 
+  // Fix the handleSubmit function syntax
+  const handleSubmit = () => {
+    setShowWelcomeModal(false);
+  };
+
   useEffect(() => {
     // Check if we already have a provider set
     const config = window.electron.getConfig();
@@ -443,6 +448,12 @@ export default function ChatWindow() {
     setupStoredProvider();
   }, []);
 
+  // Render WelcomeScreen at root level if showing
+  if (showWelcomeModal) {
+    return <WelcomeScreen onSubmit={handleSubmit} />;
+  }
+
+  // Only render ChatLayout if not showing welcome screen
   return (
     <div>
       <ChatLayout mode={mode}>
@@ -454,14 +465,6 @@ export default function ChatWindow() {
           setProgressMessage={setProgressMessage}
           setWorking={setWorking}
         />
-        {/*
-          <WingToWing
-              onExpand={toggleMode}
-              progressMessage={progressMessage}
-              working={working}
-          />
-          */}
-        {showWelcomeModal && <WelcomeModal />}
       </ChatLayout>
     </div>
   );
