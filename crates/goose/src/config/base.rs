@@ -138,7 +138,7 @@ impl Config {
         self.config_path.exists()
     }
 
-    /// Check if this config already exists
+    /// Get the path to the configuration file
     pub fn path(&self) -> String {
         self.config_path.to_string_lossy().to_string()
     }

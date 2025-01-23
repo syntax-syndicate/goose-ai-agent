@@ -6,7 +6,7 @@ use crate::model::ModelConfig;
 use mcp_core::tool::Tool;
 
 /// Metadata about a provider's configuration requirements and capabilities
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderMetadata {
     /// The unique identifier for this provider
     pub name: String,
@@ -48,7 +48,7 @@ impl ProviderMetadata {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigKey {
     pub name: String,
     pub required: bool,
