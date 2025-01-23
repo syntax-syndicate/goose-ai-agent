@@ -1,0 +1,81 @@
+{
+  "extensions": [
+    {
+      "id": "developer",
+      "name": "Developer",
+      "description": "Built-in developer extension providing core development capabilities including file operations, shell commands, and IDE integration",
+      "command": "",
+      "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/developer",
+      "installation_notes": "This is a built-in extension that comes with Goose by default. No installation required.",
+      "is_internal": true,
+      "githubStars": 356,
+      "environmentVariables": []
+    },
+    {
+      "id": "nondeveloper",
+      "name": "Non-developer",
+      "description": "Built-in extension for non-developer users providing basic system interaction capabilities",
+      "command": "",
+      "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/nondeveloper",
+      "installation_notes": "This is a built-in extension that comes with Goose by default. No installation required.",
+      "is_internal": true,
+      "githubStars": 356,
+      "environmentVariables": []
+    },
+    {
+      "id": "google-drive",
+      "name": "Google Drive",
+      "description": "Built-in Google Drive integration for accessing and managing Google Drive files",
+      "command": "",
+      "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/google_drive",
+      "installation_notes": "This is a built-in extension that comes with Goose by default. Can be accessed via goose://extension?cmd=goosed&arg=mcp&arg=google_drive&description=google_drive deeplink.",
+      "is_internal": true,
+      "githubStars": 356,
+      "environmentVariables": []
+    },
+    {
+      "id": "memory",
+      "name": "Memory",
+      "description": "Built-in memory system for maintaining conversation context and storing information",
+      "command": "",
+      "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/memory",
+      "installation_notes": "This is a built-in extension that comes with Goose by default. No installation required.",
+      "is_internal": true,
+      "githubStars": 356,
+      "environmentVariables": []
+    },
+    {
+      "id": "jetbrains",
+      "name": "JetBrains",
+      "description": "Built-in JetBrains IDE integration supporting code reading, editing, debugging and build error detection",
+      "command": "",
+      "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/jetbrains",
+      "installation_notes": "This is a built-in extension that comes with Goose by default. Can be accessed via goose://extension?cmd=goosed&arg=mcp&arg=jetbrains deeplink.",
+      "is_internal": true,
+      "githubStars": 53,
+      "environmentVariables": []
+    },
+    {
+      "id": "block-codesearch",
+      "name": "Block Codesearch",
+      "description": "Internal code search extension for searching across Block's codebase",
+      "command": "uvx mcp-codesearch",
+      "link": "https://github.com/squareup/mcp/tree/main/mcp-codesearch",
+      "installation_notes": "Install using uvx package manager.",
+      "is_internal": true,
+      "githubStars": 0,
+      "environmentVariables": []
+    },
+    {
+      "id": "fetch",
+      "name": "Fetch",
+      "description": "Web content fetching extension with support for reading web pages and respecting robots.txt",
+      "command": "uvx mcp-server-fetch",
+      "link": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
+      "installation_notes": "Install using uvx package manager. Note: Some sites may block access via robots.txt.",
+      "is_internal": false,
+      "githubStars": 7269,
+      "environmentVariables": []
+    }
+  ]
+}
