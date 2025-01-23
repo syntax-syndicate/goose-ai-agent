@@ -1,7 +1,6 @@
 use crate::message::{Message, MessageContent};
 use crate::providers::base::Usage;
 use crate::providers::configs::ModelConfig;
-use crate::providers::errors::ProviderError;
 use crate::providers::utils::{
     convert_image, is_valid_function_name, sanitize_function_name, ImageFormat,
 };
@@ -293,20 +292,6 @@ pub fn create_request(
     Ok(payload)
 }
 
-pub fn is_context_length_error(error: &Value) -> Option<ProviderError> {
-    let code = error.get("code")?.as_str()?;
-    if code == "context_length_exceeded" || code == "string_above_max_length" {
-        let message = error
-            .get("message")
-            .and_then(|m| m.as_str())
-            .unwrap_or("Unknown error")
-            .to_string();
-        Some(ProviderError::ContextLengthExceeded(message))
-    } else {
-        None
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -571,28 +556,5 @@ mod tests {
         }
 
         Ok(())
-    }
-
-    #[test]
-    fn test_is_context_length_error() {
-        let error = json!({
-            "code": "context_length_exceeded",
-            "message": "This message is too long"
-        });
-
-        let result = is_context_length_error(&error);
-        assert!(result.is_some());
-        assert_eq!(
-            result.unwrap().to_string(),
-            "Context length exceeded: This message is too long"
-        );
-
-        let error = json!({
-            "code": "other_error",
-            "message": "Some other error"
-        });
-
-        let result = is_context_length_error(&error);
-        assert!(result.is_none());
     }
 }

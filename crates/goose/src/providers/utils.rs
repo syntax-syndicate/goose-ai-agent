@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use tracing::debug;
 
-use super::formats::openai::is_context_length_error;
 use crate::providers::errors::ProviderError;
 use mcp_core::content::ImageContent;
 
@@ -40,7 +39,7 @@ pub fn convert_image(image: &ImageContent, image_format: &ImageFormat) -> Value 
 /// Error codes: https://platform.openai.com/docs/guides/error-codes
 /// Context window exceeded: https://community.openai.com/t/help-needed-tackling-context-length-limits-in-openai-models/617543
 pub async fn handle_response_openai_compat(
-    payload: Value,
+    _payload: Value,
     response: Response,
 ) -> Result<Value, ProviderError> {
     match response.status() {
@@ -53,16 +52,24 @@ pub async fn handle_response_openai_compat(
             let status = response.status();
             let payload: Value = response.json().await.unwrap();
             if let Some(error) = payload.get("error") {
-                if let Some(err) = is_context_length_error(error) {
-                    return Err(ProviderError::ContextLengthExceeded(err.to_string()));
+                debug!("Bad Request Error: {error:?}");
+                if let Some(code) = error.get("code").and_then(|c| c.as_str()) {
+                    if code == "context_length_exceeded" || code == "string_above_max_length" {
+                        let message = error
+                          .get("message")
+                          .and_then(|m| m.as_str())
+                          .unwrap_or("Unknown error")
+                          .to_string();
+                        return Err(ProviderError::ContextLengthExceeded(message));
+                    }
                 }
             }
-            Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", status, payload)))
+            Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
         }
         StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
             Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
         }
-        _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", response.status(), payload)))
+        _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
     }
 }
 

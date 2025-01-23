@@ -12,6 +12,7 @@ use super::formats::anthropic::{create_request, get_usage, response_to_message};
 use super::utils::{emit_debug_trace, get_model};
 use crate::message::Message;
 use mcp_core::tool::Tool;
+use tracing::debug;
 
 pub const ANTHROPIC_DEFAULT_MODEL: &str = "claude-3-5-sonnet-latest";
 
@@ -65,14 +66,22 @@ impl AnthropicProvider {
                 Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
                     Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
             }
-            StatusCode::TOO_MANY_REQUESTS => {
-                // Rate limit exceeded encompasses both rate limit exceeded and context length exceeded
-                Err(ProviderError::ContextLengthExceeded(format!("Rate limit exceeded. Please retry after some time. Status: {}, Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+            StatusCode::BAD_REQUEST => {
+                let status = response.status();
+                let payload: Value = response.json().await.unwrap();
+                if let Some(error) = payload.get("error") {
+                    debug!("Bad Request Error: {error:?}");
+                    let error_msg = error.get("message").unwrap().as_str().unwrap();
+                    if error_msg.to_lowercase().contains("too long") {
+                        return Err(ProviderError::ContextLengthExceeded(error_msg.to_string()));
+                    }
+                }
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
             }
             StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
                 Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
             }
-            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", response.status(), payload)))
+            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
         }
     }
 }
@@ -96,7 +105,7 @@ impl Provider for AnthropicProvider {
         let payload = create_request(&self.model, system, messages, tools).unwrap();
 
         // Make request
-        let response = self.post(payload.clone()).await.unwrap();
+        let response = self.post(payload.clone()).await?;
 
         // Parse response
         let message = response_to_message(response.clone()).unwrap();

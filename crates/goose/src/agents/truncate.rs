@@ -20,8 +20,7 @@ use mcp_core::tool::Tool;
 use serde_json::{json, Value};
 
 const MAX_TRUNCATION_ATTEMPTS: usize = 3;
-const INITIAL_ESTIMATE_FACTOR: f32 = 0.9;
-const DECAY_FACTOR: f32 = 0.9;
+const ESTIMATE_FACTOR_DECAY: f32 = 0.9;
 
 /// Truncate implementation of an Agent
 pub struct TruncateAgent {
@@ -111,7 +110,7 @@ impl Agent for TruncateAgent {
         let reply_span = tracing::Span::current();
         let mut capabilities = self.capabilities.lock().await;
         let mut tools = capabilities.get_prefixed_tools().await?;
-        let mut truncation_attempt = 0;
+        let mut truncation_attempt: usize = 0;
 
         // we add in the read_resource tool by default
         // TODO: make sure there is no collision with another extension's tool name
@@ -233,8 +232,8 @@ impl Agent for TruncateAgent {
                         debug!("Context length exceeded. Initiating truncation attempt {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
 
                         // Decay the estimate factor as we make more truncation attempts
-                        // Estimate factor looks like this: 0.9, 0.81, 0.729, ...
-                        let estimate_factor = INITIAL_ESTIMATE_FACTOR + (DECAY_FACTOR * truncation_attempt as f32);
+                        // Estimate factor decays like this over time: 0.9, 0.81, 0.729, ...
+                        let estimate_factor: f32 = ESTIMATE_FACTOR_DECAY.powi(truncation_attempt as i32);
 
                         // release the lock before truncation to prevent deadlock
                         drop(capabilities);

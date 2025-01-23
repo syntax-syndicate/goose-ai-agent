@@ -1,6 +1,6 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::time::Duration;
@@ -8,11 +8,9 @@ use std::time::Duration;
 use super::base::{Provider, ProviderUsage, Usage};
 use super::configs::ModelConfig;
 use super::errors::ProviderError;
-use super::formats::openai::{
-    create_request, get_usage, is_context_length_error, response_to_message,
-};
+use super::formats::openai::{create_request, get_usage, response_to_message};
 use super::oauth;
-use super::utils::{get_model, handle_response_openai_compat, ImageFormat};
+use super::utils::{get_model, ImageFormat};
 use crate::message::Message;
 use mcp_core::tool::Tool;
 
@@ -126,8 +124,21 @@ impl DatabricksProvider {
             .await
             .unwrap();
 
-        // https://docs.databricks.com/en/machine-learning/foundation-model-apis/index.html#use-foundation-model-apis
-        handle_response_openai_compat(payload, response).await
+        match response.status() {
+            StatusCode::OK => Ok(response.json().await.unwrap()),
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+                Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                    Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+            }
+            StatusCode::BAD_REQUEST => {
+                // Databricks responds "Received error from openai" for context limit errors
+                return Err(ProviderError::ContextLengthExceeded(response.text().await.unwrap_or_default()));
+            }
+            StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
+                Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
+            }
+            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+        }
     }
 }
 
@@ -156,14 +167,6 @@ impl Provider for DatabricksProvider {
             .remove("model");
 
         let response = self.post(payload.clone()).await?;
-
-        // Raise specific error if context length is exceeded
-        if let Some(error) = response.get("error") {
-            if let Some(err) = is_context_length_error(error) {
-                return Err(ProviderError::ContextLengthExceeded(err.to_string()));
-            }
-            return Err(ProviderError::RequestFailed(error.to_string()));
-        }
 
         // Parse response
         let message = response_to_message(response.clone()).unwrap();

@@ -1,32 +1,59 @@
+// src/lib.rs or tests/truncate_agent_tests.rs
+
 use anyhow::Result;
 use futures::StreamExt;
-
 use goose::agents::AgentFactory;
 use goose::message::Message;
-
+use goose::providers::anthropic::AnthropicProvider;
+use goose::providers::base::Provider;
+use goose::providers::databricks::DatabricksProvider;
 use goose::providers::openai::OpenAiProvider;
 
-#[tokio::test]
-#[ignore]
-async fn test_truncate_agent_truncates_messages_when_context_exceeded() -> Result<()> {
-    let provider = OpenAiProvider::new("gpt-4o-mini".to_string(), Some(30))?;
+// Define the ProviderType enum
+enum ProviderType {
+    OpenAi,
+    Anthropic,
+    Databricks,
+}
 
-    // Initialize the TruncateAgent with the mock provider
-    let agent = AgentFactory::create("truncate", Box::new(provider)).unwrap();
+// Helper function to run the test
+async fn run_truncate_test(
+    provider_type: ProviderType,
+    model: &str,
+    context_window: usize,
+) -> Result<()> {
+    // Initialize the appropriate provider
+    let provider: Box<dyn Provider> = match provider_type {
+        ProviderType::OpenAi => {
+            std::env::set_var("OPENAI_MODEL", model);
+            Box::new(OpenAiProvider::from_env()?)
+        }
+        ProviderType::Anthropic => {
+            std::env::set_var("ANTHROPIC_MODEL", model);
+            Box::new(AnthropicProvider::from_env()?)
+        }
+        ProviderType::Databricks => {
+            std::env::set_var("DATABRICKS_MODEL", model);
+            Box::new(DatabricksProvider::from_env()?)
+        }
+    };
+
+    // Initialize the TruncateAgent with the provider
+    let agent = AgentFactory::create("truncate", provider).unwrap();
 
     // Create a message history that exceeds the context window
-    // For example, 130,000 "hello " messages
-    // 130,000 tokens cause we know context window is 128,000
-    let large_message_content = "hello ".repeat(130_000);
+    let repeat_count = context_window + 10_000;
+    let large_message_content = "hello ".repeat(repeat_count);
     let messages = vec![
         Message::user().with_text("hi there. what is 2 + 2?"),
-        Message::assistant().with_text("hey! i think its 4."),
+        Message::assistant().with_text("hey! I think it's 4."),
         Message::user().with_text(&large_message_content),
-        // messages before this mark should be truncated
+        // Messages before this mark should be truncated
         Message::user().with_text("what's the meaning of life?"),
         Message::assistant().with_text("the meaning of life is 42"),
-        Message::user()
-            .with_text("did i ask you what's 2+2 in this msg history? you can answer yes or no"),
+        Message::user().with_text(
+            "did I ask you what's 2+2 in this message history? You can answer yes or no.",
+        ),
     ];
 
     // Invoke the reply method
@@ -49,8 +76,7 @@ async fn test_truncate_agent_truncates_messages_when_context_exceeded() -> Resul
         }
     }
 
-    println!("Responses: {:?}", responses);
-
+    println!("Responses: {responses:?}\n");
     assert_eq!(responses.len(), 1);
     assert_eq!(responses[0].content.len(), 1);
 
@@ -58,4 +84,36 @@ async fn test_truncate_agent_truncates_messages_when_context_exceeded() -> Resul
     assert!(response_text.to_lowercase().contains("no"));
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_truncate_agent_with_openai() -> Result<()> {
+        std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY is not set");
+
+        println!("Starting truncate test with OpenAI...");
+        run_truncate_test(ProviderType::OpenAi, "gpt-4o-mini", 128_000).await
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_truncate_agent_with_anthropic() -> Result<()> {
+        std::env::var("ANTHROPIC_API_KEY").expect("ANTHROPIC_API_KEY is not set");
+
+        println!("Starting truncate test with Anthropic...");
+        run_truncate_test(ProviderType::Anthropic, "claude-3-5-haiku-latest", 200_000).await
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_truncate_agent_with_databricks() -> Result<()> {
+        std::env::var("DATABRICKS_HOST").expect("DATABRICKS_HOST is not set");
+
+        println!("Starting truncate test with Databricks...");
+        run_truncate_test(ProviderType::Databricks, "gpt-4o-mini", 128_000).await
+    }
 }

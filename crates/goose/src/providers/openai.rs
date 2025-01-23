@@ -7,9 +7,7 @@ use std::time::Duration;
 use super::base::{Provider, ProviderUsage, Usage};
 use super::configs::ModelConfig;
 use super::errors::ProviderError;
-use super::formats::openai::{
-    create_request, get_usage, is_context_length_error, response_to_message,
-};
+use super::formats::openai::{create_request, get_usage, response_to_message};
 use super::utils::{emit_debug_trace, get_model, handle_response_openai_compat, ImageFormat};
 use crate::message::Message;
 use mcp_core::tool::Tool;
@@ -26,28 +24,6 @@ pub struct OpenAiProvider {
 }
 
 impl OpenAiProvider {
-    pub fn new(model_name: String, max_tokens: Option<i32>) -> Result<Self> {
-        let api_key = crate::key_manager::get_keyring_secret("OPENAI_API_KEY", Default::default())?;
-        let host =
-            std::env::var("OPENAI_HOST").unwrap_or_else(|_| "https://api.openai.com".to_string());
-
-        let client = Client::builder()
-            .timeout(Duration::from_secs(600))
-            .build()?;
-
-        let mut model = ModelConfig::new(model_name);
-        if let Some(max_tokens) = max_tokens {
-            model.max_tokens = Some(max_tokens);
-        }
-
-        Ok(Self {
-            client,
-            host,
-            api_key,
-            model,
-        })
-    }
-
     pub fn from_env() -> Result<Self> {
         let api_key = crate::key_manager::get_keyring_secret("OPENAI_API_KEY", Default::default())?;
         let host =
@@ -101,16 +77,9 @@ impl Provider for OpenAiProvider {
     ) -> Result<(Message, ProviderUsage), ProviderError> {
         let payload =
             create_request(&self.model, system, messages, tools, &ImageFormat::OpenAi).unwrap();
+
         // Make request
         let response = self.post(payload.clone()).await?;
-
-        // Raise specific error if context length is exceeded
-        if let Some(error) = response.get("error") {
-            if let Some(err) = is_context_length_error(error) {
-                return Err(ProviderError::ContextLengthExceeded(err.to_string()));
-            }
-            return Err(ProviderError::RequestFailed(error.to_string()));
-        }
 
         // Parse response
         let message = response_to_message(response.clone()).unwrap();
