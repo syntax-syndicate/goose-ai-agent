@@ -88,23 +88,20 @@ export function ConfigureProvidersGrid() {
     }
 
     try {
-      // Delete existing key if provider is already configured
-      const isUpdate = providers.find((p) => p.id === selectedForSetup)?.isConfigured;
-      if (isUpdate) {
-        const deleteResponse = await fetch(getApiUrl('/secrets/delete'), {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Secret-Key': getSecretKey(),
-          },
-          body: JSON.stringify({ key: keyName }),
-        });
+      // Always delete the old key first when editing
+      const deleteResponse = await fetch(getApiUrl('/secrets/delete'), {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Secret-Key': getSecretKey(),
+        },
+        body: JSON.stringify({ key: keyName }),
+      });
 
-        if (!deleteResponse.ok) {
-          const errorText = await deleteResponse.text();
-          console.error('Delete response error:', errorText);
-          throw new Error('Failed to delete old key');
-        }
+      if (!deleteResponse.ok) {
+        const errorText = await deleteResponse.text();
+        console.error('Delete response error:', errorText);
+        throw new Error('Failed to delete old key');
       }
 
       // Store new key
@@ -126,22 +123,17 @@ export function ConfigureProvidersGrid() {
         throw new Error('Failed to store new key');
       }
 
-      toast.success(
-        isUpdate
-          ? `Successfully updated API key for ${provider}`
-          : `Successfully added API key for ${provider}`
-      );
+      toast.success(`Successfully updated API key for ${provider}`);
 
       const updatedKeys = await getActiveProviders();
       setActiveKeys(updatedKeys);
 
       setShowSetupModal(false);
       setSelectedForSetup(null);
+      setModalMode('setup'); // Reset modal mode
     } catch (error) {
       console.error('Error handling modal submit:', error);
-      toast.error(
-        `Failed to ${providers.find((p) => p.id === selectedForSetup)?.isConfigured ? 'update' : 'add'} API key for ${provider}`
-      );
+      toast.error(`Failed to update API key for ${provider}`);
     }
   };
 
