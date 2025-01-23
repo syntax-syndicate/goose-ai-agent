@@ -116,10 +116,6 @@ impl Agent for ReferenceAgent {
         }
 
         let extension_prompt = capabilities.get_extension_prompt().await;
-        let _estimated_limit = capabilities
-            .provider()
-            .get_model_config()
-            .get_estimated_limit();
 
         // Set the user_message field in the span instead of creating a new event
         if let Some(content) = messages
@@ -129,9 +125,6 @@ impl Agent for ReferenceAgent {
         {
             debug!("user_message" = &content);
         }
-
-        // Update conversation history for the start of the reply
-        let _resources = capabilities.get_resources().await?;
 
         Ok(Box::pin(async_stream::try_stream! {
             let _reply_guard = reply_span.enter();

@@ -19,7 +19,9 @@ use indoc::indoc;
 use mcp_core::tool::Tool;
 use serde_json::{json, Value};
 
-const MAX_TRUNCATION_ATTEMPTS: usize = 5;
+const MAX_TRUNCATION_ATTEMPTS: usize = 3;
+const INITIAL_ESTIMATE_FACTOR: f32 = 0.9;
+const DECAY_FACTOR: f32 = 0.9;
 
 /// Truncate implementation of an Agent
 pub struct TruncateAgent {
@@ -38,14 +40,22 @@ impl TruncateAgent {
 
     /// Truncates the messages to fit within the model's context window
     /// Ensures the last message is a user message and removes tool call-response pairs
-    async fn truncate_messages(&self, messages: &mut Vec<Message>) -> anyhow::Result<()> {
+    async fn truncate_messages(
+        &self,
+        messages: &mut Vec<Message>,
+        estimate_factor: f32,
+    ) -> anyhow::Result<()> {
+        // Model's actual context limit
         let context_limit = self
             .capabilities
             .lock()
             .await
             .provider()
             .get_model_config()
-            .get_estimated_limit();
+            .context_limit();
+
+        // Our conservative estimate of the context limit
+        let context_limit = (context_limit as f32 * estimate_factor) as usize;
 
         // Calculate current token count
         let mut token_counts: Vec<usize> = messages
@@ -222,10 +232,14 @@ impl Agent for TruncateAgent {
                         truncation_attempt += 1;
                         debug!("Context length exceeded. Initiating truncation attempt {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
 
+                        // Decay the estimate factor as we make more truncation attempts
+                        // Estimate factor looks like this: 0.9, 0.81, 0.729, ...
+                        let estimate_factor = INITIAL_ESTIMATE_FACTOR + (DECAY_FACTOR * truncation_attempt as f32);
+
                         // release the lock before truncation to prevent deadlock
                         drop(capabilities);
 
-                        self.truncate_messages(&mut messages).await?;
+                        self.truncate_messages(&mut messages, estimate_factor).await?;
 
                         // Re-acquire the lock
                         capabilities = self.capabilities.lock().await;
