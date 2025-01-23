@@ -75,21 +75,7 @@ function ProviderCard({
       </p>
 
       <div className="absolute bottom-3 right-3">
-        {isConfigured ? (
-          isSelected ? (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onConfigure();
-              }}
-              className="rounded-full h-7 px-3 min-w-[110px] bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white dark:text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
-            >
-              Select Provider
-            </Button>
-          ) : null
-        ) : (
+        {!isConfigured && (
           <Button
             variant="default"
             size="sm"
@@ -221,11 +207,43 @@ export function ProviderGrid() {
     setSelectedId(selectedId === providerId ? null : providerId);
   };
 
+  // Add useEffect for Esc key handling
+  React.useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedId(null);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, []);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <div className="h-[52px]">
+        {selectedId && (
+          <div className="flex justify-end">
+            <Button
+              variant="default"
+              size="default"
+              onClick={() => {
+                const provider = providers.find((p) => p.id === selectedId);
+                if (provider) handleConfigure(provider);
+              }}
+              className="rounded-full px-6 py-2 min-w-[160px] bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white dark:text-white text-sm font-medium shadow-md hover:shadow-lg transition-all"
+            >
+              Select {providers.find((p) => p.id === selectedId)?.name}
+            </Button>
+          </div>
+        )}
+      </div>
+
       <div className="text-sm text-gray-500 dark:text-gray-400">
         Configure your AI model providers by adding their API keys. Your keys are stored securely
-        and encrypted locally.
+        and encrypted locally. You can change your provider and select specific models in the
+        settings.
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 auto-rows-fr">

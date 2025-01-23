@@ -18,10 +18,8 @@ export default function ConfigureProviders() {
 
             {/* Content Area */}
             <div className="flex-1 px-16 py-8 pt-[20px]">
-              <div className="max-w-6xl space-y-12">
-                <div className="flex items-center gap-4 mb-8">
-                  <h1 className="text-2xl font-semibold tracking-tight">Configure Providers</h1>
-                </div>
+              <div className="max-w-6xl space-y-6">
+                <h1 className="text-2xl font-semibold tracking-tight">Choose a Provider</h1>
                 <ProviderGrid />
               </div>
             </div>
