@@ -126,7 +126,6 @@ impl Agent for ReferenceAgent {
             debug!("user_message" = &content);
         }
 
-
         Ok(Box::pin(async_stream::try_stream! {
             let _reply_guard = reply_span.enter();
             loop {

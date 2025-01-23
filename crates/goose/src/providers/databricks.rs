@@ -132,7 +132,7 @@ impl DatabricksProvider {
             }
             StatusCode::BAD_REQUEST => {
                 // Databricks responds "Received error from openai" for context limit errors
-                return Err(ProviderError::ContextLengthExceeded(response.text().await.unwrap_or_default()));
+                Err(ProviderError::ContextLengthExceeded(response.text().await.unwrap_or_default()))
             }
             StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
                 Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
