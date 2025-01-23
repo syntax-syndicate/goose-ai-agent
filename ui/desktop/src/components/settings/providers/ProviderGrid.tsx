@@ -43,11 +43,11 @@ function ProviderCard({
             ? 'border-blue-500 dark:border-blue-400 shadow-[0_0_0_1px] shadow-blue-500/50'
             : 'border-gray-200 dark:border-gray-700'
         } 
-        p-4 transition-all duration-200 h-[180px] overflow-hidden
+        p-3 transition-all duration-200 h-[140px] overflow-hidden
         ${isConfigured ? 'cursor-pointer hover:border-blue-400 dark:hover:border-blue-300' : ''}
       `}
     >
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
           {name}
         </h3>
@@ -70,11 +70,11 @@ function ProviderCard({
         )}
       </div>
 
-      <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-2 mb-4 leading-relaxed overflow-y-auto max-h-[60px] pr-1">
+      <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-1.5 mb-3 leading-relaxed overflow-y-auto max-h-[48px] pr-1">
         {description}
       </p>
 
-      <div className="absolute bottom-3 right-3">
+      <div className="absolute bottom-2 right-3">
         {!isConfigured && (
           <Button
             variant="default"

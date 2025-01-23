@@ -1,62 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { ProviderSetupModal } from '../settings/ProviderSetupModal';
-import { Card } from '../ui/card';
-import { ProviderList } from '../settings/providers/old_stuff/ProvidersList';
-import { getProvidersList, Provider } from '../../utils/providerUtils';
+import React from 'react';
+import { ProviderGrid } from '../settings/providers/ProviderGrid';
+import { ScrollArea } from '../ui/scroll-area';
+import BackButton from '../ui/BackButton';
 
-export const WelcomeModal = ({
-  selectedProvider,
-  setSelectedProvider,
-  onSubmit,
-}: {
-  selectedProvider: Provider | string | null;
-  setSelectedProvider: React.Dispatch<React.SetStateAction<Provider | null>>;
-  onSubmit: (apiKey: string) => void;
-}) => {
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchProviders = async () => {
-      try {
-        const providerList = await getProvidersList();
-        // Filter for only "anthropic" and "openai"
-        const filteredProviders = providerList.filter((provider) =>
-          ['anthropic', 'openai'].includes(provider.id)
-        );
-        setProviders(filteredProviders);
-      } catch (err) {
-        console.error('Failed to fetch providers:', err);
-        setError('Unable to load providers. Please try again.');
-      }
-    };
-
-    fetchProviders();
-  }, []);
-
+export function WelcomeModal() {
   return (
-    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9999]">
-      {selectedProvider ? (
-        <ProviderSetupModal
-          provider={selectedProvider.name}
-          onSubmit={onSubmit}
-          onCancel={() => setSelectedProvider(null)}
-          model={''} // placeholder
-          endpoint={''} // placeholder
-        />
-      ) : (
-        <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden p-[16px] pt-[24px]">
-          <h2 className="text-2xl font-medium mb-6 dark:text-white">Select a Provider</h2>
-          {error ? (
-            <p className="text-center text-red-500">{error}</p>
-          ) : (
-            <ProviderList
-              providers={providers} // Use state here
-              onProviderSelect={setSelectedProvider}
-            />
-          )}
-        </Card>
-      )}
+    <div className="h-screen w-full pt-[36px]">
+      <div className="h-full w-full bg-white dark:bg-gray-800 overflow-hidden p-2 pt-0">
+        <ScrollArea className="h-full w-full">
+          <div className="flex min-h-full">
+            {/* Content Area */}
+            <div className="flex-1 px-16 py-8 pt-[20px]">
+              <div className="max-w-3xl space-y-12">
+                <div className="flex items-center gap-4 mb-8">
+                  <h1 className="text-2xl font-semibold tracking-tight">Configure Providers</h1>
+                </div>
+                <ProviderGrid />
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
-};
+}
