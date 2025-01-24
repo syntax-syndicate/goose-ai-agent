@@ -76,18 +76,6 @@
       "environmentVariables": []
     },
     {
-      "id": "block_codesearch",
-      "name": "Block Codesearch",
-      "description": "Internal code search functionality for Block repositories",
-      "command": "uvx mcp-codesearch",
-      "link": "https://github.com/squareup/mcp/tree/main/mcp-codesearch",
-      "installation_notes": "Install using uvx package manager.",
-      "is_builtin": false,
-      "endorsed": true,
-      "githubStars": 0,
-      "environmentVariables": []
-    },
-    {
       "id": "knowledge_graph_memory",
       "name": "Knowledge Graph Memory",
       "description": "Graph-based memory system for persistent knowledge storage",
