@@ -89,7 +89,9 @@ async fn run_truncate_test(
     model: &str,
     context_window: usize,
 ) -> Result<()> {
-    let model_config = ModelConfig::new(model.to_string()).with_context_limit(Some(context_window));
+    let model_config = ModelConfig::new(model.to_string())
+        .with_context_limit(Some(context_window))
+        .with_temperature(Some(0.0));
     let provider = provider_type.create_provider(model_config)?;
 
     let agent = AgentFactory::create("truncate", provider).unwrap();
