@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  trigger-on-command:
+  command:
     name: Trigger on ".bundle" PR comment
     runs-on: ubuntu-latest
     steps:
