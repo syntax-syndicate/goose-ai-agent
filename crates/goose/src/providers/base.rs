@@ -1,6 +1,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
+use super::errors::ProviderError;
 use crate::message::Message;
 use crate::model::ModelConfig;
 use mcp_core::tool::Tool;
@@ -130,12 +131,16 @@ pub trait Provider: Send + Sync {
     ///
     /// # Returns
     /// A tuple containing the model's response message and provider usage statistics
+    ///
+    /// # Errors
+    /// ProviderError
+    ///   - It's important to raise ContextLengthExceeded correctly since agent handles it
     async fn complete(
         &self,
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)>;
+    ) -> Result<(Message, ProviderUsage), ProviderError>;
 
     /// Get the model config from the provider
     fn get_model_config(&self) -> ModelConfig;

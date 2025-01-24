@@ -1,12 +1,13 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde_json::Value;
 use std::time::Duration;
 
 use super::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
+use super::errors::ProviderError;
 use super::formats::anthropic::{create_request, get_usage, response_to_message};
-use super::utils::{emit_debug_trace, get_model, handle_response};
+use super::utils::{emit_debug_trace, get_model};
 use crate::message::Message;
 use crate::model::ModelConfig;
 use mcp_core::tool::Tool;
@@ -56,7 +57,7 @@ impl AnthropicProvider {
         })
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!("{}/v1/messages", self.host.trim_end_matches('/'));
 
         let response = self
@@ -68,7 +69,43 @@ impl AnthropicProvider {
             .send()
             .await?;
 
-        handle_response(payload, response).await
+        let status = response.status();
+        let payload: Option<Value> = response.json().await.ok();
+
+        // https://docs.anthropic.com/en/api/errors
+        match status {
+            StatusCode::OK => payload.ok_or_else( || ProviderError::RequestFailed("Response body is not valid JSON".to_string()) ),
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+                Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                    Status: {}. Response: {:?}", status, payload)))
+            }
+            StatusCode::BAD_REQUEST => {
+                if let Some(payload) = &payload {
+                    if let Some(error) = payload.get("error") {
+                    tracing::debug!("Bad Request Error: {error:?}");
+                    let error_msg = error.get("message").and_then(|m| m.as_str()).unwrap_or("Unknown error");
+                    if error_msg.to_lowercase().contains("too long") || error_msg.to_lowercase().contains("too many") {
+                        return Err(ProviderError::ContextLengthExceeded(error_msg.to_string()));
+                    }
+                }}
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
+                );
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
+            }
+            StatusCode::TOO_MANY_REQUESTS => {
+                Err(ProviderError::RateLimitExceeded(format!("{:?}", payload)))
+            }
+            StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
+                Err(ProviderError::ServerError(format!("{:?}", payload)))
+            }
+            _ => {
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
+                );
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
+            }
+        }
     }
 }
 
@@ -110,7 +147,7 @@ impl Provider for AnthropicProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
         let payload = create_request(&self.model, system, messages, tools)?;
 
         // Make request
@@ -119,6 +156,7 @@ impl Provider for AnthropicProvider {
         // Parse response
         let message = response_to_message(response.clone())?;
         let usage = get_usage(&response)?;
+
         let model = get_model(&response);
         emit_debug_trace(self, &payload, &response, &usage);
         Ok((message, ProviderUsage::new(model, usage)))

@@ -1,10 +1,9 @@
 use super::base::Usage;
-use anyhow::{Error, Result};
+use anyhow::Result;
 use regex::Regex;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
-use tracing::debug;
 
 use crate::providers::errors::ProviderError;
 use mcp_core::content::ImageContent;
@@ -35,38 +34,53 @@ pub fn convert_image(image: &ImageContent, image_format: &ImageFormat) -> Value 
     }
 }
 
-// Maps a non-ok response status to a ProviderError
-pub async fn non_ok_response_to_provider_error(
-    payload: Value,
-    response: Response,
-) -> ProviderError {
-    match response.status() {
+/// Handle response from OpenAI compatible endpoints
+/// Error codes: https://platform.openai.com/docs/guides/error-codes
+/// Context window exceeded: https://community.openai.com/t/help-needed-tackling-context-length-limits-in-openai-models/617543
+pub async fn handle_response_openai_compat(response: Response) -> Result<Value, ProviderError> {
+    let status = response.status();
+    // Try to parse the response body as JSON (if applicable)
+    let payload: Option<Value> = response.json().await.ok();
+
+    match status {
+        StatusCode::OK => payload.ok_or_else( || ProviderError::RequestFailed("Response body is not valid JSON".to_string()) ),
         StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
-            ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
-                Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default()))
+            Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                Status: {}. Response: {:?}", status, payload)))
+        }
+        StatusCode::BAD_REQUEST => {
+            if let Some(payload) = &payload {
+                if let Some(error) = payload.get("error") {
+                tracing::debug!("Bad Request Error: {error:?}");
+                if let Some(code) = error.get("code").and_then(|c| c.as_str()) {
+                    if code == "context_length_exceeded" || code == "string_above_max_length" {
+                        let message = error
+                          .get("message")
+                          .and_then(|m| m.as_str())
+                          .unwrap_or("Unknown error")
+                          .to_string();
+
+
+                        return Err(ProviderError::ContextLengthExceeded(message));
+                    }
+                }
+            }}
+            tracing::debug!(
+                "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
+            );
+            Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
         }
         StatusCode::TOO_MANY_REQUESTS => {
-            ProviderError::RateLimitExceeded(format!("Rate limit exceeded. Please retry after some time. Status: {}", response.status()))
+            Err(ProviderError::RateLimitExceeded(format!("{:?}", payload)))
         }
         StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
-            ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status()))
+            Err(ProviderError::ServerError(format!("{:?}", payload)))
         }
         _ => {
-            let status = response.status();
             tracing::debug!(
-                "{}", format!("Provider request failed with status: {}. Body: {:?}. Payload: {}", status, response.text().await.unwrap_or_default(), payload)
+                "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
             );
-            ProviderError::RequestFailed(format!("Request failed with status: {}.", status))
-        }
-    }
-}
-
-pub async fn handle_response(payload: Value, response: Response) -> Result<Value, Error> {
-    match response.status() {
-        StatusCode::OK => Ok(response.json().await?),
-        _ => {
-            let provider_error = non_ok_response_to_provider_error(payload, response).await;
-            Err(anyhow::anyhow!(provider_error.to_string()))
+            Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
         }
     }
 }
@@ -79,20 +93,6 @@ pub fn sanitize_function_name(name: &str) -> String {
 pub fn is_valid_function_name(name: &str) -> bool {
     let re = Regex::new(r"^[a-zA-Z0-9_-]+$").unwrap();
     re.is_match(name)
-}
-
-pub fn check_bedrock_context_length_error(error: &Value) -> Option<ProviderError> {
-    let external_message = error
-        .get("external_model_message")?
-        .get("message")?
-        .as_str()?;
-    if external_message.to_lowercase().contains("too long") {
-        Some(ProviderError::ContextLengthExceeded(
-            external_message.to_string(),
-        ))
-    } else {
-        None
-    }
 }
 
 /// Extract the model name from a JSON object. Common with most providers to have this top level attribute.
@@ -149,7 +149,7 @@ pub fn emit_debug_trace<T: serde::Serialize>(
         Err(_) => serde_json::to_string_pretty(&payload).unwrap_or_default(),
     };
 
-    debug!(
+    tracing::debug!(
         model_config = %serde_json::to_string_pretty(model_config).unwrap_or_default(),
         input = %payload_str,
         output = %serde_json::to_string_pretty(response).unwrap_or_default(),
@@ -177,33 +177,6 @@ mod tests {
         assert!(is_valid_function_name("hello_world"));
         assert!(!is_valid_function_name("hello world"));
         assert!(!is_valid_function_name("hello@world"));
-    }
-
-    #[test]
-    fn test_check_bedrock_context_length_error() {
-        let error = json!({
-            "error": "Received error from amazon-bedrock",
-            "external_model_message": {
-                "message": "Input is too long for requested model."
-            }
-        });
-
-        let result = check_bedrock_context_length_error(&error);
-        assert!(result.is_some());
-        assert_eq!(
-            result.unwrap().to_string(),
-            "Context length exceeded: Input is too long for requested model."
-        );
-
-        let error = json!({
-            "error": "Some other error",
-            "external_model_message": {
-                "message": "Some other message"
-            }
-        });
-
-        let result = check_bedrock_context_length_error(&error);
-        assert!(result.is_none());
     }
 
     #[test]

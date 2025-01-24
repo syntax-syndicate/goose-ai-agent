@@ -1,12 +1,13 @@
+use super::errors::ProviderError;
 use crate::message::Message;
 use crate::model::ModelConfig;
 use crate::providers::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
 use crate::providers::formats::openai::{create_request, get_usage, response_to_message};
-use crate::providers::utils::{get_model, handle_response};
+use crate::providers::utils::get_model;
 use anyhow::Result;
 use async_trait::async_trait;
 use mcp_core::Tool;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde_json::Value;
 use std::time::Duration;
 
@@ -52,7 +53,7 @@ impl GroqProvider {
         })
     }
 
-    async fn post(&self, payload: Value) -> anyhow::Result<Value> {
+    async fn post(&self, payload: Value) -> anyhow::Result<Value, ProviderError> {
         let url = format!(
             "{}/openai/v1/chat/completions",
             self.host.trim_end_matches('/')
@@ -66,7 +67,31 @@ impl GroqProvider {
             .send()
             .await?;
 
-        handle_response(payload, response).await
+        let status = response.status();
+        let payload: Option<Value> = response.json().await.ok();
+
+        match status {
+            StatusCode::OK => payload.ok_or_else( || ProviderError::RequestFailed("Response body is not valid JSON".to_string()) ),
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+                Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                    Status: {}. Response: {:?}", status, payload)))
+            }
+            StatusCode::PAYLOAD_TOO_LARGE => {
+                Err(ProviderError::ContextLengthExceeded(format!("{:?}", payload)))
+            }
+            StatusCode::TOO_MANY_REQUESTS => {
+                Err(ProviderError::RateLimitExceeded(format!("{:?}", payload)))
+            }
+            StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
+                Err(ProviderError::ServerError(format!("{:?}", payload)))
+            }
+            _ => {
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
+                );
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
+            }
+        }
     }
 }
 
@@ -100,7 +125,7 @@ impl Provider for GroqProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> anyhow::Result<(Message, ProviderUsage)> {
+    ) -> anyhow::Result<(Message, ProviderUsage), ProviderError> {
         let payload = create_request(
             &self.model,
             system,

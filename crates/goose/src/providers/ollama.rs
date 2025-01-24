@@ -1,5 +1,6 @@
 use super::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
-use super::utils::{get_model, handle_response};
+use super::errors::ProviderError;
+use super::utils::{get_model, handle_response_openai_compat};
 use crate::message::Message;
 use crate::model::ModelConfig;
 use crate::providers::formats::openai::{create_request, get_usage, response_to_message};
@@ -49,12 +50,12 @@ impl OllamaProvider {
         })
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!("{}/v1/chat/completions", self.host.trim_end_matches('/'));
 
         let response = self.client.post(&url).json(&payload).send().await?;
 
-        handle_response(payload, response).await
+        handle_response_openai_compat(response).await
     }
 }
 
@@ -90,7 +91,7 @@ impl Provider for OllamaProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
         let payload = create_request(
             &self.model,
             system,

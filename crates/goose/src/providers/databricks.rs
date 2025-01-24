@@ -1,16 +1,15 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_trait::async_trait;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::time::Duration;
 
 use super::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
-use super::formats::openai::{
-    create_request, get_usage, is_context_length_error, response_to_message,
-};
+use super::errors::ProviderError;
+use super::formats::openai::{create_request, get_usage, response_to_message};
 use super::oauth;
-use super::utils::{get_model, handle_response, ImageFormat};
+use super::utils::{get_model, ImageFormat};
 use crate::config::ConfigError;
 use crate::message::Message;
 use crate::model::ModelConfig;
@@ -137,7 +136,7 @@ impl DatabricksProvider {
         }
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!(
             "{}/serving-endpoints/{}/invocations",
             self.host.trim_end_matches('/'),
@@ -153,7 +152,47 @@ impl DatabricksProvider {
             .send()
             .await?;
 
-        handle_response(payload, response).await
+        let status = response.status();
+        let payload: Option<Value> = response.json().await.ok();
+
+        match status {
+            StatusCode::OK => payload.ok_or_else( || ProviderError::RequestFailed("Response body is not valid JSON".to_string()) ),
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+                Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                    Status: {}. Response: {:?}", status, payload)))
+            }
+            StatusCode::BAD_REQUEST => {
+                // Databricks provides a generic 'error' but also includes 'external_model_message' which is provider specific
+                // we try our best to extract the error message from the payload
+                let payload_str = serde_json::to_string(&payload).unwrap_or_default();
+                if payload_str.contains("too long")
+                    || payload_str.contains("context length")
+                    || payload_str.contains("context_length_exceeded")
+                    || payload_str.contains("reduce the length")
+                    || payload_str.contains("token count")
+                    || payload_str.contains("exceeds")
+                {
+                    return Err(ProviderError::ContextLengthExceeded(payload_str));
+                }
+
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
+                );
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
+            }
+            StatusCode::TOO_MANY_REQUESTS => {
+                Err(ProviderError::RateLimitExceeded(format!("{:?}", payload)))
+            }
+            StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
+                Err(ProviderError::ServerError(format!("{:?}", payload)))
+            }
+            _ => {
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
+                );
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
+            }
+        }
     }
 }
 
@@ -190,7 +229,7 @@ impl Provider for DatabricksProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
         let mut payload = create_request(&self.model, system, messages, tools, &self.image_format)?;
         // Remove the model key which is part of the url with databricks
         payload
@@ -199,14 +238,6 @@ impl Provider for DatabricksProvider {
             .remove("model");
 
         let response = self.post(payload.clone()).await?;
-
-        // Raise specific error if context length is exceeded
-        if let Some(error) = response.get("error") {
-            if let Some(err) = is_context_length_error(error) {
-                return Err(err.into());
-            }
-            return Err(anyhow!("Databricks API error: {}", error));
-        }
 
         // Parse response
         let message = response_to_message(response.clone())?;

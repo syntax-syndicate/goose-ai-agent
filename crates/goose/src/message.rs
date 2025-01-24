@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 /// Messages which represent the content sent back and forth to LLM provider
 ///
 /// We use these messages in the agent code, and interfaces which interact with
@@ -174,5 +176,75 @@ impl Message {
         result: ToolResult<Vec<Content>>,
     ) -> Self {
         self.with_content(MessageContent::tool_response(id, result))
+    }
+
+    /// Get the concatenated text content of the message, separated by newlines
+    pub fn as_concat_text(&self) -> String {
+        self.content
+            .iter()
+            .filter_map(|c| c.as_text())
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    /// Check if the message is a tool call
+    pub fn is_tool_call(&self) -> bool {
+        self.content
+            .iter()
+            .any(|c| matches!(c, MessageContent::ToolRequest(_)))
+    }
+
+    /// Check if the message is a tool response
+    pub fn is_tool_response(&self) -> bool {
+        self.content
+            .iter()
+            .any(|c| matches!(c, MessageContent::ToolResponse(_)))
+    }
+
+    /// Retrieves all tool `id` from the message
+    pub fn get_tool_ids(&self) -> HashSet<&str> {
+        self.content
+            .iter()
+            .filter_map(|content| match content {
+                MessageContent::ToolRequest(req) => Some(req.id.as_str()),
+                MessageContent::ToolResponse(res) => Some(res.id.as_str()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Retrieves all tool `id` from ToolRequest messages
+    pub fn get_tool_request_ids(&self) -> HashSet<&str> {
+        self.content
+            .iter()
+            .filter_map(|content| {
+                if let MessageContent::ToolRequest(req) = content {
+                    Some(req.id.as_str())
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Retrieves all tool `id` from ToolResponse messages
+    pub fn get_tool_response_ids(&self) -> HashSet<&str> {
+        self.content
+            .iter()
+            .filter_map(|content| {
+                if let MessageContent::ToolResponse(res) = content {
+                    Some(res.id.as_str())
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Check if the message has only TextContent
+    pub fn has_only_text_content(&self) -> bool {
+        self.content
+            .iter()
+            .all(|c| matches!(c, MessageContent::Text(_)))
     }
 }

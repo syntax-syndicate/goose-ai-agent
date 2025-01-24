@@ -1,16 +1,15 @@
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result};
 use async_trait::async_trait;
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::time::Duration;
 
 use super::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
-use super::utils::{emit_debug_trace, get_model, handle_response};
+use super::errors::ProviderError;
+use super::utils::{emit_debug_trace, get_model, handle_response_openai_compat};
 use crate::message::Message;
 use crate::model::ModelConfig;
-use crate::providers::formats::openai::{
-    create_request, get_usage, is_context_length_error, response_to_message,
-};
+use crate::providers::formats::openai::{create_request, get_usage, response_to_message};
 use mcp_core::tool::Tool;
 
 pub const OPENROUTER_DEFAULT_MODEL: &str = "anthropic/claude-3.5-sonnet";
@@ -56,7 +55,7 @@ impl OpenRouterProvider {
         })
     }
 
-    async fn post(&self, payload: Value) -> Result<Value> {
+    async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!(
             "{}/api/v1/chat/completions",
             self.host.trim_end_matches('/')
@@ -73,7 +72,7 @@ impl OpenRouterProvider {
             .send()
             .await?;
 
-        handle_response(payload, response).await
+        handle_response_openai_compat(response).await
     }
 }
 
@@ -195,20 +194,12 @@ impl Provider for OpenRouterProvider {
         system: &str,
         messages: &[Message],
         tools: &[Tool],
-    ) -> Result<(Message, ProviderUsage)> {
+    ) -> Result<(Message, ProviderUsage), ProviderError> {
         // Create the base payload
         let payload = create_request_based_on_model(&self.model, system, messages, tools)?;
 
         // Make request
         let response = self.post(payload.clone()).await?;
-
-        // Raise specific error if context length is exceeded
-        if let Some(error) = response.get("error") {
-            if let Some(err) = is_context_length_error(error) {
-                return Err(err.into());
-            }
-            return Err(anyhow!("OpenRouter API error: {}", error));
-        }
 
         // Parse response
         let message = response_to_message(response.clone())?;

@@ -285,8 +285,8 @@ impl Capabilities {
     }
 
     /// Get the extension prompt including client instructions
-    pub async fn get_extension_prompt(&self) -> String {
-        let mut context = HashMap::new();
+    pub async fn get_system_prompt(&self) -> String {
+        let mut context: HashMap<&str, Vec<ExtensionInfo>> = HashMap::new();
         let extensions_info: Vec<ExtensionInfo> = self
             .clients
             .keys()
@@ -298,7 +298,7 @@ impl Capabilities {
             .collect();
 
         context.insert("extensions", extensions_info);
-        load_prompt_file("extension.md", &context).expect("Prompt should render")
+        load_prompt_file("system.md", &context).expect("Prompt should render")
     }
 
     /// Find and return a reference to the appropriate client for a tool call
@@ -517,6 +517,7 @@ mod tests {
     use crate::message::Message;
     use crate::model::ModelConfig;
     use crate::providers::base::{Provider, ProviderMetadata, ProviderUsage, Usage};
+    use crate::providers::errors::ProviderError;
     use mcp_client::client::Error;
     use mcp_client::client::McpClientTrait;
     use mcp_core::protocol::{
@@ -545,7 +546,7 @@ mod tests {
             _system: &str,
             _messages: &[Message],
             _tools: &[Tool],
-        ) -> anyhow::Result<(Message, ProviderUsage)> {
+        ) -> anyhow::Result<(Message, ProviderUsage), ProviderError> {
             Ok((
                 Message::assistant().with_text("Mock response"),
                 ProviderUsage::new("mock".to_string(), Usage::default()),
