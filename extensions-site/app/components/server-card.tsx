@@ -1,4 +1,4 @@
-import { Star, Download, Terminal, ChevronRight } from "lucide-react";
+import { Star, Download, Terminal, ChevronRight, Info } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
@@ -99,8 +99,9 @@ export function ServerCard({ server }: { server: MCPServer }) {
             <div className="py-4">
               {server.is_builtin ? (
                 <div className="flex items-center gap-2 text-sm dark:text-gray-300">
-                  <Terminal className="h-4 w-4" />
-                  Visit the Settings page and enable this extension.
+                  {/* <Terminal className="h-4 w-4" /> */}
+                  <Info className="h-4 w-4" />
+                  Can be enabled in the goose settings page
                 </div>
               ) : (
                 <>
