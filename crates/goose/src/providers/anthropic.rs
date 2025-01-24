@@ -11,7 +11,6 @@ use super::utils::{emit_debug_trace, get_model};
 use crate::message::Message;
 use crate::model::ModelConfig;
 use mcp_core::tool::Tool;
-use tracing::debug;
 
 pub const ANTHROPIC_DEFAULT_MODEL: &str = "claude-3-5-sonnet-latest";
 
@@ -74,18 +73,26 @@ impl AnthropicProvider {
                 let status = response.status();
                 let payload: Value = response.json().await.unwrap();
                 if let Some(error) = payload.get("error") {
-                    debug!("Bad Request Error: {error:?}");
+                    tracing::debug!("Bad Request Error: {error:?}");
                     let error_msg = error.get("message").unwrap().as_str().unwrap();
                     if error_msg.to_lowercase().contains("too long") {
                         return Err(ProviderError::ContextLengthExceeded(error_msg.to_string()));
                     }
                 }
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {}", status, payload)
+                );
                 Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
             }
             StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
                 Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
             }
-            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+            _ => {
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {}", response.status(), payload)
+                );
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+            }
         }
     }
 }

@@ -10,7 +10,6 @@ use mcp_core::tool::Tool;
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
 use std::time::Duration;
-use tracing::debug;
 
 pub const GOOGLE_API_HOST: &str = "https://generativelanguage.googleapis.com";
 pub const GOOGLE_DEFAULT_MODEL: &str = "gemini-2.0-flash-exp";
@@ -80,13 +79,16 @@ impl GoogleProvider {
                 let status = response.status();
                 let payload: Value = response.json().await.unwrap();
                 if let Some(error) = payload.get("error") {
-                    debug!("Bad Request Error: {error:?}");
+                    tracing::debug!("Bad Request Error: {error:?}");
                     print!("!!! Bad Request Error: {error:?}");
                     let error_msg = error.get("message").unwrap().as_str().unwrap();
                     if error_msg.to_lowercase().contains("too long") {
                         return Err(ProviderError::ContextLengthExceeded(error_msg.to_string()));
                     }
                 }
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {}", status, payload)
+                );
                 Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
             }
             StatusCode::INTERNAL_SERVER_ERROR => {
@@ -101,7 +103,12 @@ impl GoogleProvider {
             StatusCode::SERVICE_UNAVAILABLE => {
                 Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
             }
-            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Payload: {}", response.status(), payload)))
+            _ => {
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {}", response.status(), payload)
+                );
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+            }
         }
     }
 }

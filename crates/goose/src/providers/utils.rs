@@ -4,7 +4,6 @@ use regex::Regex;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
-use tracing::debug;
 
 use crate::providers::errors::ProviderError;
 use mcp_core::content::ImageContent;
@@ -39,7 +38,7 @@ pub fn convert_image(image: &ImageContent, image_format: &ImageFormat) -> Value 
 /// Error codes: https://platform.openai.com/docs/guides/error-codes
 /// Context window exceeded: https://community.openai.com/t/help-needed-tackling-context-length-limits-in-openai-models/617543
 pub async fn handle_response_openai_compat(
-    _payload: Value,
+    payload: Value,
     response: Response,
 ) -> Result<Value, ProviderError> {
     match response.status() {
@@ -52,7 +51,7 @@ pub async fn handle_response_openai_compat(
             let status = response.status();
             let payload: Value = response.json().await.unwrap();
             if let Some(error) = payload.get("error") {
-                debug!("Bad Request Error: {error:?}");
+                tracing::debug!("Bad Request Error: {error:?}");
                 if let Some(code) = error.get("code").and_then(|c| c.as_str()) {
                     if code == "context_length_exceeded" || code == "string_above_max_length" {
                         let message = error
@@ -64,12 +63,20 @@ pub async fn handle_response_openai_compat(
                     }
                 }
             }
+            tracing::debug!(
+                "{}", format!("Provider request failed with status: {}. Payload: {}", status, payload)
+            );
             Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
         }
         StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
             Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
         }
-        _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+        _ => {
+            tracing::debug!(
+                "{}", format!("Provider request failed with status: {}. Payload: {}", response.status(), payload)
+            );
+            Err(ProviderError::RequestFailed(format!("Request failed with status: {}.", response.status())))
+        }
     }
 }
 
@@ -151,7 +158,7 @@ pub fn emit_debug_trace<T: serde::Serialize>(
         Err(_) => serde_json::to_string_pretty(&payload).unwrap_or_default(),
     };
 
-    debug!(
+    tracing::debug!(
         model_config = %serde_json::to_string_pretty(model_config).unwrap_or_default(),
         input = %payload_str,
         output = %serde_json::to_string_pretty(response).unwrap_or_default(),

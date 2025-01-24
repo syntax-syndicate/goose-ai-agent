@@ -137,7 +137,12 @@ impl DatabricksProvider {
             StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
                 Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
             }
-            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+            _ => {
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {}", response.status(), payload)
+                );
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+            }
         }
     }
 }
