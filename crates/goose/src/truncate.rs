@@ -392,7 +392,7 @@ mod tests {
             .flat_map(|m| m.get_tool_ids())
             .collect();
 
-        for id in remaining_tool_ids {
+        for _id in remaining_tool_ids {
             // Count request/response pairs
             let requests = messages_clone
                 .iter()
