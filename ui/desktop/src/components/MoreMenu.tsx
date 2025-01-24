@@ -124,7 +124,7 @@ export default function MoreMenu() {
       </PopoverTrigger>
       <PopoverPortal>
         <PopoverContent
-          className="z-[200] w-48 rounded-md dark:bg-slate bg-white border border-borderSubtle text-textStandard origin-top-right animate-[popIn_150ms_ease_forwards]"
+          className="z-[200] w-48 rounded-md bg-bgApp border border-borderSubtle text-textStandard"
           align="end"
           sideOffset={5}
         >

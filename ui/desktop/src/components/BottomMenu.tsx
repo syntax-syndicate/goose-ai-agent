@@ -48,7 +48,7 @@ export default function BottomMenu({ hasMessages }) {
   }, [isModelMenuOpen]);
 
   return (
-    <div className="flex justify-between items-center text-textSubtle relative bg-bgSubtle border-t border-borderSubtle text-xs pl-4 h-[40px] align-middle">
+    <div className="flex justify-between items-center text-textSubtle relative bg-bgSubtle border-t border-borderSubtle text-xs pl-4 h-[40px] pb-1 align-middle">
       {/* Directory Chooser - Always visible */}
       <span
         className="cursor-pointer flex items-center [&>svg]:size-4"
@@ -82,20 +82,19 @@ export default function BottomMenu({ hasMessages }) {
 
         {/* Dropdown Menu */}
         {isModelMenuOpen && (
-          <div className="absolute bottom-[30px] right-0 w-[300px] bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-lg">
-            <div className="p-2">
+          <div className="absolute bottom-[24px] right-0 w-[300px] bg-bgApp rounded-lg border border-borderSubtle">
+            <div className="">
               <ModelRadioList
                 className="divide-y divide-gray-100 dark:divide-gray-700"
                 renderItem={({ model, isSelected, onSelect }) => (
                   <label key={model.name} className="block cursor-pointer">
                     <div
-                      className="flex items-center justify-between p-3 transition-colors
-                      hover:text-gray-900 dark:hover:text-white"
+                      className="flex items-center justify-between p-2 text-textStandard hover:bg-bgStandard"
                       onClick={onSelect}
                     >
                       <div>
                         <p className="text-sm font-semibold">{model.name}</p>
-                        <p className="text-xs text-muted-foreground">{model.provider}</p>
+                        <p className="text-xs ">{model.provider}</p>
                       </div>
                       <div className="relative">
                         <input
@@ -118,8 +117,8 @@ export default function BottomMenu({ hasMessages }) {
                 )}
               />
               <div
-                className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700
-                  border-t-2 border-gray-200 dark:border-gray-600"
+                className="flex items-center justify-between text-textStandard p-2 cursor-pointer hover:bg-bgStandard
+                  border-t border-borderSubtle mt-2"
                 onClick={() => {
                   setIsModelMenuOpen(false);
                   navigate('/settings');
