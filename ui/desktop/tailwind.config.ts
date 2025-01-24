@@ -21,6 +21,10 @@ export default {
           from: { opacity: 0, transform: 'scale(0.95)' },
           to: { opacity: 1, transform: 'scale(1)' },
         },
+        fadein: {
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
         appear: {
           '0%': { opacity: 0, transform: 'translateY(12px)' },
           '100%': { opacity: 1, transform: 'translateY(0)' },
@@ -37,6 +41,10 @@ export default {
           '0%': { transform: 'translate(0, 0)' },
           '99.99%': { transform: 'translate(-100%, 100%)' },
           '100%': { transform: 'translate(0, 0)' },
+        },
+        rotate: {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
         },
       },
       animation: {

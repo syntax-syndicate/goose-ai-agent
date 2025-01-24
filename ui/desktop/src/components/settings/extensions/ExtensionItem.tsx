@@ -11,7 +11,7 @@ export const ExtensionItem: React.FC<ExtensionItemProps> = (props) => {
   const { id, name, description, enabled, onToggle, onConfigure } = props;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg py-2 mb-2">
+    <div className="rounded-lg py-2 mb-2">
       <div className="flex justify-between items-center">
         <div className="">
           <div className="flex items-center">
@@ -26,7 +26,7 @@ export const ExtensionItem: React.FC<ExtensionItemProps> = (props) => {
           <button
             onClick={() => onToggle(id)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-              enabled ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-gray-600'
+              enabled ? 'bg-indigo-500' : 'bg-bgProminent'
             } transition-colors duration-200 ease-in-out focus:outline-none`}
           >
             <span

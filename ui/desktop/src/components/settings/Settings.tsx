@@ -171,7 +171,6 @@ export default function Settings() {
 
       <ScrollArea className="h-full w-full">
         <div className="flex flex-col">
-          {/* Top Navigation */}
           <div className="px-8 pt-6 pb-4">
             <BackButton
               onClick={() => {
@@ -179,30 +178,19 @@ export default function Settings() {
               }}
             />
             <h1 className="text-3xl font-medium text-textStandard mt-1">Settings</h1>
-            {/* <div className="flex items-center">
-              {['Models', 'Extensions'].map((section) => (
-                <button
-                  key={section}
-                  onClick={(e) => handleNavClick(section, e)}
-                  className="text-left px-3 py-2 rounded-lg text-textStandard hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  {section}
-                </button>
-              ))}
-            </div> */}
           </div>
 
           {/* Content Area */}
           <div className="flex-1 py-8 pt-[20px]">
             <div className="space-y-8">
               <section id="models">
-                <div className="flex justify-between items-center mb-4 border-b border-borderSubtle px-8">
+                <div className="flex justify-between items-center mb-6 border-b border-borderSubtle px-8">
                   <h2 className="text-xl font-medium text-textStandard">Models</h2>
                   <button
                     onClick={() => navigate('/settings/more-models')}
                     className="text-indigo-500 hover:text-indigo-600 text-sm"
                   >
-                    More Models
+                    Browse
                   </button>
                 </div>
                 <div className="px-8">
@@ -211,7 +199,7 @@ export default function Settings() {
               </section>
 
               <section id="extensions">
-                <div className="flex justify-between items-center mb-4 border-b border-borderSubtle px-8">
+                <div className="flex justify-between items-center mb-6 border-b border-borderSubtle px-8">
                   <h2 className="text-xl font-semibold text-textStandard">Extensions</h2>
                   <div className="flex gap-4">
                     <button

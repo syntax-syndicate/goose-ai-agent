@@ -12,12 +12,16 @@ export default function ConfigureProviders() {
       <ScrollArea className="h-full w-full">
         <div className="px-8 pt-6 pb-4">
           <BackButton />
-          <h1 className="text-3xl font-medium text-textStandard mt-1">Configure providers</h1>
+          <h1 className="text-3xl font-medium text-textStandard mt-1">Configure</h1>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 px-8 py-8 pt-[20px]">
-          <div className="max-w-5xl space-y-12">
+        <div className=" py-8 pt-[20px]">
+          <div className="flex justify-between items-center mb-6 border-b border-borderSubtle px-8">
+            <h2 className="text-xl font-medium text-textStandard">Providers</h2>
+          </div>
+
+          {/* Content Area */}
+          <div className="max-w-5xl pt-4 px-8">
             <div className="relative z-10">
               <ConfigureProvidersGrid />
             </div>

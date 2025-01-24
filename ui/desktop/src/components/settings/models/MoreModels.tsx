@@ -25,56 +25,38 @@ export default function MoreModelsPage() {
 
         <div className="px-8 pt-6 pb-4">
           <BackButton />
-          <h1 className="text-3xl font-medium text-textStandard mt-1">More models</h1>
+          <h1 className="text-3xl font-medium text-textStandard mt-1">Browse models</h1>
         </div>
 
-        <div className="flex min-h-full flex-col md:flex-row">
-          {/* Content Area */}
-          {/* Smaller / responsive padding so we don't overflow on small screens */}
-          <div className="flex-1 px-8 py-4">
-            {/*
-                Use a max-w but allow full width on very small screens
-                so it doesn't overflow horizontally:
-              */}
-            <div className="max-w-full md:max-w-3xl mx-auto space-y-12">
-              {/* Header Section */}
-              <div>
-                <div className="flex items-center justify-between mb-8">
-                  <h1 className="text-2xl text-textStandard">More Models</h1>
-                  <Button
-                    variant="default"
-                    className="h-9 px-4 text-sm whitespace-nowrap shrink-0
-                                 bg-dark dark:bg-white text-Standard
-                                 rounded-full border-none"
-                    onClick={() => navigate('/settings/configure-providers')}
-                  >
-                    Configure Providers
-                  </Button>
-                </div>
+        {/* Content Area */}
+        <div className="flex-1 py-8 pt-[20px]">
+          <div className="max-w-full md:max-w-3xl mx-auto space-y-12">
+            <div className="flex justify-between items-center mb-6 border-b border-borderSubtle px-8">
+              <h2 className="text-xl font-medium text-textStandard">Models</h2>
+              <button
+                onClick={() => navigate('/settings/configure-providers')}
+                className="text-indigo-500 hover:text-indigo-600 text-sm"
+              >
+                Configure
+              </button>
+            </div>
 
-                {currentModel && (
-                  <p className="text-sm text-muted-foreground mb-8">
-                    Current model: <span className="font-medium">{currentModel.name}</span> (
-                    {currentModel.provider})
-                  </p>
-                )}
-              </div>
-
+            <div className="px-8 space-y-8">
               {/* Search Section */}
               <section>
-                <h2 className="text-lg font-medium mb-4">Search Models</h2>
+                <h2 className="text-md font-medium text-textStandard mb-3">Search Models</h2>
                 <SearchBar />
               </section>
 
               {/* Add Model Section */}
               <section>
-                <h2 className="text-lg font-medium mb-4">Add Model</h2>
+                <h2 className="text-md font-medium text-textStandard mb-3">Add Model</h2>
                 <AddModelInline />
               </section>
 
               {/* Provider Section */}
               <section>
-                <h2 className="text-lg font-medium mb-4">Browse by Provider</h2>
+                <h2 className="text-md font-medium text-textStandard mb-3">Browse by Provider</h2>
                 <div>
                   <ProviderButtons />
                 </div>
@@ -82,15 +64,14 @@ export default function MoreModelsPage() {
 
               {/* Recent Models Section */}
               <section>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium">Recently Used Models</h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-md font-medium text-textStandard">Recently used</h2>
                 </div>
                 <div>
                   <RecentModels />
                 </div>
               </section>
             </div>
-            {/* end .max-w-full */}
           </div>
         </div>
       </ScrollArea>

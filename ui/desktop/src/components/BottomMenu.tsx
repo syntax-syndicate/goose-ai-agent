@@ -85,11 +85,11 @@ export default function BottomMenu({ hasMessages }) {
           <div className="absolute bottom-[24px] right-0 w-[300px] bg-bgApp rounded-lg border border-borderSubtle">
             <div className="">
               <ModelRadioList
-                className="divide-y divide-gray-100 dark:divide-gray-700"
+                className="divide-y divide-borderSubtle"
                 renderItem={({ model, isSelected, onSelect }) => (
                   <label key={model.name} className="block cursor-pointer">
                     <div
-                      className="flex items-center justify-between p-2 text-textStandard hover:bg-bgStandard"
+                      className="flex items-center justify-between p-2 text-textStandard hover:bg-bgSubtle transition-colors"
                       onClick={onSelect}
                     >
                       <div>

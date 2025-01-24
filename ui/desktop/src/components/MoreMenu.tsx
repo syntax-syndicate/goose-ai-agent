@@ -118,7 +118,7 @@ export default function MoreMenu() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="z-[100] absolute top-2 right-[10px] w-[20px] h-[20px] cursor-pointer no-drag text-textStandard">
+        <button className="z-[100] absolute top-2 right-4 w-[20px] h-[20px] cursor-pointer no-drag text-textStandard">
           <More />
         </button>
       </PopoverTrigger>
@@ -135,7 +135,7 @@ export default function MoreMenu() {
             </div> */}
             {/* {!useSystemTheme && ( */}
             <button
-              className="flex items-center justify-between p-2 hover:bg-bgStandard"
+              className="flex items-center justify-between p-2 hover:bg-bgSubtle transition-colors"
               onClick={() => toggleTheme()}
             >
               <span className="text-sm">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
@@ -231,7 +231,7 @@ export default function MoreMenu() {
                 setOpen(false);
                 navigate('/settings');
               }}
-              className="w-full text-left p-2 text-sm hover:bg-bgStandard"
+              className="w-full text-left p-2 text-sm hover:bg-bgSubtle transition-colors"
             >
               Settings
             </button>
@@ -241,7 +241,7 @@ export default function MoreMenu() {
                 setOpen(false);
                 window.electron.directoryChooser();
               }}
-              className="w-full text-left p-2 text-sm hover:bg-bgStandard"
+              className="w-full text-left p-2 text-sm hover:bg-bgSubtle transition-colors"
             >
               Open Directory (cmd+O)
             </button>
@@ -250,7 +250,7 @@ export default function MoreMenu() {
                 setOpen(false);
                 window.electron.createChatWindow();
               }}
-              className="w-full text-left p-2 text-sm hover:bg-bgStandard"
+              className="w-full text-left p-2 text-sm hover:bg-bgSubtle transition-colors"
             >
               New Session (cmd+N)
             </button>
@@ -260,7 +260,7 @@ export default function MoreMenu() {
                 setOpen(false);
                 window.electron.createChatWindow();
               }}
-              className="w-full text-left p-2 text-sm hover:bg-bgStandard text-red-400"
+              className="w-full text-left p-2 text-sm hover:bg-bgSubtle transition-colors text-red-400"
             >
               Reset Provider
             </button>
@@ -271,7 +271,7 @@ export default function MoreMenu() {
                   setOpen(false);
                   navigate('/keys');
                 }}
-                className="w-full text-left p-2 text-sm hover:bg-bgStandard"
+                className="w-full text-left p-2 text-sm hover:bg-bgSubtle transition-colors"
               >
                 Provider Settings (alpha)
               </button>
