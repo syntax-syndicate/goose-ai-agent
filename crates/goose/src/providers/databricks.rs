@@ -19,7 +19,13 @@ use mcp_core::tool::Tool;
 const DEFAULT_CLIENT_ID: &str = "databricks-cli";
 const DEFAULT_REDIRECT_URL: &str = "http://localhost:8020";
 const DEFAULT_SCOPES: &[&str] = &["all-apis"];
+
 pub const DATABRICKS_DEFAULT_MODEL: &str = "databricks-meta-llama-3-3-70b-instruct";
+// Databricks can passthrough to a wide range of models, we only provide the default
+pub const DATABRICKS_KNOWN_MODELS: &[&str] = &[DATABRICKS_DEFAULT_MODEL];
+
+pub const DATABRICKS_DOC_URL: &str =
+    "https://docs.databricks.com/en/generative-ai/external-models/index.html";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DatabricksAuth {
@@ -154,6 +160,11 @@ impl Provider for DatabricksProvider {
             "Databricks",
             "Models on Databricks AI Gateway",
             DATABRICKS_DEFAULT_MODEL,
+            DATABRICKS_KNOWN_MODELS
+                .iter()
+                .map(|&s| s.to_string())
+                .collect(),
+            DATABRICKS_DOC_URL,
             vec![
                 ConfigKey::new("DATABRICKS_HOST", true, false, None),
                 ConfigKey::new("DATABRICKS_TOKEN", false, true, None),
