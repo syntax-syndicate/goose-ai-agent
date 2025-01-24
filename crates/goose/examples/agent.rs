@@ -9,12 +9,12 @@ async fn main() {
     // Setup a model provider from env vars
     let _ = dotenv();
 
-    let provider = Box::new(DatabricksProvider::from_env().expect("should create provider"));
+    let provider = Box::new(DatabricksProvider::default());
 
     // Setup an agent with the developer extension
     let mut agent = AgentFactory::create("reference", provider).expect("default should exist");
 
-    let config = ExtensionConfig::stdio("./target/debug/developer");
+    let config = ExtensionConfig::stdio("developer", "./target/debug/developer");
     agent.add_extension(config).await.unwrap();
 
     println!("Extensions:");

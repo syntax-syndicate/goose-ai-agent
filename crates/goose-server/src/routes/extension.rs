@@ -4,7 +4,7 @@ use crate::state::AppState;
 use axum::{extract::State, routing::post, Json, Router};
 use goose::{
     agents::{extension::Envs, ExtensionConfig},
-    key_manager::{get_keyring_secret, KeyRetrievalStrategy},
+    config::Config,
 };
 use http::{HeaderMap, StatusCode};
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,8 @@ enum ExtensionConfigRequest {
     /// Server-Sent Events (SSE) extension.
     #[serde(rename = "sse")]
     Sse {
+        /// The name to identify this extension
+        name: String,
         /// The URI endpoint for the SSE extension.
         uri: String,
         /// List of environment variable keys. The server will fetch their values from the keyring.
@@ -24,6 +26,8 @@ enum ExtensionConfigRequest {
     /// Standard I/O (stdio) extension.
     #[serde(rename = "stdio")]
     Stdio {
+        /// The name to identify this extension
+        name: String,
         /// The command to execute.
         cmd: String,
         /// Arguments for the command.
@@ -65,15 +69,22 @@ async fn add_extension(
         return Err(StatusCode::UNAUTHORIZED);
     }
 
+    // Load the configuration
+    let config = Config::global();
+
     // Initialize a vector to collect any missing keys.
     let mut missing_keys = Vec::new();
 
     // Construct ExtensionConfig with Envs populated from keyring based on provided env_keys.
     let extension_config: ExtensionConfig = match request {
-        ExtensionConfigRequest::Sse { uri, env_keys } => {
+        ExtensionConfigRequest::Sse {
+            name,
+            uri,
+            env_keys,
+        } => {
             let mut env_map = HashMap::new();
             for key in env_keys {
-                match get_keyring_secret(&key, KeyRetrievalStrategy::KeyringOnly) {
+                match config.get_secret(&key) {
                     Ok(value) => {
                         env_map.insert(key, value);
                     }
@@ -94,18 +105,20 @@ async fn add_extension(
             }
 
             ExtensionConfig::Sse {
+                name,
                 uri,
                 envs: Envs::new(env_map),
             }
         }
         ExtensionConfigRequest::Stdio {
+            name,
             cmd,
             args,
             env_keys,
         } => {
             let mut env_map = HashMap::new();
             for key in env_keys {
-                match get_keyring_secret(&key, KeyRetrievalStrategy::KeyringOnly) {
+                match config.get_secret(&key) {
                     Ok(value) => {
                         env_map.insert(key, value);
                     }
@@ -126,6 +139,7 @@ async fn add_extension(
             }
 
             ExtensionConfig::Stdio {
+                name,
                 cmd,
                 args,
                 envs: Envs::new(env_map),
