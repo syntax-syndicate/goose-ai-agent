@@ -72,6 +72,18 @@ export const BUILT_IN_EXTENSIONS = [
     type: 'builtin',
     env_keys: [],
   },
+  {
+    id: 'google_drive',
+    name: 'Google Drive',
+    description: 'Built-in Google Drive integration for file management and access',
+    enabled: false,
+    type: 'builtin',
+    env_keys: [
+      'GOOGLE_DRIVE_OAUTH_PATH',
+      'GOOGLE_DRIVE_CREDENTIALS_PATH',
+      'GOOGLE_DRIVE_OAUTH_CONFIG',
+    ],
+  },
 ];
 
 export async function addExtension(
@@ -92,7 +104,7 @@ export async function addExtension(
         uri: extension.uri,
       }),
       ...(extension.type === 'builtin' && {
-        name: extension.name.toLowerCase().replace(/-/g, ''),
+        name: extension.name.toLowerCase().replace(/-/g, '').replace(/\s/g, '_'),
       }),
       env_keys: extension.env_keys,
     };
