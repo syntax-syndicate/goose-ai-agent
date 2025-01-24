@@ -230,6 +230,7 @@ impl Agent for TruncateAgent {
 
                         truncation_attempt += 1;
                         debug!("Context length exceeded. Initiating truncation attempt {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
+                        println!("Context length exceeded. Initiating truncation attempt {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
 
                         // Decay the estimate factor as we make more truncation attempts
                         // Estimate factor decays like this over time: 0.9, 0.81, 0.729, ...

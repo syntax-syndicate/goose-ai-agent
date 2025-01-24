@@ -3,11 +3,11 @@ use crate::message::Message;
 use crate::model::ModelConfig;
 use crate::providers::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
 use crate::providers::formats::openai::{create_request, get_usage, response_to_message};
-use crate::providers::utils::{get_model, handle_response_openai_compat};
+use crate::providers::utils::get_model;
 use anyhow::Result;
 use async_trait::async_trait;
 use mcp_core::Tool;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde_json::Value;
 use std::time::Duration;
 
@@ -64,7 +64,23 @@ impl GroqProvider {
             .send()
             .await?;
 
-        handle_response_openai_compat(payload, response).await
+        match response.status() {
+            StatusCode::OK => Ok(response.json().await.unwrap()),
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+                Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
+                    Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+            }
+            StatusCode::PAYLOAD_TOO_LARGE => {
+                Err(ProviderError::ContextLengthExceeded(response.json().await.unwrap_or_default()))
+            }
+            StatusCode::BAD_REQUEST => {
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+            }
+            StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
+                Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
+            }
+            _ => Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+        }
     }
 }
 

@@ -10,6 +10,7 @@ use mcp_core::tool::Tool;
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
 use std::time::Duration;
+use tracing::debug;
 
 pub const GOOGLE_API_HOST: &str = "https://generativelanguage.googleapis.com";
 pub const GOOGLE_DEFAULT_MODEL: &str = "gemini-2.0-flash-exp";
@@ -66,6 +67,8 @@ impl GoogleProvider {
             .send()
             .await?;
 
+        println!("Response from Google: {:?}", response);
+
         // https://ai.google.dev/gemini-api/docs/troubleshooting?lang=python#error-codes
         match response.status() {
             StatusCode::OK => Ok(response.json().await.unwrap()),
@@ -73,11 +76,27 @@ impl GoogleProvider {
                 Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
                     Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
             }
-            StatusCode::TOO_MANY_REQUESTS => {
-                Err(ProviderError::RateLimitExceeded(format!("Rate limit exceeded. Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+            StatusCode::BAD_REQUEST => {
+                let status = response.status();
+                let payload: Value = response.json().await.unwrap();
+                if let Some(error) = payload.get("error") {
+                    debug!("Bad Request Error: {error:?}");
+                    print!("!!! Bad Request Error: {error:?}");
+                    let error_msg = error.get("message").unwrap().as_str().unwrap();
+                    if error_msg.to_lowercase().contains("too long") {
+                        return Err(ProviderError::ContextLengthExceeded(error_msg.to_string()));
+                    }
+                }
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
             }
             StatusCode::INTERNAL_SERVER_ERROR => {
-                Err(ProviderError::ContextLengthExceeded(format!("Context length exceeded. Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+                let status = response.status();
+                let text = response.text().await.unwrap_or_default();
+                println!("!!! Internal Server Error - {}, Response: {:?}", status, text);
+                Err(ProviderError::ContextLengthExceeded(format!("Context length exceeded. Status: {}. Response: {:?}", status, text)))
+            }
+            StatusCode::TOO_MANY_REQUESTS => {
+                Err(ProviderError::RateLimitExceeded(format!("Rate limit exceeded. Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
             }
             StatusCode::SERVICE_UNAVAILABLE => {
                 Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
