@@ -180,6 +180,9 @@ impl Agent for TruncateAgent {
                     Ok((response, usage)) => {
                         capabilities.record_usage(usage).await;
 
+                        // Reset truncation attempt
+                        truncation_attempt = 0;
+
                         // Yield the assistant's response
                         yield response.clone();
 
