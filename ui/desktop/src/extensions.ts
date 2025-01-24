@@ -6,11 +6,13 @@ import { toast } from 'react-toastify';
 export type ExtensionConfig =
   | {
       type: 'sse';
+      name: string;
       uri: string;
       env_keys?: string[];
     }
   | {
       type: 'stdio';
+      name: string;
       cmd: string;
       args: string[];
       env_keys?: string[];
@@ -24,7 +26,6 @@ export type ExtensionConfig =
 // FullExtensionConfig type matching all the fields that come in deep links and are stored in local storage
 export type FullExtensionConfig = ExtensionConfig & {
   id: string;
-  name: string;
   description: string;
   enabled: boolean;
 };
@@ -82,10 +83,12 @@ export async function addExtension(
     const config = {
       type: extension.type,
       ...(extension.type === 'stdio' && {
+        name: extension.name,
         cmd: await replaceWithShims(extension.cmd),
         args: extension.args || [],
       }),
       ...(extension.type === 'sse' && {
+        name: extension.name,
         uri: extension.uri,
       }),
       ...(extension.type === 'builtin' && {
