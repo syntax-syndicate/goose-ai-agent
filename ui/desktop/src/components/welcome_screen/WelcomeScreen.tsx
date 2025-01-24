@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProviderGrid } from '../settings/providers/ProviderGrid';
+import { ProviderGrid } from './ProviderGrid';
 import { ScrollArea } from '../ui/scroll-area';
 
 // Extending React CSSProperties to include custom webkit property

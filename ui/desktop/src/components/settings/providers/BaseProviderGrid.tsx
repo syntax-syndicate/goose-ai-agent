@@ -32,6 +32,19 @@ function getArticle(word: string): string {
   return 'aeiouAEIOU'.indexOf(word[0]) >= 0 ? 'an' : 'a';
 }
 
+export function getProviderDescription(provider) {
+  const descriptions = {
+    OpenAI: 'Access GPT-4, GPT-3.5 Turbo, and other OpenAI models',
+    Anthropic: 'Access Claude and other Anthropic models',
+    Google: 'Access Gemini and other Google AI models',
+    Groq: 'Access Mixtral and other Groq-hosted models',
+    Databricks: 'Access models hosted on your Databricks instance',
+    OpenRouter: 'Access a variety of AI models through OpenRouter',
+    Ollama: 'Run and use open-source models locally',
+  };
+  return descriptions[provider] || `Access ${provider} models`;
+}
+
 function BaseProviderCard({
   name,
   description,
