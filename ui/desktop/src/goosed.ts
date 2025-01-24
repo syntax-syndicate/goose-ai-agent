@@ -37,6 +37,7 @@ const checkServerStatus = async (
       const response = await fetch(statusUrl);
       if (response.ok) {
         log.info(`Server is ready after ${attempt} attempts`);
+        log.info(`Hello world`);
         return true;
       }
     } catch (error) {
