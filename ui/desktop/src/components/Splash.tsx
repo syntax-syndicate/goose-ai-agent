@@ -8,8 +8,9 @@ export default function Splash({ append }) {
     <div className="h-full flex flex-col pb-12">
       <div className="p-8">
         <div className="relative text-textStandard mb-12">
-          {/* <GooseSplashLogo className="animate-[popin_500ms_ease-in_forwards]" /> */}
-          <GooseLogo />
+          <div className="w-min animate-[flyin_2s_var(--spring-easing)_forwards]">
+            <GooseLogo />
+          </div>
         </div>
 
         <div className="flex">

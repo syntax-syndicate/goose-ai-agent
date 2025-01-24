@@ -19,7 +19,7 @@ function SplashPill({ content, append, className = '' }) {
 
 export default function SplashPills({ append }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 animate-[fadein_500ms_ease-in_forwards]">
       <SplashPill
         content="What can goose do?"
         append={append}

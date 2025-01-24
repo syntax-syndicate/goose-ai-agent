@@ -29,13 +29,9 @@ export default {
           '0%': { opacity: 0, transform: 'translateY(12px)' },
           '100%': { opacity: 1, transform: 'translateY(0)' },
         },
-        soar: {
-          '0%': { transform: 'translate(0,0)' },
-          '20%': { transform: 'translate(-2px, 2px)' },
-          '40%': { transform: 'translate(0, 4px)' },
-          '60%': { transform: 'translate(2px, 0)' },
-          '80%': { transform: 'translate(4px, -2px)' },
-          '100%': { transform: 'translate(0,0)' },
+        flyin: {
+          '0%': { opacity: 0, transform: 'translate(-300%, 300%)' },
+          '100%': { opacity: 1, transform: 'translate(0, 0)' },
         },
         wind: {
           '0%': { transform: 'translate(0, 0)' },
