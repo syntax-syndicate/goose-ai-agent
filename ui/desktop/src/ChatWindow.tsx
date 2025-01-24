@@ -22,6 +22,7 @@ import { useRecentModels } from './components/settings/models/RecentModels';
 import { createSelectedModel } from './components/settings/models/utils';
 import { getDefaultModel } from './components/settings/models/hardcoded_stuff';
 import Splash from './components/Splash';
+import { loadAndAddStoredExtensions } from './extensions';
 
 declare global {
   interface Window {

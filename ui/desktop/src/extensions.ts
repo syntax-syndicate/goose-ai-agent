@@ -1,6 +1,7 @@
 import { getApiUrl, getSecretKey } from './config';
 import { NavigateFunction } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getStoredProvider } from './utils/providerUtils';
 
 // ExtensionConfig type matching the Rust version
 export type ExtensionConfig =
