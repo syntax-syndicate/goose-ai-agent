@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Message, useChat } from './ai-sdk-fork/useChat';
 import { getApiUrl, getSecretKey } from './config';
-import { addExtensionFromDeepLink } from './extensions';
-import { useNavigate } from 'react-router-dom';
 import BottomMenu from './components/BottomMenu';
 import FlappyGoose from './components/FlappyGoose';
 import GooseMessage from './components/GooseMessage';
@@ -336,16 +334,6 @@ export default function ChatWindow() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Listen for goose:// deep links
-    window.electron.on('add-extension', (_, link) => {
-      window.electron.logInfo(`Adding extension from deep link ${link}`);
-      addExtensionFromDeepLink(link, navigate);
-    });
-  }, [navigate]);
 
   // Get initial query and history from URL parameters
   const searchParams = new URLSearchParams(window.location.search);

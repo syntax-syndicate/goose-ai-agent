@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { addExtensionFromDeepLink } from './extensions';
+import { useNavigate } from 'react-router-dom';
 import LauncherWindow from './LauncherWindow';
 import ChatWindow from './ChatWindow';
 import ErrorScreen from './components/ErrorScreen';
@@ -12,6 +14,15 @@ export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null);
   const searchParams = new URLSearchParams(window.location.search);
   const isLauncher = searchParams.get('window') === 'launcher';
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log('Registering');
+    window.electron.on('add-extension', (_, link) => {
+      window.electron.logInfo(`Adding extension from deep link ${link}`);
+      addExtensionFromDeepLink(link, navigate);
+    });
+  }, [navigate]);
 
   useEffect(() => {
     const handleFatalError = (_: any, errorMessage: string) => {
