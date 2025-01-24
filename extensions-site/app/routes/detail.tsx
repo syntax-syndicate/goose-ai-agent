@@ -46,9 +46,11 @@ export default function DetailPage() {
   const { id } = useParams();
   const [server, setServer] = useState<Server | null>(null);
   const [isCommandVisible, setIsCommandVisible] = useState(true);
+  const serverUrl = "https://block.github.io/goose/v1/extensions/servers.json";
+
 
   useEffect(() => {
-    fetch("/servers.json")
+    fetch(serverUrl)
       .then((res) => res.json())
       .then((servers) => {
         const matchingServer = servers.find((s: Server) => s.id === id);
@@ -139,7 +141,7 @@ export default function DetailPage() {
                 <h4 className="font-medium">Command</h4>
               </div>
               <code className="block bg-gray-100 dark:bg-gray-900 p-2 rounded text-sm dark:text-gray-300">
-                goose session --with-system "{server.command}"
+                goose session --with-extension "{server.command}"
               </code>
             </div>
 

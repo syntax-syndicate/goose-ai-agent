@@ -184,13 +184,13 @@ mod tests {
         run_truncate_test(ProviderType::Ollama, "llama3.2", 128_000).await
     }
 
-    // #[tokio::test]
-    // #[ignore]
-    // async fn test_truncate_agent_with_openrouter() -> Result<()> {
-    //     std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY is not set");
+    #[tokio::test]
+    #[ignore]
+    async fn test_truncate_agent_with_openrouter() -> Result<()> {
+        std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY is not set");
 
-    //     println!("Starting truncate test with OpenRouter...");
-    //     // https://openrouter.ai/models
-    //     run_truncate_test(ProviderType::OpenRouter, "deepseek/deepseek-r1", 130_000).await
-    // }
+        println!("Starting truncate test with OpenRouter...");
+        // https://openrouter.ai/models
+        run_truncate_test(ProviderType::OpenRouter, "deepseek/deepseek-r1", 130_000).await
+    }
 }

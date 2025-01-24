@@ -3,17 +3,22 @@ import { ScrollArea } from '../ui/scroll-area';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Settings as SettingsType } from './types';
-import { FullExtensionConfig, replaceWithShims, extendGoosed } from '../../extensions';
+import {
+  FullExtensionConfig,
+  addExtension,
+  removeExtension,
+  BUILT_IN_EXTENSIONS,
+} from '../../extensions';
 import { ConfigureExtensionModal } from './extensions/ConfigureExtensionModal';
 import { ManualExtensionModal } from './extensions/ManualExtensionModal';
-import { showToast } from '../ui/toast';
 import BackButton from '../ui/BackButton';
 import { RecentModelsRadio } from './models/RecentModels';
 import { ExtensionItem } from './extensions/ExtensionItem';
-import { getApiUrl, getSecretKey } from '../../config';
 
 const EXTENSIONS_DESCRIPTION =
   'The Model Context Protocol (MCP) is a system that allows AI models to securely connect with local or remote resources using standard server setups. It works like a client-server setup and expands AI capabilities using three main components: Prompts, Resources, and Tools.';
+
+const EXTENSIONS_SITE_LINK = 'https://block.github.io/goose/v1/extensions/';
 
 const DEFAULT_SETTINGS: SettingsType = {
   models: [
@@ -36,41 +41,9 @@ const DEFAULT_SETTINGS: SettingsType = {
       enabled: true,
     },
   ],
-  extensions: [],
+  // @ts-expect-error "we actually do always have all the properties required for builtins, but tsc cannot tell for some reason"
+  extensions: BUILT_IN_EXTENSIONS,
 };
-
-const BUILT_IN_EXTENSIONS = [
-  {
-    id: 'jetbrains',
-    name: 'Jetbrains',
-    type: 'stdio',
-    cmd: 'goosed',
-    args: ['mcp', 'jetbrains'],
-    description: 'Integration with any Jetbrains IDE',
-    enabled: false,
-    env_keys: [],
-  },
-  {
-    id: 'nondeveloper',
-    name: 'Non-Developer assistant',
-    type: 'stdio',
-    cmd: 'goosed',
-    args: ['mcp', 'nondeveloper'],
-    description: "General assisant tools that don't require you to be a developer or engineer.",
-    enabled: false,
-    env_keys: [],
-  },
-  {
-    id: 'memory',
-    name: 'Memory',
-    type: 'stdio',
-    cmd: 'goosed',
-    args: ['mcp', 'memory'],
-    description: 'Teach goose your preferences as you go.',
-    enabled: false,
-    env_keys: [],
-  },
-];
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -96,6 +69,7 @@ export default function Settings() {
 
   const [extensionBeingConfigured, setExtensionBeingConfigured] =
     useState<FullExtensionConfig | null>(null);
+
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
   // Persist settings changes
@@ -142,80 +116,32 @@ export default function Settings() {
       ),
     }));
 
-    try {
-      const endpoint = newEnabled ? '/extensions/add' : '/extensions/remove';
+    let response: Response;
 
-      // Full config for adding - only "name" as a string for removing
-      const body = newEnabled
-        ? {
-            type: extension.type,
-            ...(extension.type === 'stdio' && {
-              cmd: await replaceWithShims(extension.cmd),
-              args: extension.args || [],
-            }),
-            ...(extension.type === 'sse' && {
-              uri: extension.uri,
-            }),
-            ...(extension.type === 'builtin' && {
-              name: extension.name,
-            }),
-            env_keys: extension.env_keys,
-          }
-        : extension.name;
+    if (newEnabled) {
+      response = await addExtension(extension);
+    } else {
+      response = await removeExtension(extension.name);
+    }
 
-      const response = await fetch(getApiUrl(endpoint), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Secret-Key': getSecretKey(),
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to ${newEnabled ? 'enable' : 'disable'} extension`);
-      }
-
-      showToast(`Successfully ${newEnabled ? 'enabled' : 'disabled'} extension`, 'success');
-    } catch (error) {
+    if (!response.ok) {
       setSettings(originalSettings);
-      showToast(`Error ${newEnabled ? 'enabling' : 'disabling'} extension`, 'error');
-      console.error('Error toggling extension:', error);
     }
   };
 
   const handleExtensionRemove = async () => {
-    if (!extensionBeingConfigured) return;
+    if (!extensionBeingConfigured || !extensionBeingConfigured.enabled) return;
 
-    try {
-      // First disable the extension if it's enabled
-      if (extensionBeingConfigured.enabled) {
-        const response = await fetch(getApiUrl('/extensions/remove'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Secret-Key': getSecretKey(),
-          },
-          body: JSON.stringify(extensionBeingConfigured.name),
-        });
+    const response = await removeExtension(extensionBeingConfigured.name);
 
-        if (!response.ok) {
-          throw new Error('Failed to remove extension from backend');
-        }
-      }
-
-      // Then remove it from the local settings
+    if (response.ok) {
+      // Remove from localstorage
       setSettings((prev) => ({
         ...prev,
         extensions: prev.extensions.filter((ext) => ext.id !== extensionBeingConfigured.id),
       }));
-
-      showToast(`Successfully removed ${extensionBeingConfigured.name} extension`, 'success');
       setExtensionBeingConfigured(null);
       navigate('/settings', { replace: true });
-    } catch (error) {
-      console.error('Error removing extension:', error);
-      showToast('Failed to remove extension', 'error');
     }
   };
 
@@ -240,79 +166,65 @@ export default function Settings() {
   };
 
   return (
-    <div className="h-screen w-full pt-[36px]">
-      <div className="h-full w-full bg-white dark:bg-gray-800 overflow-hidden p-2 pt-0">
-        <ScrollArea className="h-full w-full">
-          <div className="flex min-h-full">
-            {/* Left Navigation */}
-            <div className="w-48 border-gray-100 dark:border-gray-700 px-2 pt-2">
-              <div className="sticky top-8">
-                <BackButton
-                  onClick={() => {
-                    navigate('/chat/1', { replace: true });
-                  }}
-                  className="mb-4"
-                />
-                <div className="space-y-2">
-                  {['Models', 'Extensions'].map((section) => (
-                    <button
-                      key={section}
-                      onClick={(e) => handleNavClick(section, e)}
-                      className="block w-full text-left px-3 py-2 rounded-lg transition-colors
-                                                  text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    >
-                      {section}
-                    </button>
-                  ))}
+    <div className="h-screen w-full">
+      <div className="relative flex items-center h-[36px] w-full bg-bgSubtle"></div>
+
+      <ScrollArea className="h-full w-full">
+        <div className="flex flex-col pb-24">
+          <div className="px-8 pt-6 pb-4">
+            <BackButton
+              onClick={() => {
+                navigate('/chat/1', { replace: true });
+              }}
+            />
+            <h1 className="text-3xl font-medium text-textStandard mt-1">Settings</h1>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 py-8 pt-[20px]">
+            <div className="space-y-8">
+              <section id="models">
+                <div className="flex justify-between items-center mb-6 border-b border-borderSubtle px-8">
+                  <h2 className="text-xl font-medium text-textStandard">Models</h2>
+                  <button
+                    onClick={() => navigate('/settings/more-models')}
+                    className="text-indigo-500 hover:text-indigo-600 text-sm"
+                  >
+                    Browse
+                  </button>
                 </div>
-              </div>
-            </div>
+                <div className="px-8">
+                  <RecentModelsRadio />
+                </div>
+              </section>
 
-            {/* Content Area */}
-            <div className="flex-1 px-16 py-8 pt-[20px]">
-              <div className="space-y-12">
-                <section id="models">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-textStandard">Models</h2>
+              <section id="extensions">
+                <div className="flex justify-between items-center mb-6 border-b border-borderSubtle px-8">
+                  <h2 className="text-xl font-semibold text-textStandard">Extensions</h2>
+                  <div className="flex gap-4">
                     <button
-                      onClick={() => navigate('/settings/more-models')}
-                      className="text-indigo-500 hover:text-indigo-600 font-medium"
+                      onClick={() => setIsManualModalOpen(true)}
+                      className="text-indigo-500 hover:text-indigo-600 text-sm"
+                      title="Add Manually"
                     >
-                      More Models
+                      {/* <Plus className="h-4 w-4" /> */}
+                      Add
+                    </button>
+
+                    <button
+                      onClick={() => window.electron.openInChrome(EXTENSIONS_SITE_LINK)}
+                      className="text-indigo-500 hover:text-indigo-600 text-sm"
+                    >
+                      Browse
                     </button>
                   </div>
-                  <RecentModelsRadio />
-                </section>
+                </div>
 
-                <section id="extensions">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-textStandard">Extensions</h2>
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => setIsManualModalOpen(true)}
-                        className="text-indigo-500 hover:text-indigo-600 font-medium"
-                        title="Add Manually"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>{' '}
-                      |
-                      <button
-                        onClick={() =>
-                          window.electron.openInChrome(
-                            'https://silver-disco-nvm6v4e.pages.github.io/'
-                          )
-                        }
-                        className="text-indigo-500 hover:text-indigo-600 font-medium"
-                      >
-                        Browse Extensions
-                      </button>
-                    </div>
-                  </div>
+                <div className="px-8">
                   <p className="text-sm text-textStandard mb-4">{EXTENSIONS_DESCRIPTION}</p>
+
                   {settings.extensions.length === 0 ? (
-                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                      No Extensions Added
-                    </p>
+                    <p className="text-textSubtle text-center py-4">No Extensions Added</p>
                   ) : (
                     settings.extensions.map((ext) => (
                       <ExtensionItem
@@ -323,12 +235,12 @@ export default function Settings() {
                       />
                     ))
                   )}
-                </section>
-              </div>
+                </div>
+              </section>
             </div>
           </div>
-        </ScrollArea>
-      </div>
+        </div>
+      </ScrollArea>
 
       <ConfigureExtensionModal
         isOpen={!!extensionBeingConfigured}
@@ -346,37 +258,16 @@ export default function Settings() {
         isOpen={isManualModalOpen}
         onClose={() => setIsManualModalOpen(false)}
         onSubmit={async (extension) => {
-          // Create config for extendGoosed
-          const config = {
-            type: extension.type,
-            ...(extension.type === 'stdio' && {
-              cmd: await replaceWithShims(extension.cmd),
-              args: extension.args || [],
-            }),
-            ...(extension.type === 'sse' && {
-              uri: extension.uri,
-            }),
-            ...(extension.type === 'builtin' && {
-              name: extension.name,
-            }),
-            env_keys: extension.env_keys,
-          };
+          const response = await addExtension(extension);
 
-          try {
-            const success = await extendGoosed(config);
-            if (success) {
-              setSettings((prev) => ({
-                ...prev,
-                extensions: [...prev.extensions, extension],
-              }));
-              setIsManualModalOpen(false);
-              showToast('Extension added successfully', 'success');
-            } else {
-              throw new Error('Failed to add extension');
-            }
-          } catch (error) {
-            console.error('Error adding extension:', error);
-            showToast('Error adding extension', 'error');
+          if (response.ok) {
+            setSettings((prev) => ({
+              ...prev,
+              extensions: [...prev.extensions, extension],
+            }));
+            setIsManualModalOpen(false);
+          } else {
+            // TODO - Anything for the UI state beyond validation?
           }
         }}
       />

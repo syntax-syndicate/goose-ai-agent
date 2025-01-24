@@ -24,23 +24,27 @@ pub async fn handle_configure() -> Result<(), Box<dyn Error>> {
         );
         println!();
         cliclack::intro(style(" goose-configure ").on_cyan().black())?;
-        configure_provider_dialog().await?;
-        println!(
-            "\n  {}: Run '{}' again to adjust your config or add extensions",
-            style("Tip").green().italic(),
-            style("goose configure").cyan()
-        );
-
-        // Since we are setting up for the first time, we'll also enable the developer system
-        ExtensionManager::set(
-            "developer",
-            ExtensionEntry {
+        if configure_provider_dialog().await? {
+            println!(
+                "\n  {}: Run '{}' again to adjust your config or add extensions",
+                style("Tip").green().italic(),
+                style("goose configure").cyan()
+            );
+            // Since we are setting up for the first time, we'll also enable the developer system
+            ExtensionManager::set(ExtensionEntry {
                 enabled: true,
                 config: ExtensionConfig::Builtin {
                     name: "developer".to_string(),
                 },
-            },
-        )?;
+            })?;
+        } else {
+            let _ = config.clear();
+            println!(
+                "\n  {}: We did not save your config, inspect your credentials\n   and run '{}' again to ensure goose can connect",
+                style("Warning").yellow().italic(),
+                style("goose configure").cyan()
+            );
+        }
 
         Ok(())
     } else {
@@ -74,14 +78,14 @@ pub async fn handle_configure() -> Result<(), Box<dyn Error>> {
         match action {
             "toggle" => toggle_extensions_dialog(),
             "add" => configure_extensions_dialog(),
-            "providers" => configure_provider_dialog().await,
+            "providers" => configure_provider_dialog().await.and(Ok(())),
             _ => unreachable!(),
         }
     }
 }
 
 /// Dialog for configuring the AI provider and model
-pub async fn configure_provider_dialog() -> Result<(), Box<dyn Error>> {
+pub async fn configure_provider_dialog() -> Result<bool, Box<dyn Error>> {
     // Get global config instance
     let config = Config::global();
 
@@ -116,60 +120,86 @@ pub async fn configure_provider_dialog() -> Result<(), Box<dyn Error>> {
             continue;
         }
 
-        // Try to get existing value from environment or config
-        let existing: Result<String, _> = if key.secret {
-            config.get_secret(&key.name)
-        } else {
-            config.get(&key.name)
-        };
+        // First check if the value is set via environment variable
+        let from_env = std::env::var(&key.name).ok();
 
-        match existing {
-            Ok(_) => {
-                let _ = cliclack::log::info(format!("{} is already configured", key.name));
-                if cliclack::confirm("Would you like to update this value?").interact()? {
-                    let new_value: String = if key.secret {
-                        cliclack::password(format!("Enter new value for {}", key.name))
-                            .mask('▪')
-                            .interact()?
-                    } else {
-                        cliclack::input(format!("Enter new value for {}", key.name)).interact()?
-                    };
-
+        match from_env {
+            Some(env_value) => {
+                let _ =
+                    cliclack::log::info(format!("{} is set via environment variable", key.name));
+                if cliclack::confirm("Would you like to save this value to your config file?")
+                    .initial_value(true)
+                    .interact()?
+                {
                     if key.secret {
-                        config.set_secret(&key.name, Value::String(new_value))?;
+                        config.set_secret(&key.name, Value::String(env_value))?;
                     } else {
-                        config.set(&key.name, Value::String(new_value))?;
+                        config.set(&key.name, Value::String(env_value))?;
                     }
+                    let _ = cliclack::log::info(format!("Saved {} to config file", key.name));
                 }
             }
-            Err(_) => {
-                let value: String = if key.secret {
-                    cliclack::password(format!(
-                        "Provider {} requires {}, please enter a value",
-                        provider_meta.display_name, key.name
-                    ))
-                    .mask('▪')
-                    .interact()?
+            None => {
+                // No env var, check config/secret storage
+                let existing: Result<String, _> = if key.secret {
+                    config.get_secret(&key.name)
                 } else {
-                    cliclack::input(format!(
-                        "Provider {} requires {}, please enter a value",
-                        provider_meta.display_name, key.name
-                    ))
-                    .interact()?
+                    config.get(&key.name)
                 };
 
-                if key.secret {
-                    config.set_secret(&key.name, Value::String(value))?;
-                } else {
-                    config.set(&key.name, Value::String(value))?;
+                match existing {
+                    Ok(_) => {
+                        let _ = cliclack::log::info(format!("{} is already configured", key.name));
+                        if cliclack::confirm("Would you like to update this value?").interact()? {
+                            let new_value: String = if key.secret {
+                                cliclack::password(format!("Enter new value for {}", key.name))
+                                    .mask('▪')
+                                    .interact()?
+                            } else {
+                                cliclack::input(format!("Enter new value for {}", key.name))
+                                    .interact()?
+                            };
+
+                            if key.secret {
+                                config.set_secret(&key.name, Value::String(new_value))?;
+                            } else {
+                                config.set(&key.name, Value::String(new_value))?;
+                            }
+                        }
+                    }
+                    Err(_) => {
+                        let value: String = if key.secret {
+                            cliclack::password(format!(
+                                "Provider {} requires {}, please enter a value",
+                                provider_meta.display_name, key.name
+                            ))
+                            .mask('▪')
+                            .interact()?
+                        } else {
+                            cliclack::input(format!(
+                                "Provider {} requires {}, please enter a value",
+                                provider_meta.display_name, key.name
+                            ))
+                            .interact()?
+                        };
+
+                        if key.secret {
+                            config.set_secret(&key.name, Value::String(value))?;
+                        } else {
+                            config.set(&key.name, Value::String(value))?;
+                        }
+                    }
                 }
             }
         }
     }
 
     // Select model, defaulting to the provider's recommended model
+    let default_model = config
+        .get("GOOSE_MODEL")
+        .unwrap_or(provider_meta.default_model.clone());
     let model: String = cliclack::input("Enter a model from that provider:")
-        .default_input(&provider_meta.default_model)
+        .default_input(&default_model)
         .interact()?;
 
     // Update config with new values
@@ -208,15 +238,15 @@ pub async fn configure_provider_dialog() -> Result<(), Box<dyn Error>> {
             }
 
             cliclack::outro("Configuration saved successfully")?;
+            Ok(true)
         }
         Err(e) => {
             println!("{:?}", e);
             spin.stop("We could not connect!");
-            let _ = cliclack::outro("Try rerunning configure and check your credentials.");
+            let _ = cliclack::outro("The provider configuration was invalid");
+            Ok(false)
         }
     }
-
-    Ok(())
 }
 
 /// Configure extensions that can be used with goose
@@ -234,7 +264,7 @@ pub fn toggle_extensions_dialog() -> Result<(), Box<dyn Error>> {
     // Create a list of extension names and their enabled status
     let extension_status: Vec<(String, bool)> = extensions
         .iter()
-        .map(|(name, entry)| (name.clone(), entry.enabled))
+        .map(|entry| (entry.config.name().to_string(), entry.enabled))
         .collect();
 
     // Get currently enabled extensions for the selection
@@ -314,26 +344,23 @@ pub fn configure_extensions_dialog() -> Result<(), Box<dyn Error>> {
                 .interact()?
                 .to_string();
 
-            ExtensionManager::set(
-                &extension,
-                ExtensionEntry {
-                    enabled: true,
-                    config: ExtensionConfig::Builtin {
-                        name: extension.clone(),
-                    },
+            ExtensionManager::set(ExtensionEntry {
+                enabled: true,
+                config: ExtensionConfig::Builtin {
+                    name: extension.clone(),
                 },
-            )?;
+            })?;
 
             cliclack::outro(format!("Enabled {} extension", style(extension).green()))?;
         }
         "stdio" => {
-            let extensions = ExtensionManager::get_all()?;
+            let extensions = ExtensionManager::get_all_names()?;
             let name: String = cliclack::input("What would you like to call this extension?")
                 .placeholder("my-extension")
                 .validate(move |input: &String| {
                     if input.is_empty() {
                         Err("Please enter a name")
-                    } else if extensions.contains_key(input) {
+                    } else if extensions.contains(input) {
                         Err("An extension with this name already exists")
                     } else {
                         Ok(())
@@ -379,28 +406,26 @@ pub fn configure_extensions_dialog() -> Result<(), Box<dyn Error>> {
                 }
             }
 
-            ExtensionManager::set(
-                &name,
-                ExtensionEntry {
-                    enabled: true,
-                    config: ExtensionConfig::Stdio {
-                        cmd,
-                        args,
-                        envs: Envs::new(envs),
-                    },
+            ExtensionManager::set(ExtensionEntry {
+                enabled: true,
+                config: ExtensionConfig::Stdio {
+                    name: name.clone(),
+                    cmd,
+                    args,
+                    envs: Envs::new(envs),
                 },
-            )?;
+            })?;
 
             cliclack::outro(format!("Added {} extension", style(name).green()))?;
         }
         "sse" => {
-            let extensions = ExtensionManager::get_all()?;
+            let extensions = ExtensionManager::get_all_names()?;
             let name: String = cliclack::input("What would you like to call this extension?")
                 .placeholder("my-remote-extension")
                 .validate(move |input: &String| {
                     if input.is_empty() {
                         Err("Please enter a name")
-                    } else if extensions.contains_key(input) {
+                    } else if extensions.contains(input) {
                         Err("An extension with this name already exists")
                     } else {
                         Ok(())
@@ -443,16 +468,14 @@ pub fn configure_extensions_dialog() -> Result<(), Box<dyn Error>> {
                 }
             }
 
-            ExtensionManager::set(
-                &name,
-                ExtensionEntry {
-                    enabled: true,
-                    config: ExtensionConfig::Sse {
-                        uri,
-                        envs: Envs::new(envs),
-                    },
+            ExtensionManager::set(ExtensionEntry {
+                enabled: true,
+                config: ExtensionConfig::Sse {
+                    name: name.clone(),
+                    uri,
+                    envs: Envs::new(envs),
                 },
-            )?;
+            })?;
 
             cliclack::outro(format!("Added {} extension", style(name).green()))?;
         }

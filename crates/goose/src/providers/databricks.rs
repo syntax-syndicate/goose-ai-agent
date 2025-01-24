@@ -10,6 +10,7 @@ use super::errors::ProviderError;
 use super::formats::openai::{create_request, get_usage, response_to_message};
 use super::oauth;
 use super::utils::{get_model, ImageFormat};
+use crate::config::ConfigError;
 use crate::message::Message;
 use crate::model::ModelConfig;
 use mcp_core::tool::Tool;
@@ -65,7 +66,23 @@ impl Default for DatabricksProvider {
 impl DatabricksProvider {
     pub fn from_env(model: ModelConfig) -> Result<Self> {
         let config = crate::config::Config::global();
-        let host: String = config.get("DATABRICKS_HOST")?;
+
+        // For compatibility for now we check both config and secret for databricks host
+        // but it is not actually a secret value
+        let mut host: Result<String, ConfigError> = config.get("DATABRICKS_HOST");
+
+        if host.is_err() {
+            host = config.get_secret("DATABRICKS_HOST")
+        }
+
+        if host.is_err() {
+            return Err(ConfigError::NotFound(
+                "Did not find DATABRICKS_HOST in either config file or keyring".to_string(),
+            )
+            .into());
+        }
+
+        let host = host?;
 
         let client = Client::builder()
             .timeout(Duration::from_secs(600))
@@ -75,10 +92,10 @@ impl DatabricksProvider {
         if let Ok(api_key) = config.get_secret("DATABRICKS_TOKEN") {
             return Ok(Self {
                 client,
-                host: host.clone(),
+                host,
                 auth: DatabricksAuth::token(api_key),
                 model,
-                image_format: ImageFormat::Anthropic,
+                image_format: ImageFormat::OpenAi,
             });
         }
 
@@ -88,7 +105,7 @@ impl DatabricksProvider {
             auth: DatabricksAuth::oauth(host.clone()),
             host,
             model,
-            image_format: ImageFormat::Anthropic,
+            image_format: ImageFormat::OpenAi,
         })
     }
 
