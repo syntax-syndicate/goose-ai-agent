@@ -76,7 +76,7 @@ export function ServerCard({ server }: { server: MCPServer }) {
                 {server.is_builtin && (
                   <div
                     className="inline-block"
-                    title="This extension is built into Goose and can be enabled in the Settings page"
+                    title="This extension is built into goose and can be enabled in the settings page"
                   >
                     <Badge
                       variant="secondary"
