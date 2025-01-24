@@ -269,7 +269,7 @@ export function ChatContent({
                   {error.status && <span className="ml-2">(Status: {error.status})</span>}
                 </div>
                 <div
-                  className="p-4 text-center whitespace-nowrap cursor-pointer border border-borderSubtle hover:bg-bgSubtle rounded-[14px] inline-block transition-all duration-150"
+                  className="px-3 py-2 mt-2 text-center whitespace-nowrap cursor-pointer text-textStandard border border-borderSubtle hover:bg-bgSubtle rounded-full inline-block transition-all duration-150"
                   onClick={async () => {
                     const lastUserMessage = messages.reduceRight(
                       (found, m) => found || (m.role === 'user' ? m : null),
