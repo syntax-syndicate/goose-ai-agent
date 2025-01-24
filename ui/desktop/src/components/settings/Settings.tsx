@@ -18,6 +18,8 @@ import { ExtensionItem } from './extensions/ExtensionItem';
 const EXTENSIONS_DESCRIPTION =
   'The Model Context Protocol (MCP) is a system that allows AI models to securely connect with local or remote resources using standard server setups. It works like a client-server setup and expands AI capabilities using three main components: Prompts, Resources, and Tools.';
 
+const EXTENSIONS_SITE_LINK = 'https://block.github.io/goose/v1/extensions/';
+
 const DEFAULT_SETTINGS: SettingsType = {
   models: [
     {
@@ -221,11 +223,7 @@ export default function Settings() {
                       </button>{' '}
                       |
                       <button
-                        onClick={() =>
-                          window.electron.openInChrome(
-                            'https://silver-disco-nvm6v4e.pages.github.io/'
-                          )
-                        }
+                        onClick={() => window.electron.openInChrome(EXTENSIONS_SITE_LINK)}
                         className="text-indigo-500 hover:text-indigo-600 font-medium"
                       >
                         Browse Extensions
