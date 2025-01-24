@@ -52,7 +52,7 @@ impl OllamaProvider {
 
         let response = self.client.post(&url).json(&payload).send().await?;
 
-        handle_response_openai_compat(payload, response).await
+        handle_response_openai_compat(response).await
     }
 }
 

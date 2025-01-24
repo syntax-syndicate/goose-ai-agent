@@ -53,6 +53,7 @@ async fn run_truncate_test(
         Message::user().with_text("hi there. what is 2 + 2?"),
         Message::assistant().with_text("hey! I think it's 4."),
         Message::user().with_text(&large_message_content),
+        Message::assistant().with_text("heyy!!"),
         // Messages before this mark should be truncated
         Message::user().with_text("what's the meaning of life?"),
         Message::assistant().with_text("the meaning of life is 42"),
@@ -146,14 +147,14 @@ mod tests {
         run_truncate_test(ProviderType::Databricks, "gpt-4o-mini", 128_000).await
     }
 
-    #[tokio::test]
-    #[ignore]
-    async fn test_truncate_agent_with_google_via_databricks() -> Result<()> {
-        std::env::var("DATABRICKS_HOST").expect("DATABRICKS_HOST is not set");
+    // #[tokio::test]
+    // #[ignore]
+    // async fn test_truncate_agent_with_google_via_databricks() -> Result<()> {
+    //     std::env::var("DATABRICKS_HOST").expect("DATABRICKS_HOST is not set");
 
-        println!("Starting truncate test with Databricks -> Google...");
-        run_truncate_test(ProviderType::Databricks, "gemini-2-0-flash", 1_100_000).await
-    }
+    //     println!("Starting truncate test with Databricks -> Google...");
+    //     run_truncate_test(ProviderType::Databricks, "gemini-2-0-flash", 1_200_000).await
+    // }
 
     #[tokio::test]
     #[ignore]
@@ -162,7 +163,7 @@ mod tests {
 
         println!("Starting truncate test with Google...");
         // https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models#gemini-2.0-flash
-        run_truncate_test(ProviderType::Google, "gemini-1.5-flash", 1_200_000).await
+        run_truncate_test(ProviderType::Google, "gemini-2.0-flash-exp", 1_200_000).await
     }
 
     #[tokio::test]

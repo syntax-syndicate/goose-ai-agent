@@ -64,23 +64,29 @@ impl GroqProvider {
             .send()
             .await?;
 
-        match response.status() {
-            StatusCode::OK => Ok(response.json().await.unwrap()),
+        let status = response.status();
+        let payload: Option<Value> = response.json().await.ok();
+
+        match status {
+            StatusCode::OK => payload.ok_or_else( || ProviderError::RequestFailed("Response body is not valid JSON".to_string()) ),
             StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
                 Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
-                    Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+                    Status: {}. Response: {:?}", status, payload)))
             }
             StatusCode::PAYLOAD_TOO_LARGE => {
-                Err(ProviderError::ContextLengthExceeded(response.json().await.unwrap_or_default()))
+                Err(ProviderError::ContextLengthExceeded(format!("{:?}", payload)))
+            }
+            StatusCode::TOO_MANY_REQUESTS => {
+                Err(ProviderError::RateLimitExceeded(format!("{:?}", payload)))
             }
             StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
-                Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
+                Err(ProviderError::ServerError(format!("{:?}", payload)))
             }
             _ => {
                 tracing::debug!(
-                    "{}", format!("Provider request failed with status: {}. Payload: {}", response.status(), payload)
+                    "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
                 );
-                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
             }
         }
     }

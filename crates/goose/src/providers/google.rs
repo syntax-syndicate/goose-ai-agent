@@ -66,48 +66,41 @@ impl GoogleProvider {
             .send()
             .await?;
 
-        println!("Response from Google: {:?}", response);
+        let status = response.status();
+        let payload: Option<Value> = response.json().await.ok();
 
-        // https://ai.google.dev/gemini-api/docs/troubleshooting?lang=python#error-codes
-        match response.status() {
-            StatusCode::OK => Ok(response.json().await.unwrap()),
+        match status {
+            StatusCode::OK =>  payload.ok_or_else( || ProviderError::RequestFailed("Response body is not valid JSON".to_string()) ),
             StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
                 Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
-                    Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+                    Status: {}. Response: {:?}", status, payload )))
             }
             StatusCode::BAD_REQUEST => {
-                let status = response.status();
-                let payload: Value = response.json().await.unwrap();
-                if let Some(error) = payload.get("error") {
-                    tracing::debug!("Bad Request Error: {error:?}");
-                    print!("!!! Bad Request Error: {error:?}");
-                    let error_msg = error.get("message").unwrap().as_str().unwrap();
-                    if error_msg.to_lowercase().contains("too long") {
-                        return Err(ProviderError::ContextLengthExceeded(error_msg.to_string()));
+                if let Some(payload) = &payload {
+                    if let Some(error) = payload.get("error") {
+                        let error_msg = error.get("message").and_then(|m| m.as_str()).unwrap_or("Unknown error");
+                        let error_status = error.get("status").and_then(|s| s.as_str()).unwrap_or("Unknown status");
+                        if error_status == "INVALID_ARGUMENT" && error_msg.to_lowercase().contains("exceeds") {
+                            return Err(ProviderError::ContextLengthExceeded(error_msg.to_string()));
+                        }
                     }
                 }
                 tracing::debug!(
-                    "{}", format!("Provider request failed with status: {}. Payload: {}", status, payload)
+                    "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
                 );
                 Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
             }
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                let status = response.status();
-                let text = response.text().await.unwrap_or_default();
-                println!("!!! Internal Server Error - {}, Response: {:?}", status, text);
-                Err(ProviderError::ContextLengthExceeded(format!("Context length exceeded. Status: {}. Response: {:?}", status, text)))
-            }
             StatusCode::TOO_MANY_REQUESTS => {
-                Err(ProviderError::RateLimitExceeded(format!("Rate limit exceeded. Status: {}. Response: {:?}", response.status(), response.text().await.unwrap_or_default())))
+                Err(ProviderError::RateLimitExceeded(format!("{:?}", payload)))
             }
-            StatusCode::SERVICE_UNAVAILABLE => {
-                Err(ProviderError::ServerError(format!("Server error occurred. Status: {}", response.status())))
+            StatusCode::INTERNAL_SERVER_ERROR | StatusCode::SERVICE_UNAVAILABLE => {
+                Err(ProviderError::ServerError(format!("{:?}", payload)))
             }
             _ => {
                 tracing::debug!(
-                    "{}", format!("Provider request failed with status: {}. Payload: {}", response.status(), payload)
+                    "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
                 );
-                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", response.status())))
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
             }
         }
     }
