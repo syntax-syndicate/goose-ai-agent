@@ -18,7 +18,7 @@ Please follow the instructions below to convert the Goose Extension Converter so
 - please come up with a reasonable id, name, and description for the extension that is reflected by the link and the instructions. Use underscore _ instead of - dash to separate words in the id field.
 - The command should be the installation command for the extension.
 - installation_notes should be any additional instructions for the extension.
-- is_extension should be true if the extension is in the block/goose repo, false otherwise. (hint: developer, nondeveloper, memory, jetbrains, and google_drive are extensions)
+- is_builtin should be true if the extension is in the block/goose repo, false otherwise. (hint: developer, nondeveloper, memory, jetbrains, and google_drive are builtin extensions)
 - endorsed: Only put true if the extension runs without error and is recommended by the Goose team according to input/goose_extensions_curated.csv. 
 - githubStars should be the github stars for the extension.
 - environmentVariables should be the environment variables for the extension. Please do not hallucinate environment variables. Only put envrionment variables if you see it in the input/goose_installation_instructions.json file. If you don't see any, please leave it empty.
@@ -36,7 +36,7 @@ Only include endorsed extensions in the output/servers.json file.
     "command": "npx -y @modelcontextprotocol/server-aws-kb-retrieval",
     "link": "https://github.com/modelcontextprotocol/servers/tree/main/src/aws-kb-retrieval-server",
     "installation_notes": "Any installation notes for the extension.",
-    "is_extension": false,
+    "is_builtin": false,
     "endorsed": true,
     "githubStars": 120,
     "environmentVariables": [

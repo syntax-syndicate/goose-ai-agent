@@ -30,10 +30,26 @@
       "command": "",
       "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/google_drive",
       "installation_notes": "This is a built-in extension that comes with Goose by default. Can be accessed via goose://extension?cmd=goosed&arg=mcp&arg=google_drive&description=google_drive deeplink.",
-      "is_extension": true,
+      "is_builtin": true,
       "endorsed": true,
       "githubStars": 356,
-      "environmentVariables": []
+      "environmentVariables": [
+        {
+          "name": "GOOGLE_DRIVE_OAUTH_PATH",
+          "description": "Path to the OAuth config file (required)",
+          "required": true
+        },
+        {
+          "name": "GOOGLE_DRIVE_CREDENTIALS_PATH",
+          "description": "Path to store OAuth credentials (required)",
+          "required": true
+        },
+        {
+          "name": "GOOGLE_DRIVE_OAUTH_CONFIG",
+          "description": "OAuth config JSON string (optional, if not provided expects valid config file at GOOGLE_DRIVE_OAUTH_PATH)",
+          "required": false
+        }
+      ]
     },
     {
       "id": "memory",

@@ -6,7 +6,7 @@
       "command": "",
       "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/developer",
       "installation_notes": "This is a built-in extension that comes with Goose by default. No installation required.",
-      "is_extension": true,
+      "is_builtin": true,
       "endorsed": true,
       "githubStars": 356,
       "environmentVariables": []
@@ -18,7 +18,7 @@
       "command": "",
       "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/nondeveloper",
       "installation_notes": "This is a built-in extension that comes with Goose by default. No installation required.",
-      "is_extension": true,
+      "is_builtin": true,
       "endorsed": true,
       "githubStars": 356,
       "environmentVariables": []
@@ -30,10 +30,26 @@
       "command": "",
       "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/google_drive",
       "installation_notes": "This is a built-in extension that comes with Goose by default. Can be accessed via goose://extension?cmd=goosed&arg=mcp&arg=google_drive&description=google_drive deeplink.",
-      "is_extension": true,
+      "is_builtin": true,
       "endorsed": true,
       "githubStars": 356,
-      "environmentVariables": []
+      "environmentVariables": [
+        {
+          "name": "GOOGLE_DRIVE_OAUTH_PATH",
+          "description": "Path to the OAuth config file (required)",
+          "required": true
+        },
+        {
+          "name": "GOOGLE_DRIVE_CREDENTIALS_PATH",
+          "description": "Path to store OAuth credentials (required)",
+          "required": true
+        },
+        {
+          "name": "GOOGLE_DRIVE_OAUTH_CONFIG",
+          "description": "OAuth config JSON string (optional, if not provided expects valid config file at GOOGLE_DRIVE_OAUTH_PATH)",
+          "required": false
+        }
+      ]
     },
     {
       "id": "memory",
@@ -42,7 +58,7 @@
       "command": "",
       "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/memory",
       "installation_notes": "This is a built-in extension that comes with Goose by default. No installation required.",
-      "is_extension": true,
+      "is_builtin": true,
       "endorsed": true,
       "githubStars": 356,
       "environmentVariables": []
@@ -54,7 +70,7 @@
       "command": "",
       "link": "https://github.com/block/goose/tree/v1.0/crates/goose-mcp/src/jetbrains",
       "installation_notes": "This is a built-in extension that comes with Goose by default. Can be accessed via goose://extension?cmd=goosed&arg=mcp&arg=jetbrains deeplink.",
-      "is_extension": true,
+      "is_builtin": true,
       "endorsed": true,
       "githubStars": 356,
       "environmentVariables": []
@@ -66,7 +82,7 @@
       "command": "uvx mcp-codesearch",
       "link": "https://github.com/squareup/mcp/tree/main/mcp-codesearch",
       "installation_notes": "Install using uvx package manager.",
-      "is_extension": false,
+      "is_builtin": false,
       "endorsed": true,
       "githubStars": 0,
       "environmentVariables": []
@@ -78,7 +94,7 @@
       "command": "npx -y @modelcontextprotocol/server-memory",
       "link": "https://github.com/modelcontextprotocol/servers/tree/main/src/memory",
       "installation_notes": "Install using npx package manager. Note: Default memory graph location may be hard to find where npx installs the module.",
-      "is_extension": false,
+      "is_builtin": false,
       "endorsed": true,
       "githubStars": 7271,
       "environmentVariables": []
@@ -90,7 +106,7 @@
       "command": "uvx mcp-server-fetch",
       "link": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
       "installation_notes": "Install using uvx package manager. Note: Some sites may block access via robots.txt.",
-      "is_extension": false,
+      "is_builtin": false,
       "endorsed": true,
       "githubStars": 7271,
       "environmentVariables": []
@@ -102,7 +118,7 @@
       "command": "npx -y @modelcontextprotocol/server-git",
       "link": "https://github.com/modelcontextprotocol/servers/tree/main/src/git",
       "installation_notes": "Install using npx package manager. Note: Does not support git push, merge or rebase operations.",
-      "is_extension": false,
+      "is_builtin": false,
       "endorsed": true,
       "githubStars": 7271,
       "environmentVariables": []
@@ -114,7 +130,7 @@
       "command": "uvx mcp-tavily",
       "link": "https://github.com/RamXX/mcp-tavily",
       "installation_notes": "Install using uvx package manager. Requires Tavily API key.",
-      "is_extension": false,
+      "is_builtin": false,
       "endorsed": true,
       "githubStars": 4,
       "environmentVariables": [
@@ -132,7 +148,7 @@
       "command": "npx -y @hapins/figma-mcp",
       "link": "https://www.npmjs.com/package/@hapins/figma-mcp",
       "installation_notes": "Install using npx package manager. Requires Figma access token from user settings.",
-      "is_extension": false,
+      "is_builtin": false,
       "endorsed": true,
       "githubStars": 0,
       "environmentVariables": [

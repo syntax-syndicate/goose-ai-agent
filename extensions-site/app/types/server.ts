@@ -5,7 +5,7 @@ export interface MCPServer {
   command: string;
   link: string;
   installation_notes: string;
-  is_extension: boolean;
+  is_builtin: boolean;
   endorsed: boolean
   githubStars: number;
   environmentVariables: {

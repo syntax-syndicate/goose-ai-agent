@@ -8,6 +8,16 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
 function getGooseInstallLink(server: MCPServer): string {
+  if (server.is_builtin) {
+    const queryParams = [
+      'cmd=goosed',
+      'arg=mcp',
+      `arg=${encodeURIComponent(server.id)}`,
+      `description=${encodeURIComponent(server.id)}`
+    ].join('&');
+    return `goose://extension?${queryParams}`;
+  }
+
   const parts = server.command.split(" ");
   const baseCmd = parts[0]; // npx or uvx
   const args = parts.slice(1); // remaining arguments
@@ -99,7 +109,7 @@ export function ServerCard({ server }: { server: MCPServer }) {
                       transition: { duration: 0.1 },
                     }}
                   >
-                    {server.is_extension ? `goose session --with-builtin "${server.id}"` : `goose session --with-extension "${server.command}"`}
+                    {server.is_builtin ? `goose session --with-builtin "${server.id}"` : `goose session --with-extension "${server.command}"`}
                   </motion.code>
                 )}
               </AnimatePresence>

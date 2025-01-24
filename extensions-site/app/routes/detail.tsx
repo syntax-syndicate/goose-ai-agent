@@ -18,7 +18,7 @@ interface Server {
   command: string;
   link: string;
   installation_notes: string;
-  is_extension: boolean;
+  is_builtin: boolean;
   endorsed: boolean
   githubStars: number;
   environmentVariables: {
@@ -165,7 +165,7 @@ export default function DetailPage() {
                 <h4 className="font-medium">Command</h4>
               </div>
               <code className="block bg-gray-100 dark:bg-gray-900 p-2 rounded text-sm dark:text-gray-300">
-                {server.is_extension ? `goose session --with-builtin "${server.id}"` : `goose session --with-extension "${server.command}"`}
+                {server.is_builtin ? `goose session --with-builtin "${server.id}"` : `goose session --with-extension "${server.command}"`}
               </code>
             </div>
 
