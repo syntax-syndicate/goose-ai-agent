@@ -441,7 +441,10 @@ mod tests {
     use goose::{
         agents::AgentFactory,
         model::ModelConfig,
-        providers::{base::{Provider, ProviderUsage, Usage}, errors::ProviderError},
+        providers::{
+            base::{Provider, ProviderUsage, Usage},
+            errors::ProviderError,
+        },
     };
     use mcp_core::tool::Tool;
 
