@@ -2,6 +2,7 @@ use anyhow::Result;
 use dotenv::dotenv;
 use goose::message::{Message, MessageContent};
 use goose::providers::base::Provider;
+use goose::providers::errors::ProviderError;
 use goose::providers::{anthropic, databricks, google, groq, ollama, openai, openrouter};
 use mcp_core::content::Content;
 use mcp_core::tool::Tool;
@@ -197,10 +198,55 @@ impl ProviderTester {
         Ok(())
     }
 
+    async fn test_context_length_exceeded_error(&self) -> Result<()> {
+        // Google Gemini has a really long context window
+        let large_message_content = if self.name.to_lowercase() == "google" {
+            "hello ".repeat(1_300_000)
+        } else {
+            "hello ".repeat(300_000)
+        };
+
+        let messages = vec![
+            Message::user().with_text("hi there. what is 2 + 2?"),
+            Message::assistant().with_text("hey! I think it's 4."),
+            Message::user().with_text(&large_message_content),
+            Message::assistant().with_text("heyy!!"),
+            // Messages before this mark should be truncated
+            Message::user().with_text("what's the meaning of life?"),
+            Message::assistant().with_text("the meaning of life is 42"),
+            Message::user().with_text(
+                "did I ask you what's 2+2 in this message history? just respond with 'yes' or 'no'",
+            ),
+        ];
+
+        // Test that we get ProviderError::ContextLengthExceeded when the context window is exceeded
+        let result = self
+            .provider
+            .complete("You are a helpful assistant.", &messages, &[])
+            .await;
+
+        // Print some debug info
+        println!("=== {}::context_length_exceeded_error ===", self.name);
+        dbg!(&result);
+        println!("===================");
+
+        assert!(
+            result.is_err(),
+            "Expected error when context window is exceeded"
+        );
+        assert!(
+            matches!(result.unwrap_err(), ProviderError::ContextLengthExceeded(_)),
+            "Expected error to be ContextLengthExceeded"
+        );
+
+        Ok(())
+    }
+
     /// Run all provider tests
     async fn run_test_suite(&self) -> Result<()> {
         self.test_basic_response().await?;
         self.test_tool_usage().await?;
+        self.test_context_length_exceeded_error().await?;
         Ok(())
     }
 }

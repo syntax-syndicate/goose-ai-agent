@@ -77,7 +77,7 @@ impl AnthropicProvider {
                     if let Some(error) = payload.get("error") {
                     tracing::debug!("Bad Request Error: {error:?}");
                     let error_msg = error.get("message").and_then(|m| m.as_str()).unwrap_or("Unknown error");
-                    if error_msg.to_lowercase().contains("too long") {
+                    if error_msg.to_lowercase().contains("too long") || error_msg.to_lowercase().contains("too many") {
                         return Err(ProviderError::ContextLengthExceeded(error_msg.to_string()));
                     }
                 }}

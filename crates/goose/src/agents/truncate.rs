@@ -252,7 +252,7 @@ impl Agent for TruncateAgent {
                     Err(e) => {
                         // Create an error message & terminate the stream
                         error!("Error: {}", e);
-                        // the previous message would have been a user message (e.g. before any tool calls, this is just after the input message. 
+                        // the previous message would have been a user message (e.g. before any tool calls, this is just after the input message.
                         // at the start of a loop after a tool call, it would be after a tool_use assistant followed by a tool_result user)
                         let error_message = Message::assistant().with_text(format!("Error: {}", e));
                         yield error_message;
