@@ -22,7 +22,12 @@ const DEFAULT_SCOPES: &[&str] = &["all-apis"];
 
 pub const DATABRICKS_DEFAULT_MODEL: &str = "databricks-meta-llama-3-3-70b-instruct";
 // Databricks can passthrough to a wide range of models, we only provide the default
-pub const DATABRICKS_KNOWN_MODELS: &[&str] = &[DATABRICKS_DEFAULT_MODEL];
+pub const DATABRICKS_KNOWN_MODELS: &[&str] = &[
+    "databricks-meta-llama-3-3-70b-instruct",
+    "databricks-meta-llama-3-1-405b-instruct",
+    "databricks-dbrx-instruct",
+    "databricks-mixtral-8x7b-instruct",
+];
 
 pub const DATABRICKS_DOC_URL: &str =
     "https://docs.databricks.com/en/generative-ai/external-models/index.html";

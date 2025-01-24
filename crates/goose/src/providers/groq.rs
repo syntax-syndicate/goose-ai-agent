@@ -12,11 +12,7 @@ use std::time::Duration;
 
 pub const GROQ_API_HOST: &str = "https://api.groq.com";
 pub const GROQ_DEFAULT_MODEL: &str = "llama-3.3-70b-versatile";
-pub const GROQ_KNOWN_MODELS: &[&str] = &[
-    "distil-whisper-large-v3-en",
-    "gemma2-9b-it",
-    "llama-3.3-70b-versatile",
-];
+pub const GROQ_KNOWN_MODELS: &[&str] = &["gemma2-9b-it", "llama-3.3-70b-versatile"];
 
 pub const GROQ_DOC_URL: &str = "https://console.groq.com/docs/models";
 
