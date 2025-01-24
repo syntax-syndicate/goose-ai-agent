@@ -233,7 +233,6 @@ impl Agent for TruncateAgent {
 
                         truncation_attempt += 1;
                         debug!("Context length exceeded. Initiating truncation attempt {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
-                        println!("Context length exceeded. Initiating truncation attempt {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
 
                         // Decay the estimate factor as we make more truncation attempts
                         // Estimate factor decays like this over time: 0.9, 0.81, 0.729, ...
@@ -251,9 +250,11 @@ impl Agent for TruncateAgent {
                         continue;
                     },
                     Err(e) => {
-                        // Create a user-facing error message & terminate the stream
+                        // Create an error message & terminate the stream
                         error!("Error: {}", e);
-                        let error_message = Message::user().with_text(format!("Error: {}", e));
+                        // the previous message would have been a user message (e.g. before any tool calls, this is just after the input message. 
+                        // at the start of a loop after a tool call, it would be after a tool_use assistant followed by a tool_result user)
+                        let error_message = Message::assistant().with_text(format!("Error: {}", e));
                         yield error_message;
                         break;
                     }
