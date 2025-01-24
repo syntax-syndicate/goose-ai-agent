@@ -77,7 +77,6 @@ pub async fn handle_response_openai_compat(response: Response) -> Result<Value, 
             Err(ProviderError::ServerError(format!("{:?}", payload)))
         }
         _ => {
-            let status = response.status();
             tracing::debug!(
                 "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
             );
