@@ -50,22 +50,22 @@ impl TruncationStrategy for OldestFirstTruncation {
 
             // If it's a ToolRequest or ToolResponse, mark its pair for removal
             if message.is_tool_call() || message.is_tool_response() {
-                if let Some(tool_id) = message.get_tool_id() {
-                    tool_ids_to_remove.insert((i, tool_id.to_string()));
-                }
+                message.get_tool_ids().iter().for_each(|id| {
+                    tool_ids_to_remove.insert((i, id.to_string()));
+                });
             }
         }
 
         // Now, find and remove paired ToolResponses or ToolRequests
         for (i, message) in messages.iter().enumerate() {
-            if let Some(tool_id) = message.get_tool_id() {
-                // the other part of the pair has same tool_id but different message index
-                if tool_ids_to_remove
-                    .iter()
-                    .any(|&(idx, ref id)| id == tool_id && idx != i)
-                {
+            let message_tool_ids = message.get_tool_ids();
+            // Find the other part of the pair - same tool_id but different message index
+            for (message_idx, tool_id) in &tool_ids_to_remove {
+                if message_idx != &i && message_tool_ids.contains(tool_id.as_str()) {
                     indices_to_remove.insert(i);
                     total_tokens -= token_counts[i];
+                    // No need to check other tool_ids for this message since it's already marked
+                    break;
                 }
             }
         }
@@ -303,14 +303,15 @@ mod tests {
         // Verify tool pairs are either both present or both removed
         let tool_ids: HashSet<_> = messages_clone
             .iter()
-            .filter_map(|m| m.get_tool_id())
+            .flat_map(|m| m.get_tool_ids())
             .collect();
 
         // Each tool ID should appear 0 or 2 times (request + response)
         for id in tool_ids {
             let count = messages_clone
                 .iter()
-                .filter(|m| m.get_tool_id() == Some(id))
+                .flat_map(|m| m.get_tool_ids().into_iter())
+                .filter(|&tool_id| tool_id == id)
                 .count();
             assert!(count == 0 || count == 2, "Tool pair was split: {}", id);
         }
@@ -388,18 +389,19 @@ mod tests {
         // Verify that remaining tool chains are complete
         let remaining_tool_ids: HashSet<_> = messages_clone
             .iter()
-            .filter_map(|m| m.get_tool_id())
+            .flat_map(|m| m.get_tool_ids())
             .collect();
 
         for id in remaining_tool_ids {
             // Count request/response pairs
             let requests = messages_clone
                 .iter()
-                .filter(|m| m.is_tool_call() && m.get_tool_id() == Some(id))
+                .flat_map(|m| m.get_tool_request_ids().into_iter())
                 .count();
+
             let responses = messages_clone
                 .iter()
-                .filter(|m| m.is_tool_response() && m.get_tool_id() == Some(id))
+                .flat_map(|m| m.get_tool_response_ids().into_iter())
                 .count();
 
             assert_eq!(requests, 1, "Each remaining tool should have one request");

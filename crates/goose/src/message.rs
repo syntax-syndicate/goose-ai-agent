@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 /// Messages which represent the content sent back and forth to LLM provider
 ///
 /// We use these messages in the agent code, and interfaces which interact with
@@ -199,16 +201,44 @@ impl Message {
             .any(|c| matches!(c, MessageContent::ToolResponse(_)))
     }
 
-    /// Retrieve the `id` if the message is a tool call or response
-    pub fn get_tool_id(&self) -> Option<&str> {
-        for content in &self.content {
-            match content {
-                MessageContent::ToolRequest(req) => return Some(&req.id),
-                MessageContent::ToolResponse(res) => return Some(&res.id),
-                _ => {}
-            }
-        }
-        None
+    /// Retrieves all tool `id` from the message
+    pub fn get_tool_ids(&self) -> HashSet<&str> {
+        self.content
+            .iter()
+            .filter_map(|content| match content {
+                MessageContent::ToolRequest(req) => Some(req.id.as_str()),
+                MessageContent::ToolResponse(res) => Some(res.id.as_str()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Retrieves all tool `id` from ToolRequest messages
+    pub fn get_tool_request_ids(&self) -> HashSet<&str> {
+        self.content
+            .iter()
+            .filter_map(|content| {
+                if let MessageContent::ToolRequest(req) = content {
+                    Some(req.id.as_str())
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Retrieves all tool `id` from ToolResponse messages
+    pub fn get_tool_response_ids(&self) -> HashSet<&str> {
+        self.content
+            .iter()
+            .filter_map(|content| {
+                if let MessageContent::ToolResponse(res) = content {
+                    Some(res.id.as_str())
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 
     /// Check if the message has only TextContent

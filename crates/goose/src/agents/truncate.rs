@@ -53,7 +53,8 @@ impl TruncateAgent {
             .get_model_config()
             .context_limit();
 
-        // Our conservative estimate of the context limit
+        // Our conservative estimate of the **target** context limit
+        // Our token count is an estimate since model providers often don't provide the tokenizer (eg. Claude)
         let context_limit = (context_limit as f32 * estimate_factor) as usize;
 
         // Calculate current token count
