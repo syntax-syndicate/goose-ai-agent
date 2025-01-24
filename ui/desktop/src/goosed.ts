@@ -23,6 +23,7 @@ export const findAvailablePort = (): Promise<number> => {
 
 // Goose process manager. Take in the app, port, and directory to start goosed in.
 // Check if goosed server is ready by polling the status endpoint
+// noop change
 const checkServerStatus = async (
   port: number,
   maxAttempts: number = 60,
