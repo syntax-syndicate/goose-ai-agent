@@ -166,18 +166,14 @@ export function ProviderGrid({ onSubmit }: ProviderGridProps) {
                 const provider = providers.find((p) => p.id === selectedId);
                 if (provider) handleConfigure(provider);
               }}
-              className="rounded-full px-6 py-2 min-w-[160px] bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white dark:text-white text-sm font-medium shadow-md hover:shadow-lg transition-all"
+              className={
+                'text-sm whitespace-nowrap shrink-0 bg-bgSubtle text-textStandard border-borderStandard rounded-full shadow-none border'
+              }
             >
               Select {providers.find((p) => p.id === selectedId)?.name}
             </Button>
           </div>
         )}
-      </div>
-
-      <div className="text-sm text-gray-500 dark:text-gray-400">
-        Configure your AI model providers by adding their API keys. Your keys are stored securely
-        and encrypted locally. You can change your provider and select specific models in the
-        settings.
       </div>
 
       <BaseProviderGrid
