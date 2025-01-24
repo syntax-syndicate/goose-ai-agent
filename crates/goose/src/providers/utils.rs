@@ -95,20 +95,6 @@ pub fn is_valid_function_name(name: &str) -> bool {
     re.is_match(name)
 }
 
-pub fn check_bedrock_context_length_error(error: &Value) -> Option<ProviderError> {
-    let external_message = error
-        .get("external_model_message")?
-        .get("message")?
-        .as_str()?;
-    if external_message.to_lowercase().contains("too long") {
-        Some(ProviderError::ContextLengthExceeded(
-            external_message.to_string(),
-        ))
-    } else {
-        None
-    }
-}
-
 /// Extract the model name from a JSON object. Common with most providers to have this top level attribute.
 pub fn get_model(data: &Value) -> String {
     if let Some(model) = data.get("model") {
@@ -191,33 +177,6 @@ mod tests {
         assert!(is_valid_function_name("hello_world"));
         assert!(!is_valid_function_name("hello world"));
         assert!(!is_valid_function_name("hello@world"));
-    }
-
-    #[test]
-    fn test_check_bedrock_context_length_error() {
-        let error = json!({
-            "error": "Received error from amazon-bedrock",
-            "external_model_message": {
-                "message": "Input is too long for requested model."
-            }
-        });
-
-        let result = check_bedrock_context_length_error(&error);
-        assert!(result.is_some());
-        assert_eq!(
-            result.unwrap().to_string(),
-            "Context length exceeded: Input is too long for requested model."
-        );
-
-        let error = json!({
-            "error": "Some other error",
-            "external_model_message": {
-                "message": "Some other message"
-            }
-        });
-
-        let result = check_bedrock_context_length_error(&error);
-        assert!(result.is_none());
     }
 
     #[test]

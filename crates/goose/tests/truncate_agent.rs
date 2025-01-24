@@ -201,6 +201,16 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_truncate_agent_with_databricks_openai() -> Result<()> {
+        run_test_with_config(TestConfig {
+            provider_type: ProviderType::Databricks,
+            model: "gpt-4o-mini",
+            context_window: 128_000,
+        })
+        .await
+    }
+
+    #[tokio::test]
     async fn test_truncate_agent_with_google() -> Result<()> {
         run_test_with_config(TestConfig {
             provider_type: ProviderType::Google,

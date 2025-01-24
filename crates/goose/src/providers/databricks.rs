@@ -151,8 +151,23 @@ impl DatabricksProvider {
                     Status: {}. Response: {:?}", status, payload)))
             }
             StatusCode::BAD_REQUEST => {
-                // Databricks responds "Received error from openai" for context limit errors
-                Err(ProviderError::ContextLengthExceeded(format!("{:?}", payload)))
+                // Databricks provides a generic 'error' but also includes 'external_model_message' which is provider specific
+                // we try our best to extract the error message from the payload
+                let payload_str = serde_json::to_string(&payload).unwrap_or_default();
+                if payload_str.contains("too long")
+                    || payload_str.contains("context length")
+                    || payload_str.contains("context_length_exceeded")
+                    || payload_str.contains("reduce the length")
+                    || payload_str.contains("token count")
+                    || payload_str.contains("exceeds")
+                {
+                    return Err(ProviderError::ContextLengthExceeded(payload_str));
+                }
+
+                tracing::debug!(
+                    "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
+                );
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
             }
             StatusCode::TOO_MANY_REQUESTS => {
                 Err(ProviderError::RateLimitExceeded(format!("{:?}", payload)))
