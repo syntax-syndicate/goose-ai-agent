@@ -20,8 +20,22 @@ export default function GooseSplashLogo({ className = '' }) {
             x2="100%"
             y2="0%"
           >
-            <stop offset="0%" stopColor="#13BBAF" />
-            <stop offset="100%" stopColor="#FF4F00" />
+            <stop offset="0%" stopColor="#13BBAF">
+              <animate
+                attributeName="stop-color"
+                values="#13BBAF;#FF4F00;#13BBAF"
+                dur="4s"
+                repeatCount="indefinite"
+              ></animate>
+            </stop>
+            <stop offset="100%" stopColor="#FF4F00">
+              <animate
+                attributeName="stop-color"
+                values="#FF4F00;#13BBAF;#FF4F00"
+                dur="4s"
+                repeatCount="indefinite"
+              ></animate>
+            </stop>
           </linearGradient>
         </defs>
         <g id="logo" fill="url(#gradient)" className="transition-all duration-200">
@@ -31,13 +45,6 @@ export default function GooseSplashLogo({ className = '' }) {
           />
         </g>
       </svg>
-      <style>
-        {`
-          .group:hover g#logo {
-            fill: url(#hoverGradient);
-          }
-        `}
-      </style>
     </div>
   );
 }

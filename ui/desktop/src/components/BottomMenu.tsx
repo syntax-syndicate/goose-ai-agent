@@ -48,7 +48,7 @@ export default function BottomMenu({ hasMessages }) {
   }, [isModelMenuOpen]);
 
   return (
-    <div className="flex justify-between items-center text-textSubtle relative bg-bgSubtle border-t border-borderSubtle text-xs pl-4 h-[40px] align-middle rounded-b-2xl">
+    <div className="flex justify-between items-center text-textSubtle relative bg-bgSubtle border-t border-borderSubtle text-xs pl-4 h-[40px] align-middle">
       {/* Directory Chooser - Always visible */}
       <span
         className="cursor-pointer flex items-center [&>svg]:size-4"
