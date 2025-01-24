@@ -227,13 +227,12 @@ impl Agent for TruncateAgent {
                     Err(ProviderError::ContextLengthExceeded(_)) => {
                         if truncation_attempt >= MAX_TRUNCATION_ATTEMPTS {
                             // Create a user-facing error message & terminate the stream
-                            let error_message = Message::user().with_text("Error: Context length exceeds limits even after multiple attempts to truncate.");
-                            yield error_message;
+                            yield Message::assistant().with_text("Error: Context length exceeds limits even after multiple attempts to truncate.");
                             break;
                         }
 
                         truncation_attempt += 1;
-                        debug!("Context length exceeded. Initiating truncation attempt {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
+                        debug!("Context length exceeded. Truncation Attempt: {}/{}.", truncation_attempt, MAX_TRUNCATION_ATTEMPTS);
 
                         // Decay the estimate factor as we make more truncation attempts
                         // Estimate factor decays like this over time: 0.9, 0.81, 0.729, ...
@@ -255,8 +254,7 @@ impl Agent for TruncateAgent {
                         error!("Error: {}", e);
                         // the previous message would have been a user message (e.g. before any tool calls, this is just after the input message.
                         // at the start of a loop after a tool call, it would be after a tool_use assistant followed by a tool_result user)
-                        let error_message = Message::assistant().with_text(format!("Error: {}", e));
-                        yield error_message;
+                        yield Message::assistant().with_text(format!("Error: {}", e));
                         break;
                     }
                 }
