@@ -199,6 +199,8 @@ html {
 .hero__subtitle {
   max-width: 600px;
   margin-bottom: 32px;
+  font-size: 28px;
+  line-height: 36px;
 }
 
 .footer {
@@ -209,8 +211,8 @@ html {
 /* net new */
 
 .hero--logo svg {
-  height: 100px;
-  width: 100px;
+  height: 220px;
+  width: 220px;
 }
 
 /* Ensure links inside :::note sections are styled green */
@@ -222,4 +224,12 @@ html {
 .theme-admonition a:hover {
   color: #29784c; /* Slightly darker green for hover effect */
   text-decoration: underline;
+}
+
+html[data-theme="dark"] .hide-in-dark {
+  opacity: 0;
+}
+
+html[data-theme="light"] .hide-in-light {
+  opacity: 0;
 }

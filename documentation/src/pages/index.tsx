@@ -9,6 +9,7 @@ import Heading from "@theme/Heading";
 import styles from "./index.module.css";
 import { IconDownload } from "../components/icons/download";
 import Goose from "../components/icons/goose";
+import { GooseWordmark } from "../components/gooseWordmark";
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
@@ -16,11 +17,11 @@ function HomepageHeader() {
     <header className={clsx("hero hero--primary", styles.heroBanner)}>
       <div className="container">
         <div className="hero--logo">
-          <Goose />
+          <GooseWordmark />
         </div>
-        <Heading as="h1" className="hero__title">
+        {/* <Heading as="h1" className="hero__title">
           {siteConfig.title}
-        </Heading>
+        </Heading> */}
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link

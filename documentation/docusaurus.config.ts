@@ -7,7 +7,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 const config: Config = {
   title: "codename goose",
   tagline:
-    "goose is your on-machine developer agent, automating engineering tasks seamlessly within your IDE or terminal",
+    "Your on-machine developer AI agent, automating engineering tasks seamlessly.",
   favicon: "img/favicon.ico",
 
   // Set the production url of your site here

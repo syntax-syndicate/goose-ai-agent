@@ -22,8 +22,8 @@ const FeatureList: FeatureItem[] = [
     Svg: require("@site/static/img/lock-unlocked-fill.svg").default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Built with transparency and collaboration in mind, goose empowers
+        developers to contribute, customize, and innovate freely.
       </>
     ),
   },
@@ -32,8 +32,8 @@ const FeatureList: FeatureItem[] = [
     Svg: require("@site/static/img/category-moving.svg").default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Goose runs locally to execute tasks efficiently, keeping control in your
+        hands.
       </>
     ),
   },
@@ -42,8 +42,8 @@ const FeatureList: FeatureItem[] = [
     Svg: require("@site/static/img/category-ETF.svg").default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Customize goose with your preferred LLM and connect it seamlessly to any
+        external MCP server or API for limitless possibilities.
       </>
     ),
   },
@@ -52,8 +52,8 @@ const FeatureList: FeatureItem[] = [
     Svg: require("@site/static/img/pay-in-four.svg").default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Goose independently handles complex tasks, from debugging to deployment,
+        freeing you to focus on what matters most.
       </>
     ),
   },
@@ -127,17 +127,8 @@ function Feature({ title, Svg, description }: FeatureItem) {
 
 function Quote({ name, github, role, testimonial }: FeatureQuote) {
   return (
-    <div
-      // style={{
-      //   display: "flex",
-      //   flexDirection: "column",
-      //   marginBottom: "40px",
-      //   padding: "20px",
-      //   border: "1px solid #eaeaea",
-      //   borderRadius: "10px",
-      // }}
-      className="col col--6"
-    >
+    <div className="col col--6">
+      {/* inline styles in the interest of time */}
       <div
         className="text--left padding-horiz--md padding-bottom--xl"
         style={{
@@ -169,11 +160,51 @@ export default function HomepageFeatures(): ReactNode {
     <section className={styles.features}>
       <div className="container">
         <div className="row">
+          <div className={styles.videoContainer}>
+            <video
+              className={`${styles.video} hide-in-dark`}
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              <source
+                src={require("@site/static/videos/hero_light.mp4").default}
+                type="video/mp4"
+              />
+            </video>
+
+            <video
+              className={`${styles.video} hide-in-light`}
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              <source
+                src={require("@site/static/videos/hero_dark.mp4").default}
+                type="video/mp4"
+              />
+            </video>
+          </div>
+
           {FeatureList.map((props, idx) => (
             <Feature key={idx} {...props} />
           ))}
 
-          {/* inline in the interest of time */}
+          <div
+            style={{
+              margin: "80px 0",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <img src={require("@site/static/img/placeholder.png").default} />
+          </div>
+
+          {/* inline styles in the interest of time */}
           <div
             style={{
               display: "flex",
