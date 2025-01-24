@@ -7,12 +7,16 @@ import TabItem from '@theme/TabItem';
 
 # Using Extensions
 
+:::info Supported Environments
+Goose currently works only on **OSX** and **Linux** systems, and supports both **ARM** and **x86** architectures. If you'd like to request support for additional operating systems, please [open an issue on GitHub](https://github.com/block/goose/issues/new?template=Blank+issue) to let us know.
+:::
+
 Goose Extensions are add-ons that provide a way to extend the functionality of Goose by connecting with applications and tools you already use in your workflow. These extensions can be used to add new features, access data and resources, or integrate with other systems.
 
 ### Adding An Extension
 When you install Goose, a few built-in extensions are included. In addition, you can add external extensions that were developed on the [Model Context Protocol (MCP)][mcp].
 
-<Tabs>
+<Tabs groupId="interface">
   <TabItem value="cli" label="Goose CLI" default>
     
     **To add an extension:**
@@ -61,7 +65,7 @@ When you install Goose, a few built-in extensions are included. In addition, you
 
 You can manage extensions by enabling or disabling them based on your workflow needs. Both, the CLI and UI, allow you to toggle extensions on or off as necessary.
 
-<Tabs>
+<Tabs groupId="interface">
   <TabItem value="cli" label="Goose CLI" default>
     **To enable or disable extensions that are already installed:** 
 
