@@ -5,15 +5,14 @@ use futures::StreamExt;
 use goose::agents::AgentFactory;
 use goose::message::Message;
 use goose::model::ModelConfig;
-use goose::providers::anthropic::AnthropicProvider;
 use goose::providers::base::Provider;
-use goose::providers::databricks::DatabricksProvider;
-use goose::providers::google::GoogleProvider;
-use goose::providers::groq::GroqProvider;
-use goose::providers::ollama::OllamaProvider;
-use goose::providers::openai::OpenAiProvider;
-use goose::providers::openrouter::OpenRouterProvider;
+use goose::providers::{anthropic::AnthropicProvider, databricks::DatabricksProvider};
+use goose::providers::{google::GoogleProvider, groq::GroqProvider};
+use goose::providers::{
+    ollama::OllamaProvider, openai::OpenAiProvider, openrouter::OpenRouterProvider,
+};
 
+#[derive(Debug)]
 enum ProviderType {
     OpenAi,
     Anthropic,
@@ -24,29 +23,76 @@ enum ProviderType {
     OpenRouter,
 }
 
-// Helper function to run the test
+impl ProviderType {
+    fn required_env(&self) -> &'static [&'static str] {
+        match self {
+            ProviderType::OpenAi => &["OPENAI_API_KEY"],
+            ProviderType::Anthropic => &["ANTHROPIC_API_KEY"],
+            ProviderType::Databricks => &["DATABRICKS_HOST"],
+            ProviderType::Google => &["GOOGLE_API_KEY"],
+            ProviderType::Groq => &["GROQ_API_KEY"],
+            ProviderType::Ollama => &[],
+            ProviderType::OpenRouter => &["OPENROUTER_API_KEY"],
+        }
+    }
+
+    fn pre_check(&self) -> Result<()> {
+        match self {
+            ProviderType::Ollama => {
+                // Check if the `ollama ls` CLI command works
+                use std::process::Command;
+                let output = Command::new("ollama").arg("ls").output();
+                if let Ok(output) = output {
+                    if output.status.success() {
+                        return Ok(()); // CLI is running
+                    }
+                }
+                println!("Skipping Ollama tests - `ollama ls` command not found or failed");
+                Err(anyhow::anyhow!("Ollama CLI is not running"))
+            }
+            _ => Ok(()), // Other providers don't need special pre-checks
+        }
+    }
+
+    fn create_provider(&self, model_config: ModelConfig) -> Result<Box<dyn Provider>> {
+        Ok(match self {
+            ProviderType::OpenAi => Box::new(OpenAiProvider::from_env(model_config)?),
+            ProviderType::Anthropic => Box::new(AnthropicProvider::from_env(model_config)?),
+            ProviderType::Databricks => Box::new(DatabricksProvider::from_env(model_config)?),
+            ProviderType::Google => Box::new(GoogleProvider::from_env(model_config)?),
+            ProviderType::Groq => Box::new(GroqProvider::from_env(model_config)?),
+            ProviderType::Ollama => Box::new(OllamaProvider::from_env(model_config)?),
+            ProviderType::OpenRouter => Box::new(OpenRouterProvider::from_env(model_config)?),
+        })
+    }
+}
+
+pub fn check_required_env_vars(required_vars: &[&str]) -> Result<()> {
+    let missing_vars: Vec<&str> = required_vars
+        .iter()
+        .filter(|&&var| std::env::var(var).is_err())
+        .cloned()
+        .collect();
+
+    if !missing_vars.is_empty() {
+        println!(
+            "Skipping tests. Missing environment variables: {:?}",
+            missing_vars
+        );
+        return Err(anyhow::anyhow!("Required environment variables not set"));
+    }
+    Ok(())
+}
+
 async fn run_truncate_test(
     provider_type: ProviderType,
     model: &str,
     context_window: usize,
 ) -> Result<()> {
-    // Initialize the appropriate provider
     let model_config = ModelConfig::new(model.to_string()).with_context_limit(Some(context_window));
+    let provider = provider_type.create_provider(model_config)?;
 
-    let provider: Box<dyn Provider> = match provider_type {
-        ProviderType::OpenAi => Box::new(OpenAiProvider::from_env(model_config)?),
-        ProviderType::Anthropic => Box::new(AnthropicProvider::from_env(model_config)?),
-        ProviderType::Databricks => Box::new(DatabricksProvider::from_env(model_config)?),
-        ProviderType::Google => Box::new(GoogleProvider::from_env(model_config)?),
-        ProviderType::Groq => Box::new(GroqProvider::from_env(model_config)?),
-        ProviderType::Ollama => Box::new(OllamaProvider::from_env(model_config)?),
-        ProviderType::OpenRouter => Box::new(OpenRouterProvider::from_env(model_config)?),
-    };
-
-    // Initialize the TruncateAgent with the provider
     let agent = AgentFactory::create("truncate", provider).unwrap();
-
-    // Create a message history that exceeds the context window
     let repeat_count = context_window + 10_000;
     let large_message_content = "hello ".repeat(repeat_count);
     let messages = vec![
@@ -54,7 +100,6 @@ async fn run_truncate_test(
         Message::assistant().with_text("hey! I think it's 4."),
         Message::user().with_text(&large_message_content),
         Message::assistant().with_text("heyy!!"),
-        // Messages before this mark should be truncated
         Message::user().with_text("what's the meaning of life?"),
         Message::assistant().with_text("the meaning of life is 42"),
         Message::user().with_text(
@@ -62,19 +107,13 @@ async fn run_truncate_test(
         ),
     ];
 
-    // Invoke the reply method
     let reply_stream = agent.reply(&messages).await?;
-
-    // Collect responses from the stream
     tokio::pin!(reply_stream);
 
     let mut responses = Vec::new();
-
     while let Some(response_result) = reply_stream.next().await {
         match response_result {
-            Ok(response) => {
-                responses.push(response);
-            }
+            Ok(response) => responses.push(response),
             Err(e) => {
                 println!("Error: {:?}", e);
                 return Err(e);
@@ -97,100 +136,107 @@ async fn run_truncate_test(
 mod tests {
     use super::*;
 
+    #[derive(Debug)]
+    struct TestConfig {
+        provider_type: ProviderType,
+        model: &'static str,
+        context_window: usize,
+    }
+
+    async fn run_test_with_config(config: TestConfig) -> Result<()> {
+        println!("Starting test for {config:?}");
+
+        // Check for required environment variables
+        if check_required_env_vars(config.provider_type.required_env()).is_err() {
+            return Ok(()); // Skip test if env vars are missing
+        }
+
+        // Run provider-specific pre-checks
+        if config.provider_type.pre_check().is_err() {
+            return Ok(()); // Skip test if pre-check fails
+        }
+
+        // Run the truncate test
+        run_truncate_test(config.provider_type, config.model, config.context_window).await
+    }
+
     #[tokio::test]
-    #[ignore]
     async fn test_truncate_agent_with_openai() -> Result<()> {
-        std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY is not set");
-
-        println!("Starting truncate test with OpenAI...");
-        run_truncate_test(ProviderType::OpenAi, "gpt-4o-mini", 128_000).await
-    }
-
-    #[tokio::test]
-    #[ignore]
-    async fn test_truncate_agent_with_anthropic() -> Result<()> {
-        std::env::var("ANTHROPIC_API_KEY").expect("ANTHROPIC_API_KEY is not set");
-
-        println!("Starting truncate test with Anthropic...");
-        run_truncate_test(ProviderType::Anthropic, "claude-3-5-haiku-latest", 200_000).await
-    }
-
-    #[tokio::test]
-    #[ignore]
-    async fn test_truncate_agent_with_databricks() -> Result<()> {
-        std::env::var("DATABRICKS_HOST").expect("DATABRICKS_HOST is not set");
-
-        println!("Starting truncate test with Databricks...");
-        run_truncate_test(
-            ProviderType::Databricks,
-            "databricks-meta-llama-3-3-70b-instruct",
-            128_000,
-        )
+        run_test_with_config(TestConfig {
+            provider_type: ProviderType::OpenAi,
+            model: "gpt-4o-mini",
+            context_window: 128_000,
+        })
         .await
     }
 
     #[tokio::test]
-    #[ignore]
-    async fn test_truncate_agent_with_bedrock_via_databricks() -> Result<()> {
-        std::env::var("DATABRICKS_HOST").expect("DATABRICKS_HOST is not set");
-
-        println!("Starting truncate test with Databricks -> Bedrock...");
-        run_truncate_test(ProviderType::Databricks, "claude-3-5-sonnet-2", 210_000).await
+    async fn test_truncate_agent_with_anthropic() -> Result<()> {
+        run_test_with_config(TestConfig {
+            provider_type: ProviderType::Anthropic,
+            model: "claude-3-5-haiku-latest",
+            context_window: 200_000,
+        })
+        .await
     }
 
     #[tokio::test]
-    #[ignore]
-    async fn test_truncate_agent_with_openai_via_databricks() -> Result<()> {
-        std::env::var("DATABRICKS_HOST").expect("DATABRICKS_HOST is not set");
-
-        println!("Starting truncate test with Databricks -> OpenAI...");
-        run_truncate_test(ProviderType::Databricks, "gpt-4o-mini", 128_000).await
+    async fn test_truncate_agent_with_databricks() -> Result<()> {
+        run_test_with_config(TestConfig {
+            provider_type: ProviderType::Databricks,
+            model: "databricks-meta-llama-3-3-70b-instruct",
+            context_window: 128_000,
+        })
+        .await
     }
 
     #[tokio::test]
-    #[ignore]
-    async fn test_truncate_agent_with_google_via_databricks() -> Result<()> {
-        std::env::var("DATABRICKS_HOST").expect("DATABRICKS_HOST is not set");
-
-        println!("Starting truncate test with Databricks -> Google...");
-        run_truncate_test(ProviderType::Databricks, "gemini-2-0-flash", 1_200_000).await
+    async fn test_truncate_agent_with_databricks_bedrock() -> Result<()> {
+        run_test_with_config(TestConfig {
+            provider_type: ProviderType::Databricks,
+            model: "claude-3-5-sonnet-2",
+            context_window: 200_000,
+        })
+        .await
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_truncate_agent_with_google() -> Result<()> {
-        std::env::var("GOOGLE_API_KEY").expect("GOOGLE_API_KEY is not set");
-
-        println!("Starting truncate test with Google...");
-        // https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models#gemini-2.0-flash
-        run_truncate_test(ProviderType::Google, "gemini-2.0-flash-exp", 1_200_000).await
+        run_test_with_config(TestConfig {
+            provider_type: ProviderType::Google,
+            model: "gemini-2.0-flash-exp",
+            context_window: 1_200_000,
+        })
+        .await
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_truncate_agent_with_groq() -> Result<()> {
-        std::env::var("GROQ_API_KEY").expect("GROQ_API_KEY is not set");
-
-        println!("Starting truncate test with Groq...");
-        // https://console.groq.com/docs/models#production-models
-        run_truncate_test(ProviderType::Groq, "gemma2-9b-it", 9_000).await
+        run_test_with_config(TestConfig {
+            provider_type: ProviderType::Groq,
+            model: "gemma2-9b-it",
+            context_window: 9_000,
+        })
+        .await
     }
 
     #[tokio::test]
-    #[ignore]
-    async fn test_truncate_agent_with_ollama() -> Result<()> {
-        println!("Starting truncate test with Ollama...");
-        // https://ollama.com/library/llama3.2
-        run_truncate_test(ProviderType::Ollama, "llama3.2", 128_000).await
-    }
-
-    #[tokio::test]
-    #[ignore]
     async fn test_truncate_agent_with_openrouter() -> Result<()> {
-        std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY is not set");
+        run_test_with_config(TestConfig {
+            provider_type: ProviderType::OpenRouter,
+            model: "deepseek/deepseek-r1",
+            context_window: 130_000,
+        })
+        .await
+    }
 
-        println!("Starting truncate test with OpenRouter...");
-        // https://openrouter.ai/models
-        run_truncate_test(ProviderType::OpenRouter, "deepseek/deepseek-r1", 130_000).await
+    #[tokio::test]
+    async fn test_truncate_agent_with_ollama() -> Result<()> {
+        run_test_with_config(TestConfig {
+            provider_type: ProviderType::Ollama,
+            model: "llama3.2",
+            context_window: 128_000,
+        })
+        .await
     }
 }
