@@ -170,7 +170,7 @@ export default function Settings() {
       <div className="relative flex items-center h-[36px] w-full bg-bgSubtle"></div>
 
       <ScrollArea className="h-full w-full">
-        <div className="flex flex-col">
+        <div className="flex flex-col pb-24">
           <div className="px-8 pt-6 pb-4">
             <BackButton
               onClick={() => {
