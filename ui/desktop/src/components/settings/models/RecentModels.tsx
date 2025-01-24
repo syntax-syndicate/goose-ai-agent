@@ -138,15 +138,11 @@ export function RecentModels() {
 export function RecentModelsRadio() {
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl text-textStandard">Recent Models</h2>
+      <h2 className="text-xl text-textStandard">Recent Models</h2>
       <ModelRadioList
         renderItem={({ model, isSelected, onSelect }) => (
-          <label key={model.name} className="flex items-center justify-between p-4 cursor-pointer">
-            <div className="space-y-1">
-              <p className="text-sm text-textStandard">{model.name}</p>
-              <p className="font-medium text-textStandard">{model.provider}</p>
-            </div>
-            <div className="relative">
+          <label key={model.name} className="flex items-center py-2 cursor-pointer">
+            <div className="relative mr-4">
               <input
                 type="radio"
                 name="recentModels"
@@ -161,6 +157,11 @@ export function RecentModelsRadio() {
                                 peer-checked:bg-white dark:peer-checked:bg-black
                                 transition-all duration-200 ease-in-out"
               ></div>
+            </div>
+
+            <div className="">
+              <p className="text-sm text-textStandard">{model.name}</p>
+              <p className="text-xs text-textSubtle">{model.provider}</p>
             </div>
           </label>
         )}

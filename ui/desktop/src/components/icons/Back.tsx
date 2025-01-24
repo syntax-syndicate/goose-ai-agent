@@ -14,7 +14,7 @@ export default function Back({ className = '' }) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M9.56 3.94a1.5 1.5 0 0 1 0 2.12L3.622 12l5.94 5.94a1.5 1.5 0 0 1-2.122 2.12l-7-7a1.5 1.5 0 0 1 0-2.12l7-7a1.5 1.5 0 0 1 2.122 0Z"
+        d="M.5 12c0-.413.17-.807.47-1.09l9-8.5a1.5 1.5 0 1 1 2.06 2.18L5.773 10.5H21.5a1.5 1.5 0 1 1 0 3H5.773l6.257 5.91a1.5 1.5 0 1 1-2.06 2.18l-9-8.5A1.5 1.5 0 0 1 .5 12Z"
         fill="currentColor"
       ></path>
     </svg>

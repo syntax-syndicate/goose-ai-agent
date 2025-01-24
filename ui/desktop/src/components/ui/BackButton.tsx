@@ -20,9 +20,9 @@ const BackButton: React.FC<BackButtonProps> = ({ onClick, className = '' }) => {
   return (
     <button
       onClick={handleExit}
-      className={`flex items-center text-sm text-textSubtle group hover:text-textStandard px-2 ${className}`}
+      className={`flex items-center text-sm text-textSubtle group hover:text-textStandard ${className}`}
     >
-      <Back className="w-4 h-4 group-hover:-translate-x-1 transition-all" />
+      <Back className="w-3 h-3 group-hover:-translate-x-1 transition-all mr-1" />
       <span>Back</span>
     </button>
   );

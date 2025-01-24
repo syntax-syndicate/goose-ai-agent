@@ -22,12 +22,13 @@ export default function MoreModelsPage() {
             Instead of forcing one row, allow the layout
             to stack vertically on small screens:
           */}
-        <div className="flex min-h-full flex-col md:flex-row">
-          {/* Left Navigation */}
-          <div className="p-6">
-            <BackButton className="mb-4" />
-          </div>
 
+        <div className="px-8 pt-6 pb-4">
+          <BackButton />
+          <h1 className="text-3xl font-medium text-textStandard mt-1">More models</h1>
+        </div>
+
+        <div className="flex min-h-full flex-col md:flex-row">
           {/* Content Area */}
           {/* Smaller / responsive padding so we don't overflow on small screens */}
           <div className="flex-1 px-8 py-4">

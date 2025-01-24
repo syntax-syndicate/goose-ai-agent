@@ -53,15 +53,11 @@ function BaseProviderCard({
     <div
       onClick={() => isSelectable && isConfigured && onSelect?.()}
       className={`relative bg-white dark:bg-gray-800 rounded-lg border 
-        ${
-          isSelected
-            ? 'border-blue-500 dark:border-blue-400 shadow-[0_0_0_1px] shadow-blue-500/50'
-            : 'border-gray-200 dark:border-gray-700'
-        } 
+        ${isSelected ? 'border-borderStandard' : 'border-borderSubtle'} 
         p-3 transition-all duration-200 h-[140px]
         ${isSelectable && isConfigured ? 'cursor-pointer' : ''}
-        ${!isSelectable ? 'hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md hover:scale-[1.01]' : ''}
-        ${isSelectable && isConfigured ? 'hover:border-blue-400 dark:hover:border-blue-300 hover:shadow-md' : ''}
+        ${!isSelectable ? 'hover:border-borderStandard' : ''}
+        ${isSelectable && isConfigured ? 'hover:border-borderStandard' : ''}
       `}
     >
       {isConfigured && (
@@ -112,13 +108,13 @@ function BaseProviderCard({
         </div>
       )}
 
-      <div className="space-y-1 mt-4">
+      <div className="">
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
           {name}
         </h3>
       </div>
 
-      <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-1.5 mb-3 leading-normal overflow-y-auto max-h-[48px] pr-1">
+      <p className="text-xs text-textSubtle mt-1.5 mb-3 leading-normal overflow-y-auto max-h-[48px] ">
         {description}
       </p>
 
