@@ -8,7 +8,7 @@
 > - Avoid providing Goose with sensitive or confidential information to prevent information leakage.
 > - For any systems and actions that may result in significant changes, always require human confirmation.
 > - If possible, break down complex Goose instructions into smaller, isolated operations. This reduces the risk of an errant command affecting multiple parts of the system at once and makes it easier to detect abnormal behaviour.
-> - Only connect Goose with MCP systems that you have reviewed
+> - Only connect Goose with MCP extensions that you have reviewed
 >
 > In some circumstances, Goose may follow commands found embedded in content even if those commands conflict with the task given to Goose. We suggest taking the precautions above to limit risks from prompt injection. By taking these steps, you can reduce the potential security risks associated with developer agents and better protect your systems and users.
 >
