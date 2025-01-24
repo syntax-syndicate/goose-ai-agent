@@ -102,7 +102,7 @@ impl DatabricksProvider {
                 host,
                 auth: DatabricksAuth::token(api_key),
                 model,
-                image_format: ImageFormat::Anthropic,
+                image_format: ImageFormat::OpenAi,
             });
         }
 
@@ -112,7 +112,7 @@ impl DatabricksProvider {
             auth: DatabricksAuth::oauth(host.clone()),
             host,
             model,
-            image_format: ImageFormat::Anthropic,
+            image_format: ImageFormat::OpenAi,
         })
     }
 
