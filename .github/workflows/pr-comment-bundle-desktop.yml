@@ -62,7 +62,7 @@ jobs:
           merge-multiple: true
 
       - name: Comment on PR with download link
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
