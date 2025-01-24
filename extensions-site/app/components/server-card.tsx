@@ -72,19 +72,6 @@ export function ServerCard({ server }: { server: MCPServer }) {
               </svg>
               <div className="font-medium dark:text-gray-100 home-page-server-name">
                 {server.name}
-                {server.is_builtin && (
-                  <div
-                    className="inline-block"
-                    title="This extension is built into goose and can be enabled in the settings page"
-                  >
-                    <Badge
-                      variant="secondary"
-                      className="ml-2 text-xs cursor-help"
-                    >
-                      Built-in
-                    </Badge>
-                  </div>
-                )}
               </div>
             </NavLink>
           </div>
@@ -145,7 +132,19 @@ export function ServerCard({ server }: { server: MCPServer }) {
               <Star className="h-4 w-4" />
               <span className="ml-1">{server.githubStars} on Github</span>
             </div>
-            {!server.is_builtin && (
+            {server.is_builtin ? (
+              <div
+                className="inline-block"
+                title="This extension is built into goose and can be enabled in the settings page"
+              >
+                <Badge
+                  variant="secondary"
+                  className="ml-2 text-xs cursor-help"
+                >
+                  Built-in
+                </Badge>
+              </div>
+            ) : (
               <a
                 href={getGooseInstallLink(server)}
                 target="_blank"

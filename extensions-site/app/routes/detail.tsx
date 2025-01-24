@@ -219,7 +219,19 @@ export default function DetailPage() {
                 rel="noopener noreferrer"
                 className="no-underline"
               >
-                {!server.is_builtin && (
+                {server.is_builtin ? (
+                  <div
+                    className="inline-block"
+                    title="This extension is built into goose and can be enabled in the settings page"
+                  >
+                    <Badge
+                      variant="secondary"
+                      className="ml-2 text-xs cursor-help"
+                    >
+                      Built-in
+                    </Badge>
+                  </div>
+                ) : (
                   <Button
                     size="icon"
                     variant="link"
