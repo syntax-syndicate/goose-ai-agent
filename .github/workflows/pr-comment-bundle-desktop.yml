@@ -26,6 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       continue: ${{ steps.command.outputs.continue }}
+      # Cannot use github.event.pull_request.number since the trigger is 'issue_comment'
+      pr_number: ${{ steps.command.outputs.issue_number }}
     steps:
       - uses: github/command@v1.3.0
         id: command
@@ -72,7 +74,7 @@ jobs:
       - name: Comment on PR with download link
         uses: peter-evans/create-or-update-comment@v4
         with:
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ needs.trigger-on-command.outputs.pr_number }}
           body: |
             ### Desktop App for this PR
             
@@ -83,4 +85,3 @@ jobs:
             After downloading, unzip the file and drag the Goose.app to your Applications folder. The app is signed and notarized for macOS.
             
             This link is provided by nightly.link and will work even if you're not logged into GitHub.
-          edit-mode: replace
