@@ -12,7 +12,7 @@
     "environmentVariables": []
   },
   {
-    "id": "computer_control",
+    "id": "nondeveloper",
     "name": "Computer Controller",
     "description": "Built-in computer controlls for webscraping, file caching, and automations",
     "command": "",
