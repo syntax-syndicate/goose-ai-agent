@@ -52,7 +52,8 @@ jobs:
     needs: [ trigger-on-command ]
     permissions:
       pull-requests: write
-
+    
+    steps:
       - name: Print debug info
         run: | 
           echo "PR Number: ${{ needs.trigger-on-command.outputs.pr_number }}"
