@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   trigger-on-command:
+    runs-on: ubuntu-latest
     outputs:
       continue: "true"
       pr_number: "759"
