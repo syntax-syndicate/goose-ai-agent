@@ -75,7 +75,7 @@
     "id": "git",
     "name": "Git",
     "description": "Git version control system integration",
-    "command": "npx -y @modelcontextprotocol/server-git",
+    "command": "uvx mcp-server-git",
     "link": "https://github.com/modelcontextprotocol/servers/tree/main/src/git",
     "installation_notes": "Install using npx package manager. Note: Does not support git push, merge or rebase operations.",
     "is_builtin": false,
