@@ -29,8 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       continue: "true"
-      pr_number: "759"
-      comment_id: "2613657392"
+      pr_number: 759
+      comment_id: 2613657392
     steps:
       - run: echo "Triggered by command"
 
@@ -58,7 +58,7 @@ jobs:
   pr-comment1:
     name: Testing PR Comment
     runs-on: ubuntu-latest
-    needs: [ trigger-on-command ]
+    # needs: [ trigger-on-command ]
     permissions:
       pull-requests: write
     
