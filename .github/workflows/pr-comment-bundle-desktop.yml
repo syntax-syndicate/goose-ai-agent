@@ -5,8 +5,8 @@
 # Do NOT allow on: pull_request since that allows a user to alter a file in a PR and exfil secrets for example.
 # Only using issue_comment is the suggested workflow type. Comments on pull requests, and issues will trigger the issue_comment workflow event.
 on:
-  issue_comment:
-    types: [created]
+  # issue_comment:
+  #   types: [created]
   # TODO: remove after testing
   pull_request:
     branches:
@@ -16,7 +16,7 @@ on:
 permissions:
   pull-requests: write
   checks: read
-  # issues: write
+  issues: write
 
 name: Workflow to Bundle Desktop App
 
@@ -25,31 +25,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  trigger-on-command:
-    name: Trigger on ".bundle" PR comment
-    runs-on: ubuntu-latest
-    outputs:
-      continue: ${{ steps.command.outputs.continue }}
-      # Cannot use github.event.pull_request.number since the trigger is 'issue_comment'
-      pr_number: ${{ steps.command.outputs.issue_number }}
-      comment_id: ${{ steps.command.outputs.comment_id }}
-    steps:
-      - uses: github/command@v1.3.0
-        id: command
-        with:
-          command: ".bundle"
-          reaction: "eyes"
-          allowed_contexts: pull_request
-      - name: Print debug info
-        run: |
-          echo "Continue: ${{ steps.command.outputs.continue }}"
-          echo "PR Number: ${{ steps.command.outputs.issue_number }}"
-          echo "Comment ID: ${{ steps.command.outputs.comment_id }}"
+  # trigger-on-command:
+  #   name: Trigger on ".bundle" PR comment
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     continue: ${{ steps.command.outputs.continue }}
+  #     # Cannot use github.event.pull_request.number since the trigger is 'issue_comment'
+  #     pr_number: ${{ steps.command.outputs.issue_number }}
+  #     comment_id: ${{ steps.command.outputs.comment_id }}
+  #   steps:
+  #     - uses: github/command@v1.3.0
+  #       id: command
+  #       with:
+  #         command: ".bundle"
+  #         reaction: "eyes"
+  #         allowed_contexts: pull_request
+  #     - name: Print debug info
+  #       run: |
+  #         echo "Continue: ${{ steps.command.outputs.continue }}"
+  #         echo "PR Number: ${{ steps.command.outputs.issue_number }}"
+  #         echo "Comment ID: ${{ steps.command.outputs.comment_id }}"
 
-  pr-comment:
+  pr-comment1:
     name: Testing PR Comment
     runs-on: ubuntu-latest
-    needs: [ trigger-on-command ]
+    # needs: [ trigger-on-command ]
     permissions:
       pull-requests: write
     
@@ -62,13 +62,53 @@ jobs:
       - name: Test PR Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
-          issue-number: ${{ needs.trigger-on-command.outputs.pr_number }}
+          # issue-number: ${{ needs.trigger-on-command.outputs.pr_number }}
+          issue-number: '759'
 
           body: |
             ### Testing PR Comment
 
             This is a test comment to see if the workflow is working as expected.
 
+
+  pr-comment2:
+    name: Testing PR Comment with github script
+    runs-on: ubuntu-latest
+    needs: [ trigger-on-command ]
+    permissions:
+      pull-requests: write
+    
+    steps:
+      - name: Print debug info
+        run: | 
+          echo "PR Number: ${{ needs.trigger-on-command.outputs.pr_number }}"
+          echo "Comment ID: ${{ needs.trigger-on-command.outputs.comment_id }}"
+
+      - name: Post a comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Retrieve the PR number from the previous job's output
+            // const prNumber = parseInt("${{ needs.trigger-on-command.outputs.pr_number }}", 10);
+            const prNumber = parseInt("759", 10);
+
+            // Validate the PR number - else, fail the job
+            if (isNaN(prNumber)) {
+              core.setFailed(`Invalid PR number: ${prNumberRaw}`);
+              return;
+            }
+
+            // Define the comment body
+            const commentBody = "Hello from GitHub Actions! (Posted from pr-comment2)";
+
+            // Create a comment on the PR using the GitHub REST API
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody,
+            });
+        
 
   # bundle-desktop:
   #   # Only run this if ".bundle" command is detected.
