@@ -1,5 +1,3 @@
-# Goose
-
 > [!CAUTION]
 > Goose is a developer agent with access to a variety of systems that perform actions on behalf of the user on their local machine. Please be aware that since developer agents have the ability to run code and take actions on your computer, they pose a unique risk compared to chat based LLM interactions. While most foundational models include baseline protections against prompt injection, there is still inherent risk when using Goose to interact with the internet or through other untrusted data sources. To minimize these risks, consider taking the following precautions:
 >
