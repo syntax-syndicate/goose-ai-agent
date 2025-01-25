@@ -64,7 +64,7 @@ jobs:
   pr-comment1:
     name: Testing PR Comment
     runs-on: ubuntu-latest
-    needs: [ bundle-desktop ]
+    needs: [ trigger-on-command, bundle-desktop ]
     permissions:
       pull-requests: write
     
