@@ -51,6 +51,18 @@ sudo rm -rf ~/Library/Caches/hermit
 
 ---
 
+### Reinstalling or resetting (advanced)
+
+You may want to reset the state of things for goose to be reinstalled fresh, here is how for CLI and GUI:
+
+* stop any copies of goose running (CLI or GUI) - and check no rogue processes are running (activity monitor can help)
+* remove `~/.config/goose` directory to remove all general goose config
+* for GUI (on macos) remove `~/Library/Application Support/Goose` as well for GUI specific config
+* with GUI, you can `tail -f ~/Library/Application\ Support/Goose/logs/main.log` to see what is going on behind the scenes if not clear
+* with GUI, open the Keychain Access.app on macos, and remove "goose/Goose" related login items
+* remove goose from ~/Applications if there
+* install and configure again (download GUI, or run cli installer again, and then configure it)
+
 ### API Errors
 
 Users may run into an error like the one below when there are issues with their LLM API tokens, such as running out of credits or incorrect configuration:
