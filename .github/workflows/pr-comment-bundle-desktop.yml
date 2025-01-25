@@ -12,6 +12,7 @@ on:
 permissions:
   pull-requests: write
   checks: read
+  # issues: write
 
 name: Workflow to Bundle Desktop App
 
@@ -25,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       continue: ${{ steps.command.outputs.continue }}
+      # Cannot use github.event.pull_request.number since the trigger is 'issue_comment'
       pr_number: ${{ steps.command.outputs.issue_number }}
     steps:
       - uses: github/command@v1.3.0
