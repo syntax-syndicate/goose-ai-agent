@@ -25,6 +25,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  trigger-on-command:
+    outputs:
+      continue: "true"
+      pr_number: "759"
+      comment_id: "2613657392"
+    steps:
+      - run: echo "Triggered by command"
+
   # trigger-on-command:
   #   name: Trigger on ".bundle" PR comment
   #   runs-on: ubuntu-latest
@@ -62,8 +70,7 @@ jobs:
       - name: Test PR Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
-          # issue-number: ${{ needs.trigger-on-command.outputs.pr_number }}
-          issue-number: '759'
+          issue-number: ${{ needs.trigger-on-command.outputs.pr_number }}
 
           body: |
             ### Testing PR Comment
