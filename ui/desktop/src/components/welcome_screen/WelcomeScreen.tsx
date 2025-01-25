@@ -6,7 +6,7 @@ import { Goose } from '../icons/Goose';
 // Extending React CSSProperties to include custom webkit property
 declare module 'react' {
   interface CSSProperties {
-    WebkitAppRegion?: string; // Now TypeScript knows about WebkitAppRegion
+    WebkitAppRegion?: string;
   }
 }
 
@@ -16,13 +16,16 @@ interface WelcomeScreenProps {
 
 export function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
   return (
-    <div className="h-screen w-full select-none bg-bgSubtle">
+    <div className="h-screen w-full select-none bg-white dark:bg-black">
       {/* Draggable title bar region */}
-      <div className="h-[36px] w-full bg-surface/50" style={{ WebkitAppRegion: 'drag' }} />
+      <div
+        className="h-[36px] w-full bg-white/50 dark:bg-black/50"
+        style={{ WebkitAppRegion: 'drag' }}
+      />
 
       {/* Content area - explicitly set as non-draggable */}
       <div
-        className="h-[calc(100vh-36px)] w-full bg-surface dark:bg-surface-dark overflow-hidden p-4"
+        className="h-[calc(100vh-36px)] w-full overflow-hidden p-4"
         style={{ WebkitAppRegion: 'no-drag' }}
       >
         <ScrollArea className="h-full w-full">
@@ -44,12 +47,12 @@ export function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
                   <h2 className="text-xl font-semibold text-textStandard tracking-tight">
                     Get started
                   </h2>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-textSubtle">
                     Check out the{' '}
                     <a
                       href="https://block.github.io/goose/v1/docs/quickstart"
-                      target="_blank" // Optional: Opens the link in a new tab
-                      rel="noopener noreferrer" // Optional: Security for external links
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-indigo-500 hover:text-indigo-600 text-sm"
                     >
                       quick start guide
@@ -62,7 +65,7 @@ export function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
                   <h2 className="text-xl font-semibold text-textStandard tracking-tight">
                     Choose a provider
                   </h2>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-textSubtle">
                     Configure your AI model providers by adding their API keys. Your keys are stored
                     securely and encrypted locally. You can change your provider and select specific
                     models in the settings.
