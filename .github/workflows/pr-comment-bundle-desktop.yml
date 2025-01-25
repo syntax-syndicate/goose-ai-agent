@@ -97,17 +97,20 @@ jobs:
         with:
           script: |
             // Retrieve the PR number from the previous job's output
-            // const prNumber = parseInt("${{ needs.trigger-on-command.outputs.pr_number }}", 10);
-            const prNumber = parseInt("759", 10);
+            const prNumber = parseInt("${{ needs.trigger-on-command.outputs.pr_number }}", 10);
+            
+            // Build the comment body using a template literal
+            const commentBody = `
+            ### Desktop App for this PR
 
-            // Validate the PR number - else, fail the job
-            if (isNaN(prNumber)) {
-              core.setFailed(`Invalid PR number: ${prNumberRaw}`);
-              return;
-            }
+            The following build is available for testing:
 
-            // Define the comment body
-            const commentBody = "Hello from GitHub Actions! (Posted from pr-comment2)";
+            - [📱 macOS Desktop App (arm64, signed)](https://example.com)
+
+            After downloading, unzip the file and drag the Goose.app to your Applications folder. The app is signed and notarized for macOS.
+
+            This link is provided by nightly.link and will work even if you're not logged into GitHub.
+            `;
 
             // Create a comment on the PR using the GitHub REST API
             await github.rest.issues.createComment({
