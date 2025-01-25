@@ -61,6 +61,10 @@ jobs:
         with:
           merge-multiple: true
 
+      - name: Debug pull_request number
+        run: |
+          echo "Pull Request number is: '${{ github.event.pull_request.number }}'"
+
       - name: Comment on PR with download link
         uses: peter-evans/create-or-update-comment@v4
         with:
