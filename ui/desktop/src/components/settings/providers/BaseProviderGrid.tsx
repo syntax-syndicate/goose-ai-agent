@@ -64,8 +64,12 @@ function BaseProviderCard({
 
   return (
     <div className="relative h-full p-[2px] overflow-hidden rounded-[9px] group/card bg-borderSubtle hover:bg-transparent hover:duration-300">
-      <div className="absolute opacity-0 group-hover/card:opacity-100 pointer-events-none w-[260px] h-[260px] top-[-50px] left-[-30px] origin-center bg-[linear-gradient(45deg,#13BBAF,#FF4F00)] animate-[rotate_6s_linear_infinite] z-[-1]"></div>
-
+      {/* Glowing ring */}
+      <div
+        className={`absolute pointer-events-none w-[260px] h-[260px] top-[-50px] left-[-30px] origin-center bg-[linear-gradient(45deg,#13BBAF,#FF4F00)] animate-[rotate_6s_linear_infinite] z-[-1] ${
+          isSelected ? 'opacity-100' : 'opacity-0 group-hover/card:opacity-100'
+        }`}
+      ></div>
       <div
         onClick={() => isSelectable && isConfigured && onSelect?.()}
         className={`relative bg-bgApp rounded-lg
