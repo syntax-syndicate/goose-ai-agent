@@ -12,7 +12,7 @@ on:
 permissions:
   pull-requests: write
   checks: read
-  # issues: write
+  issues: write
 
 name: Workflow to Bundle Desktop App
 
