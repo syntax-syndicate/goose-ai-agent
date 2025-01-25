@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       continue: ${{ steps.command.outputs.continue }}
+      issue_number: ${{ steps.command.outputs.issue_number }}
     steps:
       - uses: github/command@v1.3.0
         id: command
@@ -37,6 +38,12 @@ jobs:
         run: |
           echo "Pull Request number is: '${{ steps.command.outputs.issue_number }}'
           echo "Comment ID is: '${{ steps.command.outputs.comment_id }}'
+      - name: Test PR Comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ needs.trigger-on-command.outputs.issue_number }}
+        body: |
+          This is a test comment to see if the workflow is working.
 
   bundle-desktop:
     # Only run this if ".bundle" command is detected.
@@ -65,14 +72,10 @@ jobs:
         with:
           merge-multiple: true
 
-      - name: Debug pull_request number
-        run: |
-          echo "Pull Request number is: '${{ github.event.pull_request.number }}'"
-
       - name: Comment on PR with download link
         uses: peter-evans/create-or-update-comment@v4
         with:
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ needs.trigger-on-command.outputs.issue_number }}
           body: |
             ### Desktop App for this PR
             
