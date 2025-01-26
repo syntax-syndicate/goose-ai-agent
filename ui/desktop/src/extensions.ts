@@ -2,6 +2,7 @@ import { getApiUrl, getSecretKey } from './config';
 import { NavigateFunction } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getStoredProvider } from './utils/providerUtils';
+import React from 'react';
 
 // ExtensionConfig type matching the Rust version
 export type ExtensionConfig =
@@ -247,41 +248,57 @@ function envVarsRequired(config: ExtensionConfig) {
   return config.env_keys?.length > 0;
 }
 
+function handleError(message: string, shouldThrow = false): void {
+  toast.error(message);
+  console.error(message);
+  if (shouldThrow) {
+    throw new Error(message);
+  }
+}
+
 export async function addExtensionFromDeepLink(url: string, navigate: NavigateFunction) {
   if (!url.startsWith('goose://extension')) {
-    console.log('Invalid URL: URL must use the goose://extension scheme');
+    handleError(
+      'Failed to install extension: Invalid URL: URL must use the goose://extension scheme'
+    );
     return;
   }
 
   const parsedUrl = new URL(url);
 
   if (parsedUrl.protocol !== 'goose:') {
-    throw new Error('Invalid protocol: URL must use the goose:// scheme');
+    handleError(
+      'Failed to install extension: Invalid protocol: URL must use the goose:// scheme',
+      true
+    );
   }
 
   const cmd = parsedUrl.searchParams.get('cmd');
-
   if (!cmd) {
-    throw new Error("Missing required 'cmd' parameter in the URL");
+    handleError("Failed to install extension: Missing required 'cmd' parameter in the URL", true);
   }
 
-  // Validate that the command is one of the allowed commands
   const allowedCommands = ['npx', 'uvx', 'goosed'];
   if (!allowedCommands.includes(cmd)) {
-    throw new Error(`Invalid command: ${cmd}. Only ${allowedCommands.join(', ')} are allowed.`);
+    handleError(
+      `Failed to install extension: Invalid command: ${cmd}. Only ${allowedCommands.join(', ')} are allowed.`,
+      true
+    );
   }
 
-  // Check for security risk with npx -c command
   const args = parsedUrl.searchParams.getAll('arg');
   if (cmd === 'npx' && args.includes('-c')) {
-    throw new Error('Error: npx with -c argument can lead to code injection');
+    handleError(
+      'Failed to install extension: npx with -c argument can lead to code injection',
+      true
+    );
   }
+
   const envList = parsedUrl.searchParams.getAll('env');
   const id = parsedUrl.searchParams.get('id');
   const name = parsedUrl.searchParams.get('name');
   const description = parsedUrl.searchParams.get('description');
 
-  // split env based on delimiter to a map
   const envs = envList.reduce(
     (acc, env) => {
       const [key, value] = env.split('=');
@@ -291,7 +308,6 @@ export async function addExtensionFromDeepLink(url: string, navigate: NavigateFu
     {} as Record<string, string>
   );
 
-  // Create a ExtensionConfig from the URL parameters
   const config: FullExtensionConfig = {
     id,
     name,
@@ -303,16 +319,13 @@ export async function addExtensionFromDeepLink(url: string, navigate: NavigateFu
     env_keys: Object.keys(envs).length > 0 ? Object.keys(envs) : [],
   };
 
-  // Store the extension config regardless of env vars status
   storeExtensionConfig(config);
 
-  // Check if extension requires env vars and go to settings if so
   if (envVarsRequired(config)) {
     console.log('Environment variables required, redirecting to settings');
     navigate(`/settings?extensionId=${config.id}&showEnvVars=true`);
     return;
   }
 
-  // If no env vars are required, proceed with extending Goosed
   await addExtension(config);
 }
