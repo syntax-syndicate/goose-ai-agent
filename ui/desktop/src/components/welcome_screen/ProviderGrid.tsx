@@ -170,7 +170,7 @@ export function ProviderGrid({ onSubmit }: ProviderGridProps) {
                 'bg-black dark:bg-white dark:hover:bg-gray-200 text-white dark:!text-black border-borderStandard hover:bg-slate text-sm whitespace-nowrap shrink-0 bg-bgSubtle text-textStandard rounded-full shadow-none border px-4 py-2'
               }
             >
-              Select {providers.find((p) => p.id === selectedId)?.name}
+              Let's takeoff
             </Button>
           </div>
         )}

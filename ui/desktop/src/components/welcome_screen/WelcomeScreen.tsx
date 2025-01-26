@@ -42,7 +42,7 @@ export function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
             {/* ProviderGrid */}
             <div className="w-full">
               <h2 className="text-3xl font-bold text-textStandard tracking-tight mb-2">
-                Let's fly
+                Choose a Provider
               </h2>
               <p className="text-xl text-textStandard mb-4">
                 Select an AI model provider to get started with goose.
