@@ -328,7 +328,7 @@ pub fn configure_extensions_dialog() -> Result<(), Box<dyn Error>> {
                 .item(
                     "computercontroller",
                     "Computer Controller",
-                    "AI driven scripting for non developers",
+                    "controls for webscraping, file caching, and automations",
                 )
                 .item(
                     "google_drive",
