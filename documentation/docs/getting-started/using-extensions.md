@@ -17,7 +17,7 @@ Out of the box, Goose is installed with a few extensions but with only the `Deve
 Here are the built-in extensions:
 
 1. **Developer**: provides a set of general development tools that are useful for software development.
-2. **Computer Controller**: provides general computer control tools that
+2. **Computer Controller**: provides general computer control tools for webscraping, file caching, and automations.
 3. **Memory**: teaches goose to remember your preferences as you use it
 4. **JetBrains**: provides an integration for working with JetBrains IDEs.
 5. **Google Drive**: provides an integration for working with Google Drive for file management and access.
