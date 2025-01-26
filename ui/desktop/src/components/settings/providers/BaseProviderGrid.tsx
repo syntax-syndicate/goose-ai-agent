@@ -162,7 +162,7 @@ function BaseProviderCard({
                 </Tooltip>
               </TooltipProvider>
             )}
-            {showDelete && hasRequiredKeys && (
+            {showDelete && hasRequiredKeys && isConfigured && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
