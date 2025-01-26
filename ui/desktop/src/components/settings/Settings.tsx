@@ -232,6 +232,7 @@ export default function Settings() {
                       <ExtensionItem
                         key={ext.id}
                         {...ext}
+                        canConfigure={!BUILT_IN_EXTENSIONS.find((builtIn) => builtIn.id === ext.id)}
                         onToggle={handleExtensionToggle}
                         onConfigure={(extension) => setExtensionBeingConfigured(extension)}
                       />
