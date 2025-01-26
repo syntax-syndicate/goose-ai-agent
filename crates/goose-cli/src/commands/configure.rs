@@ -326,8 +326,8 @@ pub fn configure_extensions_dialog() -> Result<(), Box<dyn Error>> {
                     "Code editing and shell access",
                 )
                 .item(
-                    "nondeveloper",
-                    "Non Developer",
+                    "computercontroller",
+                    "Computer Controller",
                     "AI driven scripting for non developers",
                 )
                 .item(
