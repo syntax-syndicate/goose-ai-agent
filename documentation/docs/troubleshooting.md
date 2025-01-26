@@ -51,18 +51,6 @@ sudo rm -rf ~/Library/Caches/hermit
 
 ---
 
-### Reinstalling or resetting (advanced)
-
-You may want to reset the state of things for goose to be reinstalled fresh, here is how for CLI and GUI:
-
-* stop any copies of goose running (CLI or GUI) - and check no rogue processes are running (activity monitor can help)
-* remove `~/.config/goose` directory to remove all general goose config
-* for GUI (on macos) remove `~/Library/Application Support/Goose` as well for GUI specific config
-* with GUI, you can `tail -f ~/Library/Application\ Support/Goose/logs/main.log` to see what is going on behind the scenes if not clear
-* with GUI, open the Keychain Access.app on macos, and remove "goose/Goose" related login items
-* remove goose from ~/Applications if there
-* install and configure again (download GUI, or run cli installer again, and then configure it)
-
 ### API Errors
 
 Users may run into an error like the one below when there are issues with their LLM API tokens, such as running out of credits or incorrect configuration:
@@ -92,6 +80,26 @@ This error typically occurs when LLM API credits are exhausted or your API key i
     goose configure
     ```
 For detailed steps on updating your LLM provider, refer to the [Installation][installation] Guide.
+
+---
+
+### Remove Cached Data
+
+Goose stores data in a few places. Secrets, such as API keys, are stored exclusively in the system keychain.
+Logs and configuration data are stored in `~/.config/goose`. And the app stores a small amount of data in
+`~/Library/Application Support/Goose`.
+
+You can remove all of this data by following these steps.
+
+* stop any copies of goose running (CLI or GUI)
+  * consider confirming you've stopped them all via the activity monitor
+* open the keychain and delete the credential called "goose", which contains all secrets stored by goose
+* `rm -rf ~/.config/goose`
+* For the App on macos, `rm -rf ~/Library/Application Support/Goose`
+* Delete the "Goose" app from your Applications folder
+
+After this cleanup, if you are looking to try out a fresh install of Goose, you can now start from the usual
+install instructions.
 
 ---
 
