@@ -19,7 +19,10 @@ export function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
   return (
     <div className="h-screen w-full select-none bg-white dark:bg-black">
       {/* Draggable title bar region */}
-      <div className="h-[36px] w-full bg-transparent" style={{ WebkitAppRegion: 'drag' }} />
+      <div
+        className="relative flex items-center h-[36px] w-full bg-bgSubtle"
+        style={{ WebkitAppRegion: 'drag' }}
+      ></div>
 
       {/* Content area - explicitly set as non-draggable */}
       <div
@@ -29,7 +32,7 @@ export function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
         <ScrollArea className="h-full w-full">
           <div className="flex min-h-full flex-col justify-center px-8 py-8 md:px-16 max-w-4xl mx-auto">
             {/* Header Section */}
-            <div className="mb-12">
+            <div className="mb-8 mt-4">
               <div className="flex items-center gap-4 mb-4">
                 <div className="group/logo">
                   <WelcomeGooseLogo className="h-16 w-16 md:h-20 md:w-20 text-black dark:text-white" />
