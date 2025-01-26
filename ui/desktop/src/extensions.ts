@@ -276,6 +276,7 @@ export async function addExtensionFromDeepLink(url: string, navigate: NavigateFu
     handleError("Failed to install extension: Missing required 'cmd' parameter in the URL", true);
   }
 
+  // Validate that the command is one of the allowed commands
   const allowedCommands = ['npx', 'uvx', 'goosed'];
   if (!allowedCommands.includes(cmd)) {
     handleError(
@@ -284,6 +285,7 @@ export async function addExtensionFromDeepLink(url: string, navigate: NavigateFu
     );
   }
 
+  // Check for security risk with npx -c command
   const args = parsedUrl.searchParams.getAll('arg');
   if (cmd === 'npx' && args.includes('-c')) {
     handleError(
@@ -297,6 +299,7 @@ export async function addExtensionFromDeepLink(url: string, navigate: NavigateFu
   const name = parsedUrl.searchParams.get('name');
   const description = parsedUrl.searchParams.get('description');
 
+  // split env based on delimiter to a map
   const envs = envList.reduce(
     (acc, env) => {
       const [key, value] = env.split('=');
@@ -306,6 +309,7 @@ export async function addExtensionFromDeepLink(url: string, navigate: NavigateFu
     {} as Record<string, string>
   );
 
+  // Create a ExtensionConfig from the URL parameters
   const config: FullExtensionConfig = {
     id,
     name,
@@ -317,13 +321,16 @@ export async function addExtensionFromDeepLink(url: string, navigate: NavigateFu
     env_keys: Object.keys(envs).length > 0 ? Object.keys(envs) : [],
   };
 
+  // Store the extension config regardless of env vars status
   storeExtensionConfig(config);
 
+  // Check if extension requires env vars and go to settings if so
   if (envVarsRequired(config)) {
     console.log('Environment variables required, redirecting to settings');
     navigate(`/settings?extensionId=${config.id}&showEnvVars=true`);
     return;
   }
 
+  // If no env vars are required, proceed with extending Goosed
   await addExtension(config);
 }
