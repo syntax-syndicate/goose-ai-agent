@@ -140,7 +140,7 @@ export function ConfigureBuiltInExtensionModal({
                 type="submit"
                 variant="ghost"
                 disabled={isSubmitting}
-                className="w-full h-[60px] rounded-none border-t dark:border-gray-600 text-lg hover:bg-gray-50 hover:dark:text-black dark:text-white dark:border-gray-600 font-regular"
+                className="w-full h-[60px] rounded-none border-t dark:border-gray-600 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 dark:border-gray-600 text-lg font-regular"
               >
                 {isSubmitting ? 'Saving...' : 'Save Configuration'}
               </Button>
