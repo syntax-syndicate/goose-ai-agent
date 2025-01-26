@@ -42,8 +42,8 @@ const FeatureList: FeatureItem[] = [
     Svg: require("@site/static/img/category-ETF.svg").default,
     description: (
       <>
-        Customize goose with your preferred LLM and connect it seamlessly to any
-        external MCP server or API for limitless possibilities.
+        Customize goose with your preferred LLM and enhance its capabilities by connecting it to any
+        external MCP server or API.
       </>
     ),
   },
