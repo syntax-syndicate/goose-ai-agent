@@ -118,7 +118,7 @@ function BaseProviderCard({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 dark:bf-gray-900/30 shrink-0 ml-2 text-gray-600 dark:text-gray-500">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-bgApp hover:bg-bgApp shadow-none text-textSubtle border border-borderSubtle hover:border-borderStandard hover:text-textStandard transition-colors">
                       !
                     </div>
                   </TooltipTrigger>
