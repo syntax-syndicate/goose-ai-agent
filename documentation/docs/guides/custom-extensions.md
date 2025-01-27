@@ -1,6 +1,6 @@
 ---
 title: Building Custom Extensions
-sidebar_position: 7
+sidebar_position: 6
 ---
 
 # Building Custom Extensions with Goose
@@ -12,7 +12,7 @@ In this guide, we build an MCP server using the [Python SDK for MCP][mcp-python]
 
 You can checkout other examples in this [MCP servers repository][mcp-servers]. MCP SDKs are also available in [Typescript][mcp-typescript] and [Kotlin][mcp-kotlin].
 
-:::note
+:::info
 
 Goose currently supports Tools and Resources for [MCP Server features](https://spec.modelcontextprotocol.io/specification/2024-11-05/server/). 
 We will be adding support for MCP Prompts soon.
@@ -36,9 +36,7 @@ rm hello.py
 mkdir -p src/mcp_wiki
 touch src/mcp_wiki/server.py  # Your MCP server code (tool, resources, prompts)
 touch src/mcp_wiki/__init__.py  # Primary CLI entry point
-
-# Optional: To enable running as a Python module
-touch src/mcp_wiki/__main__.py
+touch src/mcp_wiki/__main__.py # To enable running as a Python module
 ```
 
 Your project directory structure should look like this:
@@ -186,7 +184,7 @@ build-backend = "hatchling.build"
 
 ### Using MCP Inspector
 
-1. Synchronize your project:
+1. Setup the project environment:
 
    ```bash
    uv sync
@@ -252,9 +250,9 @@ To add your MCP server as an extension in Goose:
 1. Go to `Settings > Extensions > Add`.
 2. Set the `Type` to `StandardIO`.
 3. Provide the ID, name, and description for your extension.
-4. In the `Command` field, provide the full path to your executable. For example:
+4. In the `Command` field, provide the absolute path to your executable. For example:
    ```plaintext
-   uv run /Users/smohammed/Development/mcp/mcp-wiki/.venv/bin/mcp-wiki
+   uv run /full/path/to/mcp-wiki/.venv/bin/mcp-wiki
    ```
 
 Alternatively in Step 3, you can also publish your package to pypi. Once published, the server can be run directly using uvx. For example:
