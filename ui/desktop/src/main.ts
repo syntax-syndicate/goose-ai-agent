@@ -350,32 +350,31 @@ ipcMain.handle('select-file-or-directory', async () => {
 
 ipcMain.handle('check-ollama', async () => {
   try {
-    return new Promise((resolve, reject) => {
-      // Run `ps` and filter for "ollama"
-      exec('ps aux | grep -iw "[o]llama"', (error, stdout, stderr) => {
+    console.log('Checking if Ollama binary is available and active...');
+    return new Promise((resolve) => {
+      exec('ollama status', (error, stdout, stderr) => {
         if (error) {
-          console.error('Error executing ps command:', error);
-          return resolve(false); // Process is not running
+          console.error('Error executing Ollama binary:', error);
+          resolve(false); // Ollama is not active or installed
+          return;
         }
 
         if (stderr) {
-          console.error('Standard error output from ps command:', stderr);
-          return resolve(false); // Process is not running
+          console.error('Error output from Ollama binary:', stderr);
+          resolve(false); // Ollama is not active or installed
+          return;
         }
 
-        console.log('Raw stdout from ps command:', stdout);
+        console.log('Ollama binary output:', stdout);
+        const isRunning = stdout.includes('Running'); // Adjust based on actual output
+        console.log('Is Ollama running:', isRunning);
 
-        // Trim and check if output contains a match
-        const trimmedOutput = stdout.trim();
-        console.log('Trimmed stdout:', trimmedOutput);
-
-        const isRunning = trimmedOutput.length > 0; // True if there's any output
-        resolve(isRunning); // Resolve true if running, false otherwise
+        resolve(isRunning); // Resolve true if Ollama is active
       });
     });
   } catch (err) {
-    console.error('Error checking for Ollama:', err);
-    return false; // Return false on error
+    console.error('Error checking Ollama binary:', err);
+    return false; // Return false if any exception occurs
   }
 });
 
