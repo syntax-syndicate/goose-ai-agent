@@ -31,14 +31,6 @@ const { exec } = require('child_process');
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) app.quit();
 
-// Track the last focused window
-let lastFocusedWindow: BrowserWindow | null = null;
-
-// Update last focused window when any window gains focus
-app.on('browser-window-focus', (_, window) => {
-  lastFocusedWindow = window;
-});
-
 // Triggered when the user opens "goose://..." links
 app.on('open-url', async (event, url) => {
   event.preventDefault();
@@ -217,7 +209,6 @@ const createChat = async (app, query?: string, dir?: string, version?: string) =
   // Register shortcut when window is focused
   mainWindow.on('focus', () => {
     registerDevToolsShortcut(mainWindow);
-    lastFocusedWindow = mainWindow;
   });
 
   // Unregister shortcut when window loses focus
@@ -228,9 +219,6 @@ const createChat = async (app, query?: string, dir?: string, version?: string) =
   windowMap.set(windowId, mainWindow);
   mainWindow.on('closed', () => {
     windowMap.delete(windowId);
-    if (lastFocusedWindow === mainWindow) {
-      lastFocusedWindow = null;
-    }
     unregisterDevToolsShortcut();
     goosedProcess.kill();
   });
