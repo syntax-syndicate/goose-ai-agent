@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Check, Plus, Settings, X, Rocket, RefreshCw } from 'lucide-react';
+import { Check, Plus, Settings, X, Rocket, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/Tooltip';
 import { Portal } from '@radix-ui/react-portal';
@@ -118,8 +118,8 @@ function BaseProviderCard({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/30 shrink-0 ml-2">
-                      <ExclamationTriangleIcon className="h-3 w-3 text-red-600 dark:text-red-500" />
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 dark:bf-gray-900/30 shrink-0 ml-2 text-gray-600 dark:text-gray-500">
+                      !
                     </div>
                   </TooltipTrigger>
                   <Portal>
