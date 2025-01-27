@@ -26,6 +26,7 @@ import {
   saveSettings,
   updateEnvironmentVariables,
 } from './utils/settings';
+const fs = require('fs');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) app.quit();
@@ -345,6 +346,22 @@ ipcMain.handle('select-file-or-directory', async () => {
     return result.filePaths[0];
   }
   return null;
+});
+
+// Handle the Ollama check request
+ipcMain.handle('check-ollama', async () => {
+  const ollamaPath = '/Applications/Ollama.app';
+  try {
+    const stats = fs.statSync(ollamaPath);
+    console.log('stats', stats);
+    console.log('isDir', stats.isDirectory());
+    return stats.isDirectory(); // Return true if the path exists and is a directory
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return false; // File or directory does not exist
+    }
+    throw error; // Propagate other errors
+  }
 });
 
 app.whenReady().then(async () => {

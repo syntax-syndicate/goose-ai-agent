@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, Plus, Settings, X, Rocket } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/Tooltip';
 import { Portal } from '@radix-ui/react-portal';
 import { required_keys } from '../models/hardcoded_stuff';
+import { checkForOllama } from './utils';
 
 // Common interfaces and helper functions
 interface Provider {
@@ -64,6 +65,18 @@ function BaseProviderCard({
   const numRequiredKeys = required_keys[name]?.length || 0;
   const tooltipText = numRequiredKeys === 1 ? `Add ${name} API Key` : `Add ${name} API Keys`;
 
+  // Add state for Ollama installation status
+  const [isOllamaInstalled, setIsOllamaInstalled] = useState(false);
+
+  useEffect(() => {
+    if (name === 'Ollama') {
+      // Check if Ollama is installed via IPC call to the main process
+      checkForOllama().then((installed) => {
+        setIsOllamaInstalled(installed);
+      });
+    }
+  }, [name]);
+
   return (
     <div className="relative h-full p-[2px] overflow-hidden rounded-[9px] group/card bg-borderSubtle hover:bg-transparent hover:duration-300">
       {/* Glowing ring */}
@@ -85,7 +98,7 @@ function BaseProviderCard({
           <div className="flex items-center">
             <h3 className="text-base font-medium text-textStandard truncate mr-2">{name}</h3>
 
-            {isConfigured && (
+            {isConfigured && name !== 'Ollama' && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -99,6 +112,40 @@ function BaseProviderCard({
                         {hasRequiredKeys
                           ? `You have ${getArticle(name)} ${name} API Key set in your environment`
                           : `${name} has no required API keys`}
+                      </p>
+                    </TooltipContent>
+                  </Portal>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            {/* Special case for Ollama */}
+            {name === 'Ollama' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={`flex items-center justify-center w-5 h-5 rounded-full ${
+                        isOllamaInstalled
+                          ? 'bg-green-100 dark:bg-green-900/30'
+                          : 'bg-red-100 dark:bg-red-900/30'
+                      } shrink-0`}
+                    >
+                      <Check
+                        className={`h-3 w-3 ${
+                          isOllamaInstalled
+                            ? 'text-green-600 dark:text-green-500'
+                            : 'text-red-600 dark:text-red-500'
+                        }`}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <Portal>
+                    <TooltipContent side="top" align="center" className="z-[9999]">
+                      <p>
+                        {isOllamaInstalled
+                          ? 'Ollama is installed on your system.'
+                          : 'You need to install Ollama to use it.'}
                       </p>
                     </TooltipContent>
                   </Portal>
