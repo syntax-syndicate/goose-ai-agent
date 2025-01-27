@@ -1,10 +1,21 @@
 import { Provider, ProviderResponse } from './types';
 import { getApiUrl, getSecretKey } from '../../../config';
+import { special_provider_cases } from '../providers/utils';
 
 export async function getActiveProviders(): Promise<string[]> {
   try {
     // Fetch the secrets settings
     const secretsSettings = await getSecretsSettings();
+
+    // Check for special provider cases (e.g. ollama needs to be installed in Applications folder)
+    const specialCasesResults = await Promise.all(
+      Object.entries(special_provider_cases).map(async ([providerName, checkPromise]) => {
+        const isActive = await checkPromise; // Resolve the promise for each special case
+        return isActive ? providerName : null; // Include provider if active
+      })
+    );
+
+    console.log(specialCasesResults);
 
     // Extract active providers based on `is_set` in `secret_status` or providers with no keys
     const activeProviders = Object.values(secretsSettings) // Convert object to array
@@ -12,13 +23,20 @@ export async function getActiveProviders(): Promise<string[]> {
         const apiKeyStatus = Object.values(provider.secret_status || {}); // Get all key statuses
 
         // Include providers if:
-        // - They have at least one key set (`is_set: true`), OR
-        // - They have no keys (`secret_status` is empty or undefined)
-        return apiKeyStatus.some((key) => key.is_set) || apiKeyStatus.length === 0;
+        // - They have at least one key set (`is_set: true`)
+        return apiKeyStatus.some((key) => key.is_set);
       })
       .map((provider) => provider.name || 'Unknown Provider'); // Extract provider name
 
-    return activeProviders;
+    // Combine active providers from secrets settings and special cases
+    const allActiveProviders = [
+      ...activeProviders,
+      ...specialCasesResults.filter((provider) => provider !== null), // Filter out null results
+    ];
+
+    console.log('all active prov', allActiveProviders);
+
+    return allActiveProviders;
   } catch (error) {
     console.error('Failed to get active providers:', error);
     return [];

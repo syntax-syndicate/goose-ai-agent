@@ -28,6 +28,7 @@ interface BaseProviderCardProps {
   showDelete?: boolean;
   hasRequiredKeys?: boolean;
   onTakeoff?: () => void;
+  showTakeoff?: boolean;
 }
 
 function getArticle(word: string): string {
@@ -61,12 +62,15 @@ function BaseProviderCard({
   showDelete = false,
   hasRequiredKeys = false,
   onTakeoff,
+  showTakeoff,
 }: BaseProviderCardProps) {
   const numRequiredKeys = required_keys[name]?.length || 0;
   const tooltipText = numRequiredKeys === 1 ? `Add ${name} API Key` : `Add ${name} API Keys`;
 
   // Add state for Ollama installation status
   const [isOllamaInstalled, setIsOllamaInstalled] = useState(false);
+
+  console.log('is configured', name, isConfigured);
 
   useEffect(() => {
     if (name === 'Ollama') {
@@ -98,7 +102,7 @@ function BaseProviderCard({
           <div className="flex items-center">
             <h3 className="text-base font-medium text-textStandard truncate mr-2">{name}</h3>
 
-            {isConfigured && name !== 'Ollama' && (
+            {isConfigured && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -111,41 +115,7 @@ function BaseProviderCard({
                       <p>
                         {hasRequiredKeys
                           ? `You have ${getArticle(name)} ${name} API Key set in your environment`
-                          : `${name} has no required API keys`}
-                      </p>
-                    </TooltipContent>
-                  </Portal>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            {/* Special case for Ollama */}
-            {name === 'Ollama' && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div
-                      className={`flex items-center justify-center w-5 h-5 rounded-full ${
-                        isOllamaInstalled
-                          ? 'bg-green-100 dark:bg-green-900/30'
-                          : 'bg-red-100 dark:bg-red-900/30'
-                      } shrink-0`}
-                    >
-                      <Check
-                        className={`h-3 w-3 ${
-                          isOllamaInstalled
-                            ? 'text-green-600 dark:text-green-500'
-                            : 'text-red-600 dark:text-red-500'
-                        }`}
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <Portal>
-                    <TooltipContent side="top" align="center" className="z-[9999]">
-                      <p>
-                        {isOllamaInstalled
-                          ? 'Ollama is installed on your system.'
-                          : 'You need to install Ollama to use it.'}
+                          : `${name} is installed on your machine`}
                       </p>
                     </TooltipContent>
                   </Portal>
@@ -180,6 +150,31 @@ function BaseProviderCard({
                   <Portal>
                     <TooltipContent side="top" align="center" className="z-[9999]">
                       <p>{tooltipText}</p>
+                    </TooltipContent>
+                  </Portal>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {/* Ollama special case  */}
+            {!isConfigured && name == 'Ollama' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open('https://ollama.com/download', '_blank'); // Open URL in a new tab
+                      }}
+                      className="rounded-full h-7 w-7 p-0 bg-bgApp hover:bg-bgApp shadow-none text-textSubtle border border-borderSubtle hover:border-borderStandard hover:text-textStandard transition-colors"
+                    >
+                      <Plus className="!size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <Portal>
+                    <TooltipContent side="top" align="center" className="z-[9999]">
+                      <p>{'Install Ollama'}</p>
                     </TooltipContent>
                   </Portal>
                 </Tooltip>
@@ -234,7 +229,7 @@ function BaseProviderCard({
               </TooltipProvider>
             )}
           </div>
-          {isConfigured && onTakeoff && (
+          {isConfigured && onTakeoff && showTakeoff !== false && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -275,6 +270,7 @@ interface BaseProviderGridProps {
   onConfigure?: (provider: Provider) => void;
   onDelete?: (provider: Provider) => void;
   onTakeoff?: (provider: Provider) => void;
+  showTakeoff?: boolean;
 }
 
 export function BaseProviderGrid({
@@ -287,6 +283,7 @@ export function BaseProviderGrid({
   onAddKeys,
   onConfigure,
   onDelete,
+  showTakeoff,
   onTakeoff,
 }: BaseProviderGridProps) {
   return (
@@ -309,6 +306,7 @@ export function BaseProviderGrid({
             showSettings={showSettings}
             showDelete={showDelete}
             hasRequiredKeys={hasRequiredKeys}
+            showTakeoff={showTakeoff}
           />
         );
       })}

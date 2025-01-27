@@ -1,5 +1,5 @@
 export const special_provider_cases = {
-  ollama: checkForOllama(), // Set the check result here
+  Ollama: checkForOllama(), // Set the check result here
 };
 
 export async function checkForOllama() {
