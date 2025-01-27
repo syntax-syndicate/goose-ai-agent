@@ -1,9 +1,15 @@
 export const special_provider_cases = {
-  Ollama: checkForOllama(), // Set the check result here
+  Ollama: async () => await checkForOllama(), // Dynamically re-check
 };
 
 export async function checkForOllama() {
-  const ollamaInstalled = await window.electron.checkForOllama();
-  console.log('Is ollama installed?', ollamaInstalled);
-  return ollamaInstalled;
+  console.log('Invoking check-ollama IPC handler...');
+  try {
+    const ollamaInstalled = await window.electron.checkForOllama();
+    console.log('Is Ollama running (from renderer)?', ollamaInstalled);
+    return ollamaInstalled;
+  } catch (error) {
+    console.error('Error invoking check-ollama:', error);
+    return false;
+  }
 }

@@ -9,9 +9,10 @@ export async function getActiveProviders(): Promise<string[]> {
 
     // Check for special provider cases (e.g. ollama needs to be installed in Applications folder)
     const specialCasesResults = await Promise.all(
-      Object.entries(special_provider_cases).map(async ([providerName, checkPromise]) => {
-        const isActive = await checkPromise; // Resolve the promise for each special case
-        return isActive ? providerName : null; // Include provider if active
+      Object.entries(special_provider_cases).map(async ([providerName, checkFunction]) => {
+        const isActive = await checkFunction(); // Dynamically re-check status
+        console.log(`Special case result for ${providerName}:`, isActive);
+        return isActive ? providerName : null;
       })
     );
 

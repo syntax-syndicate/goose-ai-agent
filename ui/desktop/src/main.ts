@@ -26,7 +26,7 @@ import {
   saveSettings,
   updateEnvironmentVariables,
 } from './utils/settings';
-const fs = require('fs');
+const { exec } = require('child_process');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) app.quit();
@@ -348,19 +348,39 @@ ipcMain.handle('select-file-or-directory', async () => {
   return null;
 });
 
-// Handle the Ollama check request
 ipcMain.handle('check-ollama', async () => {
-  const ollamaPath = '/Applications/Ollama.app';
   try {
-    const stats = fs.statSync(ollamaPath);
-    console.log('stats', stats);
-    console.log('isDir', stats.isDirectory());
-    return stats.isDirectory(); // Return true if the path exists and is a directory
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return false; // File or directory does not exist
-    }
-    throw error; // Propagate other errors
+    return new Promise((resolve, reject) => {
+      console.log('Executing ps command to check for Ollama...');
+      // Run `ps` and filter for "ollama"
+      exec('ps aux | grep -iw "[o]llama"', (error, stdout, stderr) => {
+        console.log('Command executed.');
+
+        if (error) {
+          console.error('Error executing ps command:', error);
+          return resolve(false); // Process is not running
+        }
+
+        if (stderr) {
+          console.error('Standard error output from ps command:', stderr);
+          return resolve(false); // Process is not running
+        }
+
+        console.log('Raw stdout from ps command:', stdout);
+
+        // Trim and check if output contains a match
+        const trimmedOutput = stdout.trim();
+        console.log('Trimmed stdout:', trimmedOutput);
+
+        const isRunning = trimmedOutput.length > 0; // True if there's any output
+        console.log('Ollama is running:', isRunning);
+
+        resolve(isRunning); // Resolve true if running, false otherwise
+      });
+    });
+  } catch (err) {
+    console.error('Error checking for Ollama:', err);
+    return false; // Return false on error
   }
 });
 
