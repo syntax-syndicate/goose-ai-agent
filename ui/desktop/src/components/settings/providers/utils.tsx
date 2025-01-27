@@ -6,7 +6,6 @@ export async function checkForOllama() {
   console.log('Invoking check-ollama IPC handler...');
   try {
     const ollamaInstalled = await window.electron.checkForOllama();
-    console.log('Is Ollama running (from renderer)?', ollamaInstalled);
     return ollamaInstalled;
   } catch (error) {
     console.error('Error invoking check-ollama:', error);

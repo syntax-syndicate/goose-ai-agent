@@ -162,7 +162,6 @@ function BaseProviderCard({
                         const refreshActiveKeys = async () => {
                           try {
                             const providers = await getActiveProviders(); // Re-fetch active providers
-                            console.log('Refreshed providers:', providers); // Log the fetched providers
                             setActiveKeys(providers); // Update the context state
                           } catch (error) {
                             console.error('Error refreshing active providers:', error);

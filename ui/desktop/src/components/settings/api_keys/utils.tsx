@@ -16,8 +16,6 @@ export async function getActiveProviders(): Promise<string[]> {
       })
     );
 
-    console.log(specialCasesResults);
-
     // Extract active providers based on `is_set` in `secret_status` or providers with no keys
     const activeProviders = Object.values(secretsSettings) // Convert object to array
       .filter((provider) => {
@@ -34,9 +32,6 @@ export async function getActiveProviders(): Promise<string[]> {
       ...activeProviders,
       ...specialCasesResults.filter((provider) => provider !== null), // Filter out null results
     ];
-
-    console.log('all active prov', allActiveProviders);
-
     return allActiveProviders;
   } catch (error) {
     console.error('Failed to get active providers:', error);

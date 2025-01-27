@@ -351,11 +351,8 @@ ipcMain.handle('select-file-or-directory', async () => {
 ipcMain.handle('check-ollama', async () => {
   try {
     return new Promise((resolve, reject) => {
-      console.log('Executing ps command to check for Ollama...');
       // Run `ps` and filter for "ollama"
       exec('ps aux | grep -iw "[o]llama"', (error, stdout, stderr) => {
-        console.log('Command executed.');
-
         if (error) {
           console.error('Error executing ps command:', error);
           return resolve(false); // Process is not running
@@ -373,8 +370,6 @@ ipcMain.handle('check-ollama', async () => {
         console.log('Trimmed stdout:', trimmedOutput);
 
         const isRunning = trimmedOutput.length > 0; // True if there's any output
-        console.log('Ollama is running:', isRunning);
-
         resolve(isRunning); // Resolve true if running, false otherwise
       });
     });
