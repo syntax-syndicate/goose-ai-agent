@@ -10,7 +10,7 @@ Goose allows you to extend its functionality by creating your own custom extensi
 
 In this guide, we build an MCP server using the [Python SDK for MCP][mcp-python]. We’ll demonstrate how to create an MCP server that reads Wikipedia articles and converts them to Markdown, integrate it as an extension in Goose. You can follow a similar process to develop your own custom extensions for Goose.
 
-You can checkout other examples in this [MCP servers repository][mcp-servers]. MCP SDKs are also available in Typescript and Kotlin.
+You can checkout other examples in this [MCP servers repository][mcp-servers]. MCP SDKs are also available in [Typescript][mcp-typescript] and [Kotlin][mcp-kotlin].
 
 :::note
 
