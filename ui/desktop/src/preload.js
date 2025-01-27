@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('electron', {
   fetchMetadata: (url) => ipcRenderer.invoke('fetch-metadata', url),
   reloadApp: () => ipcRenderer.send('reload-app'),
   selectFileOrDirectory: () => ipcRenderer.invoke('select-file-or-directory'),
+  settingsUpdated: () => ipcRenderer.send('settingsUpdated'),
   startPowerSaveBlocker: () => ipcRenderer.invoke('start-power-save-blocker'),
   stopPowerSaveBlocker: () => ipcRenderer.invoke('stop-power-save-blocker'),
   getBinaryPath: (binaryName) => ipcRenderer.invoke('get-binary-path', binaryName),
