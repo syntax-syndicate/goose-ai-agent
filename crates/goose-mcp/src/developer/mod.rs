@@ -249,8 +249,21 @@ impl DeveloperRouter {
             .wait_with_output()
             .await
             .map_err(|e| ToolError::ExecutionError(e.to_string()))?;
-
+        
         let output_str = String::from_utf8_lossy(&output.stdout);
+        
+        // Check the character count of the output
+        const MAX_CHAR_COUNT: usize = 400_000; // 409600 chars = 400KB
+        let char_count = output_str.chars().count();
+            if char_count > MAX_CHAR_COUNT {
+                return Err(ToolError::ExecutionError(format!(
+                    "Shell output from command '{}' has too many characters ({}). Maximum character count is {}.",
+                    command,
+                    char_count,
+                    MAX_CHAR_COUNT
+                )));
+            }
+        
         Ok(vec![
             Content::text(output_str.clone()).with_audience(vec![Role::Assistant]),
             Content::text(output_str)
