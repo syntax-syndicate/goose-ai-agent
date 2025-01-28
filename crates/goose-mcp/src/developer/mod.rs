@@ -312,9 +312,9 @@ impl DeveloperRouter {
 
     async fn text_editor_view(&self, path: &PathBuf) -> Result<Vec<Content>, ToolError> {
         if path.is_file() {
-            // Check file size first (2MB limit)
-            const MAX_FILE_SIZE: u64 = 2 * 1024 * 1024; // 2MB in bytes
-            const MAX_CHAR_COUNT: usize = 1 << 20; // 2^20 characters (1,048,576)
+            // Check file size first (400KB limit)
+            const MAX_FILE_SIZE: u64 = 400 * 1024; // 400KB in bytes
+            const MAX_CHAR_COUNT: usize = 400_000; // 409600 chars = 400KB
 
             let file_size = std::fs::metadata(path)
                 .map_err(|e| {
@@ -324,9 +324,9 @@ impl DeveloperRouter {
 
             if file_size > MAX_FILE_SIZE {
                 return Err(ToolError::ExecutionError(format!(
-                    "File '{}' is too large ({:.2}MB). Maximum size is 2MB to prevent memory issues.",
+                    "File '{}' is too large ({:.2}KB). Maximum size is 400KB to prevent memory issues.",
                     path.display(),
-                    file_size as f64 / 1024.0 / 1024.0
+                    file_size as f64 / 1024.0
                 )));
             }
 
@@ -778,8 +778,8 @@ mod tests {
             let many_chars_path = temp_dir.path().join("many_chars.txt");
             let many_chars_str = many_chars_path.to_str().unwrap();
 
-            // Create a file with more than 2^20 characters but less than 2MB
-            let content = "x".repeat((1 << 20) + 1); // 2^20 + 1 characters
+            // Create a file with more than 400K characters but less than 400KB
+            let content = "x".repeat(405_000);
             std::fs::write(&many_chars_path, content).unwrap();
 
             let result = router
