@@ -16,6 +16,11 @@ on:
         required: false
         default: true
         type: boolean
+      build_intel:
+        description: 'Whether to also build Intel version'
+        required: false
+        default: false
+        type: boolean
     secrets:
       CERTIFICATE_OSX_APPLICATION:
         description: 'Certificate for macOS application signing'
@@ -38,7 +43,7 @@ name: Reusable workflow to bundle desktop app
 jobs:
   bundle-desktop:
     runs-on: macos-latest
-    name: Bundle Desktop App on macOS
+    name: Bundle Desktop App on macOS (ARM64)
     steps:
       # Validate Signing Secrets if signing is enabled
       - name: Validate Signing Secrets
@@ -173,6 +178,158 @@ jobs:
           xattr -cr "ui/desktop/out/Goose-darwin-arm64/Goose.app"
           echo "Opening Goose.app..."
           open -g "ui/desktop/out/Goose-darwin-arm64/Goose.app"
+
+          # Give the app a few seconds to start and write logs
+          sleep 5
+
+          # Check if it's running
+          if pgrep -f "Goose.app/Contents/MacOS/Goose" > /dev/null; then
+            echo "App appears to be running."
+          else
+            echo "App did not stay open. Possible crash or startup error."
+            exit 1
+          fi
+          LOGFILE="$HOME/Library/Application Support/Goose/logs/main.log"
+          # Print the log and verify "ChatWindow loaded" is in the logs
+          if [ -f "$LOGFILE" ]; then
+            echo "===== Log file contents ====="
+            cat "$LOGFILE"
+            echo "============================="
+            if grep -F "ChatWindow loaded" "$LOGFILE"; then
+              echo "Confirmed: 'ChatWindow loaded' found in logs!"
+            else
+              echo "Did not find 'ChatWindow loaded' in logs. Failing..."
+              exit 1
+            fi
+          else
+            echo "No log file found at $LOGFILE. Exiting with failure."
+            exit 1
+          fi
+          # Kill the app to clean up
+          pkill -f "Goose.app/Contents/MacOS/Goose"
+
+  bundle-desktop-intel:
+    runs-on: macos-latest
+    name: Bundle Desktop App on macOS (Intel)
+    if: ${{ inputs.build_intel }}
+    steps:
+      # Validate Signing Secrets if signing is enabled
+      - name: Validate Signing Secrets
+        if: ${{ inputs.signing }}
+        run: |
+          if [[ -z "${{ secrets.CERTIFICATE_OSX_APPLICATION }}" ]]; then
+            echo "Error: CERTIFICATE_OSX_APPLICATION secret is required for signing."
+            exit 1
+          fi
+          if [[ -z "${{ secrets.CERTIFICATE_PASSWORD }}" ]]; then
+            echo "Error: CERTIFICATE_PASSWORD secret is required for signing."
+            exit 1
+          fi
+          if [[ -z "${{ secrets.APPLE_ID }}" ]]; then
+            echo "Error: APPLE_ID secret is required for signing."
+            exit 1
+          fi
+          if [[ -z "${{ secrets.APPLE_ID_PASSWORD }}" ]]; then
+            echo "Error: APPLE_ID_PASSWORD secret is required for signing."
+            exit 1
+          fi
+          if [[ -z "${{ secrets.APPLE_TEAM_ID }}" ]]; then
+            echo "Error: APPLE_TEAM_ID secret is required for signing."
+            exit 1
+          fi
+          echo "All required signing secrets are present."
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          target: x86_64-apple-darwin
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-intel-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-intel-cargo-registry-
+
+      - name: Cache Cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/index
+          key: ${{ runner.os }}-intel-cargo-index
+          restore-keys: |
+            ${{ runner.os }}-intel-cargo-index
+
+      - name: Cache Cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-intel-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-intel-cargo-build-
+
+      - name: Build goosed (Intel)
+        run: cargo build --release --target x86_64-apple-darwin -p goose-server
+
+      - name: Copy binary into Electron folder
+        run: cp target/x86_64-apple-darwin/release/goosed ui/desktop/src/bin/goosed
+
+      # Conditional Signing Step - we skip this for faster builds
+      - name: Add MacOS certs for signing and notarization
+        if: ${{ inputs.signing }}
+        run: ./add-macos-cert.sh
+        working-directory: ui/desktop
+        env:
+          CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ui/desktop
+
+      - name: Make Signed App (Intel)
+        if: ${{ inputs.signing }}
+        run: |
+          attempt=0
+          max_attempts=2
+          until [ $attempt -ge $max_attempts ]; do
+            npm run bundle:default && break
+            attempt=$((attempt + 1))
+            echo "Attempt $attempt failed. Retrying..."
+            sleep 5
+          done
+          if [ $attempt -ge $max_attempts ]; then
+            echo "Action failed after $max_attempts attempts."
+            exit 1
+          fi
+        working-directory: ui/desktop
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Upload Desktop artifact (Intel)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Goose-darwin-x86_64
+          path: ui/desktop/out/Goose-darwin-x86_64/Goose.zip
+
+      - name: Quick launch test (macOS Intel)
+        if: ${{ inputs.quick_test }}
+        run: |
+          # Ensure no quarantine attributes (if needed)
+          xattr -cr "ui/desktop/out/Goose-darwin-x86_64/Goose.app"
+          echo "Opening Goose.app..."
+          open -g "ui/desktop/out/Goose-darwin-x86_64/Goose.app"
 
           # Give the app a few seconds to start and write logs
           sleep 5

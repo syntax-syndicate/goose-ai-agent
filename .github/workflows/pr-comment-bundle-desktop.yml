@@ -1,4 +1,4 @@
-# This workflow is triggered by a comment on an issue or PR with the text ".bundle"
+# This workflow is triggered by a comment on an issue or PR with the text ".bundle" or ".bundle-intel"
 # It bundles the Desktop App, then creates a PR comment with a link to download the app.
 
 # IMPORTANT: issue_comment workflows only use files found on "main" branch to run.
@@ -22,28 +22,37 @@ concurrency:
 
 jobs:
   trigger-on-command:
-    name: Trigger on ".bundle" PR comment
+    name: Trigger on ".bundle" or ".bundle-intel" PR comment
     runs-on: ubuntu-latest
     outputs:
-      continue: ${{ steps.command.outputs.continue }}
-      # Cannot use github.event.pull_request.number since the trigger is 'issue_comment'
-      pr_number: ${{ steps.command.outputs.issue_number }}
+      continue: ${{ steps.command-bundle.outputs.continue || steps.command-bundle-intel.outputs.continue }}
+      build_intel: ${{ steps.command-bundle-intel.outputs.continue }}
+      pr_number: ${{ steps.command-bundle.outputs.issue_number || steps.command-bundle-intel.outputs.issue_number }}
     steps:
       - uses: github/command@v1.3.0
-        id: command
+        id: command-bundle
         with:
           command: ".bundle"
           skip_reviews: true
           reaction: "eyes"
           allowed_contexts: pull_request
 
+      - uses: github/command@v1.3.0
+        id: command-bundle-intel
+        with:
+          command: ".bundle-intel"
+          skip_reviews: true
+          reaction: "eyes"
+          allowed_contexts: pull_request
+
   bundle-desktop:
-    # Only run this if ".bundle" command is detected.
+    # Only run this if either command is detected
     needs: [trigger-on-command]
     if: ${{ needs.trigger-on-command.outputs.continue == 'true' }}
     uses: ./.github/workflows/bundle-desktop.yml
     with:
       signing: true
+      build_intel: ${{ needs.trigger-on-command.outputs.build_intel == 'true' }}
     secrets:
       CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
       CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
@@ -71,9 +80,10 @@ jobs:
           body: |
             ### Desktop App for this PR
             
-            The following build is available for testing:
+            The following build(s) are available for testing:
             
             - [📱 macOS Desktop App (arm64, signed)](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/Goose-darwin-arm64.zip)
+            ${{ needs.trigger-on-command.outputs.build_intel == 'true' && '- [💻 macOS Desktop App (Intel x86_64, signed)](https://nightly.link/' || '' }}${{ needs.trigger-on-command.outputs.build_intel == 'true' && github.repository || '' }}${{ needs.trigger-on-command.outputs.build_intel == 'true' && '/actions/runs/' || '' }}${{ needs.trigger-on-command.outputs.build_intel == 'true' && github.run_id || '' }}${{ needs.trigger-on-command.outputs.build_intel == 'true' && '/Goose-darwin-x86_64.zip)' || '' }}
 
             After downloading, unzip the file and drag the Goose.app to your Applications folder. The app is signed and notarized for macOS.
             
