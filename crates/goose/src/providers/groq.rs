@@ -71,7 +71,10 @@ impl GroqProvider {
         let payload: Option<Value> = response.json().await.ok();
 
         match status {
-            StatusCode::OK => payload.ok_or_else( || ProviderError::RequestFailed("Response body is not valid JSON".to_string()) ),
+            StatusCode::OK => payload.ok_or_else( || ProviderError::RequestFailed {
+                status,
+                body: "Response body is not valid JSON".to_string()
+            }),
             StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
                 Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
                     Status: {}. Response: {:?}", status, payload)))
@@ -89,7 +92,10 @@ impl GroqProvider {
                 tracing::debug!(
                     "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
                 );
-                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
+                Err(ProviderError::RequestFailed {
+                    status,
+                    body: format!("{:?}", payload)
+                })
             }
         }
     }
