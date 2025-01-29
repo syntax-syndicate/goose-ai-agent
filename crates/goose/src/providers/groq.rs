@@ -137,7 +137,14 @@ impl Provider for GroqProvider {
         let response = self.post(payload.clone()).await?;
 
         let message = response_to_message(response.clone())?;
-        let usage = get_usage(&response)?;
+        let usage = match get_usage(&response) {
+            Ok(usage) => usage,
+            Err(ProviderError::UsageError(e)) => {
+                tracing::warn!("Failed to get usage data: {}", e);
+                Usage::default()
+            }
+            Err(e) => return Err(e),
+        };
         let model = get_model(&response);
         super::utils::emit_debug_trace(self, &payload, &response, &usage);
         Ok((message, ProviderUsage::new(model, usage)))
