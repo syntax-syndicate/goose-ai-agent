@@ -260,7 +260,6 @@ pub fn create_request(
     // Determine if the model is "o1", "o1-mini", or something else
     // Note that o1 is a superset of o1-mini
     let is_o1 = model_config.model_name.starts_with("o1");
-    let is_o1_mini = model_config.model_name.starts_with("o1-mini");
 
     let system_role = if is_o1 { "developer" } else { "system" };
 
@@ -276,9 +275,6 @@ pub fn create_request(
         vec![]
     };
 
-    if !is_o1_mini {
-        messages_array.push(system_message);
-    }
     messages_array.extend(messages_spec);
 
     let mut payload = json!({
