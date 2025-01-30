@@ -46,7 +46,7 @@ function ToolCall({ call }: ToolCallProps) {
     <div>
       <div className="flex items-center mb-4">
         <Box size={16} />
-        <span className="ml-[8px] text-textSubtle font-medium">
+        <span className="ml-[8px] text-textStandard">
           {snakeToTitleCase(call.toolName.substring(call.toolName.lastIndexOf('__') + 2))}
         </span>
       </div>
