@@ -14,11 +14,8 @@ pub enum ProviderError {
     #[error("Server error: {0}")]
     ServerError(String),
 
-    #[error("Request failed: {status} - {body}")]
-    RequestFailed {
-        status: reqwest::StatusCode,
-        body: String, // Store full response body
-    },
+    #[error("Request failed: {0}")]
+    RequestFailed(String),
 
     #[error("Execution error: {0}")]
     ExecutionError(String),

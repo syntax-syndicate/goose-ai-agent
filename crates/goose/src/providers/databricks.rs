@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::time::Duration;
 
-use super::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage, Usage};
+use super::base::{ConfigKey, Provider, ProviderMetadata, ProviderUsage};
 use super::errors::ProviderError;
 use super::formats::openai::{create_request, get_usage, response_to_message};
 use super::oauth;
@@ -156,10 +156,7 @@ impl DatabricksProvider {
         let payload: Option<Value> = response.json().await.ok();
 
         match status {
-            StatusCode::OK => payload.ok_or_else( || ProviderError::RequestFailed {
-                status,
-                body: "Response body is not valid JSON".to_string()
-            }),
+            StatusCode::OK => payload.ok_or_else( || ProviderError::RequestFailed("Response body is not valid JSON".to_string()) ),
             StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
                 Err(ProviderError::Authentication(format!("Authentication failed. Please ensure your API keys are valid and have the required permissions. \
                     Status: {}. Response: {:?}", status, payload)))
@@ -188,10 +185,7 @@ impl DatabricksProvider {
                 tracing::debug!(
                     "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
                 );
-                Err(ProviderError::RequestFailed {
-                    status,
-                    body: format!("{:?}", payload)
-                })
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}. Message: {}", status, error_msg)))
             }
             StatusCode::TOO_MANY_REQUESTS => {
                 Err(ProviderError::RateLimitExceeded(format!("{:?}", payload)))
@@ -203,10 +197,7 @@ impl DatabricksProvider {
                 tracing::debug!(
                     "{}", format!("Provider request failed with status: {}. Payload: {:?}", status, payload)
                 );
-                Err(ProviderError::RequestFailed {
-                    status,
-                    body: format!("{:?}", payload)
-                })
+                Err(ProviderError::RequestFailed(format!("Request failed with status: {}", status)))
             }
         }
     }
@@ -257,14 +248,7 @@ impl Provider for DatabricksProvider {
 
         // Parse response
         let message = response_to_message(response.clone())?;
-        let usage = match get_usage(&response) {
-            Ok(usage) => usage,
-            Err(ProviderError::UsageError(e)) => {
-                tracing::warn!("Failed to get usage data: {}", e);
-                Usage::default()
-            }
-            Err(e) => return Err(e),
-        };
+        let usage = get_usage(&response)?;
         let model = get_model(&response);
         super::utils::emit_debug_trace(self, &payload, &response, &usage);
 
