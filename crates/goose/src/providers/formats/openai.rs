@@ -256,8 +256,6 @@ pub fn create_request(
     tools: &[Tool],
     image_format: &ImageFormat,
 ) -> anyhow::Result<Value, Error> {
-    let mut messages_array = vec![];
-
     // Determine if the model is "o1", "o1-mini", or something else
     // Note that o1 is a superset of o1-mini
     let is_o1 = model_config.model_name.starts_with("o1");
@@ -276,6 +274,7 @@ pub fn create_request(
         vec![]
     };
 
+    let mut messages_array = vec![system_message];
     messages_array.extend(messages_spec);
 
     let mut payload = json!({
