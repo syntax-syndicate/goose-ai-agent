@@ -256,14 +256,16 @@ pub fn create_request(
     tools: &[Tool],
     image_format: &ImageFormat,
 ) -> anyhow::Result<Value, Error> {
-    // Determine if the model is "o1", "o1-mini", or something else
-    // Note that o1 is a superset of o1-mini
+    if model_config.model_name.starts_with("o1-mini") {
+        return Err(anyhow!(
+            "o1-mini model is not currently supported since Goose uses tool calling."
+        ));
+    }
+
     let is_o1 = model_config.model_name.starts_with("o1");
 
-    let system_role = if is_o1 { "developer" } else { "system" };
-
     let system_message = json!({
-        "role": system_role,
+        "role": if is_o1 { "developer" } else { "system" },
         "content": system
     });
 
@@ -297,6 +299,7 @@ pub fn create_request(
                 .insert("temperature".to_string(), json!(temp));
         }
     }
+
     // o1 models use max_completion_tokens instead of max_tokens
     if let Some(tokens) = model_config.max_tokens {
         let key = if is_o1 {
