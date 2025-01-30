@@ -23,7 +23,7 @@ Goose is compatible with a wide range of LLM providers, allowing you to choose a
 | [OpenAI](https://platform.openai.com/api-keys) | Provides gpt-4o, o1, and other advanced language models. **o1-mini and o1-preview are not supported because Goose uses tool calling.**                                                                                  | `OPENAI_API_KEY`                      |
 | [OpenRouter](https://openrouter.ai/)          | API gateway for unified access to various models with features like rate-limiting management.                                                                                                                            | `OPENROUTER_API_KEY`                  |
 
-:::tip Model Recommendation
+:::tip Model Selection
 Goose relies heavily on tool calling capabilities and currently works best with Anthropic's Claude 3.5 Sonnet and OpenAI's GPT-4o (2024-11-20) model.
 [Berkeley Function-Calling Leaderboard][function-calling-leaderboard] can be a good guide for selecting models.
 :::
