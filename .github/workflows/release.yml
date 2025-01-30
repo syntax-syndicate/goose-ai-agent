@@ -2,10 +2,10 @@
 on:
   push:
     paths-ignore:
-      - 'documentation/**'
+      - "documentation/**"
     tags:
       - "v1.*"
-      - 'test.*' # TODO: remove after testing
+      - "test.*" # TODO: remove after testing
 name: Release
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -96,6 +96,32 @@ jobs:
           prerelease: true # TODO: remove after testing
           draft: true # TODO: remove after testing
 
+      # move this after releasing stable when we update, so this is the final step
+      - name: commit release version changes
+        run: |
+          # update the cargo/node versions since these do not persist across
+          # jobs in github actions
+          sed -i.bak 's/^version = ".*"/version = "'$VERSION'"/' Cargo.toml
+          rm -f Cargo.toml.bak
+
+          # update app version
+          cd ui/desktop
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+          # back to the base directory for git commands
+          cd -
+          # show during testing
+          # TODO: remove after testing
+          git diff
+
+          # TODO: uncomment after testing
+          ## add our changed files, and commit them
+          #git add Cargo.toml ui/desktop/package.json
+          #git commit -m "ci: update version to $VERSION"
+          #git push
+        env:
+          VERSION: ${{ needs.prepare-version.outputs.version }}
+
       # TODO: uncomment after testing. otherwise, this replaces the assets in the stable release
       # # Create/update the stable release
       # - name: Release stable
@@ -111,4 +137,3 @@ jobs:
       #     allowUpdates: true
       #     omitBody: true
       #     omitPrereleaseDuringUpdate: true
-      
