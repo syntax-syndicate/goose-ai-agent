@@ -12,11 +12,10 @@ use crate::message::Message;
 use crate::model::ModelConfig;
 use mcp_core::tool::Tool;
 
-
 pub const AZURE_DEFAULT_MODEL: &str = "gpt-4o";
 pub const AZURE_DOC_URL: &str =
     "https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models";
-pub const AZURE_API_VERSION: &str = "2024-10-21-preview";
+pub const AZURE_API_VERSION: &str = "2024-08-01-preview";
 pub const AZURE_OPENAI_KNOWN_MODELS: &[&str] = &[
     "gpt-4o",
     "gpt-4o-mini",
@@ -124,7 +123,6 @@ impl Provider for AzureProvider {
         tools: &[Tool],
     ) -> Result<(Message, ProviderUsage), ProviderError> {
         let payload = create_request(&self.model, system, messages, tools, &ImageFormat::OpenAi)?;
-
         let response = self.post(payload.clone()).await?;
 
         let message = response_to_message(response.clone())?;
