@@ -82,7 +82,11 @@ const config: Config = {
           {
             to: '/',
             from: '/v1/',
-          }
+          },
+          {
+            to: '/docs/getting-started/using-goose-free',
+            from: '/docs/getting-started/providers#using-goose-for-free',
+          }          
         ],
       },
     ],

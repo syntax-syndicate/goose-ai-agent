@@ -8,25 +8,26 @@ import TabItem from '@theme/TabItem';
 
 # Supported LLM Providers
 
-
 Goose is compatible with a wide range of LLM providers, allowing you to choose and integrate your preferred model.
-
-## Available Providers
-
-| Provider                                      | Description                                                                                                                                                                                                              | Parameters                            |
-|-----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------|
-| [Anthropic](https://www.anthropic.com/)       | Offers Claude, an advanced AI model for natural language tasks.                                                                                                                                                          | `ANTHROPIC_API_KEY`                   |
-| [Databricks](https://www.databricks.com/)     | Unified data analytics and AI platform for building and deploying models.                                                                                                                                                | `DATABRICKS_HOST`, `DATABRICKS_TOKEN` |
-| [Gemini](https://ai.google.dev/gemini-api/docs) | Advanced LLMs by Google with multimodal capabilities (text, images).                                                                                                                                                   | `GOOGLE_API_KEY`                      |
-| [Groq](https://groq.com/)                     | High-performance inference hardware and tools for LLMs.                                                                                                                                                                  | `GROQ_API_KEY`                        |
-| [Ollama](https://ollama.com/)                 | Local model runner supporting Qwen, Llama, DeepSeek, and other open-source models. **Because this provider runs locally, you must first [download and run a model](/docs/getting-started/providers#local-llms-ollama).** | N/A                                   |
-| [OpenAI](https://platform.openai.com/api-keys) | Provides gpt-4o, o1, and other advanced language models. **o1-mini and o1-preview are not supported because Goose uses tool calling.**                                                                                  | `OPENAI_API_KEY`                      |
-| [OpenRouter](https://openrouter.ai/)          | API gateway for unified access to various models with features like rate-limiting management.                                                                                                                            | `OPENROUTER_API_KEY`                  |
 
 :::tip Model Selection
 Goose relies heavily on tool calling capabilities and currently works best with Anthropic's Claude 3.5 Sonnet and OpenAI's GPT-4o (2024-11-20) model.
 [Berkeley Function-Calling Leaderboard][function-calling-leaderboard] can be a good guide for selecting models.
 :::
+
+## Available Providers
+
+| Provider                                      | Description                                         |   Parameters                          |
+|-----------------------------------------------|-----------------------------------------------------|---------------------------------------|
+| [Anthropic](https://www.anthropic.com/)       | Offers Claude, an advanced AI model for natural language tasks. | `ANTHROPIC_API_KEY`                   |
+| [Databricks](https://www.databricks.com/)     | Unified data analytics and AI platform for building and deploying models. | `DATABRICKS_HOST`, `DATABRICKS_TOKEN` |
+| [Gemini](https://ai.google.dev/gemini-api/docs) | Advanced LLMs by Google with multimodal capabilities (text, images).    | `GOOGLE_API_KEY`                      |
+| [Groq](https://groq.com/)                     | High-performance inference hardware and tools for LLMs.    | `GROQ_API_KEY`                        |
+| [Ollama](https://ollama.com/)                 | Local model runner supporting Qwen, Llama, DeepSeek, and other open-source models. **Because this provider runs locally, you must first [download and run a model](/docs/getting-started/providers#local-llms-ollama).** | `OLLAMA_HOST`                                 |
+| [OpenAI](https://platform.openai.com/api-keys) | Provides gpt-4o, o1, and other advanced language models. **o1-mini and o1-preview are not supported because Goose uses tool calling.**                                                                                  | `OPENAI_API_KEY`                      |
+| [OpenRouter](https://openrouter.ai/)          | API gateway for unified access to various models with features like rate-limiting management.  | `OPENROUTER_API_KEY`                  |
+
+
    
 ## Configure Provider
 
@@ -98,13 +99,12 @@ To configure your chosen provider or see available options, run `goose configure
 
 ## Using Goose for Free
 
-Goose is a free and open source developer AI agent that you can start using right away, but not all supported [LLM Providers][providers] provide a free tier. 
+Goose is a free and open source AI agent that you can start using right away, but not all supported [LLM Providers][providers] provide a free tier. 
 
 Below, we outline a couple of free options and how to get started with them.
 
 :::warning Limitations
-These free options are a great way to get started with Goose and explore its capabilities. However, to get the best out of Goose, 
-we recommend trying out models with native tool calling capabilities, eg. Anthropic's Claude 3.5 Sonnet.
+These free options are a great way to get started with Goose and explore its capabilities. However, you may need to upgrade your LLM for better performance.
 :::
 
 
@@ -211,6 +211,23 @@ goose configure
 └  
 ```
 
+5. Enter the host where your model is running
+
+```
+┌   goose-configure 
+│
+◇  What would you like to configure?
+│  Configure Providers 
+│
+◇  Which model provider should we use?
+│  Ollama 
+│
+◆  Provider Ollama requires OLLAMA_HOST, please enter a value
+│  http://localhost:11434
+└
+```
+
+
 6. Enter the model you have running
 
 ```
@@ -235,16 +252,12 @@ goose configure
 
 ### DeepSeek-R1
 
-:::warning
-In our testing, we have found the Google Gemini performs better that DeepSeek models, likely
-because Goose relies heavily on tool calling and DeepSeek does not support it natively yet.
-When using DeepSeek, we currently recommend the 70B model size, which requires
-a powerful device to run smoothly.
-:::
-
 Ollama provides open source LLMs, such as `DeepSeek-r1`, that you can install and run locally.
 Note that the native `DeepSeek-r1` model doesn't support tool calling, however, we have a [custom model](https://ollama.com/michaelneale/deepseek-r1-goose) you can use with Goose. 
 
+:::warning
+Note that this is a 70B model size and requires a powerful device to run smoothly.
+:::
 
 
 1. Download and install Ollama from [ollama.com](https://ollama.com/download).
@@ -293,7 +306,7 @@ ollama run michaelneale/deepseek-r1-goose
     └  
     ```
 
-    6. Enter the installed deepseek-r1 model from above
+    5. Enter the host where your model is running
 
     ```
     ┌   goose-configure 
@@ -304,6 +317,25 @@ ollama run michaelneale/deepseek-r1-goose
     ◇  Which model provider should we use?
     │  Ollama 
     │
+    ◆  Provider Ollama requires OLLAMA_HOST, please enter a value
+    │  http://localhost:11434
+    └
+    ```
+
+    6. Enter the installed model from above
+
+    ```
+    ┌   goose-configure 
+    │
+    ◇  What would you like to configure?
+    │  Configure Providers 
+    │
+    ◇  Which model provider should we use?
+    │  Ollama 
+    │
+    ◇   Provider Ollama requires OLLAMA_HOST, please enter a value
+    │  http://localhost:11434  
+    │    
     ◇  Enter a model from that provider:
     │  michaelneale/deepseek-r1-goose
     │
