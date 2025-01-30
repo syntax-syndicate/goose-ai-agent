@@ -5,6 +5,7 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { required_keys } from './models/hardcoded_stuff';
 import { isSecretKey } from './api_keys/utils';
+// import UnionIcon from "../images/Union@2x.svg";
 
 interface ProviderSetupModalProps {
   provider: string;
@@ -47,6 +48,10 @@ export function ProviderSetupModal({
         <div className="px-4 pb-0 space-y-8">
           {/* Header */}
           <div className="flex">
+            {/* Purple icon */}
+            {/* <div className="w-[24px] h-[24px] flex items-center justify-center">
+              <img src={UnionIcon} alt="Union icon" />
+            </div> */}
             <h2 className="text-2xl font-regular text-textStandard">{headerText}</h2>
           </div>
 

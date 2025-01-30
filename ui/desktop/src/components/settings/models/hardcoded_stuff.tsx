@@ -41,7 +41,9 @@ export const groq_models = ['llama-3.3-70b-versatile'];
 
 export const ollama_mdoels = ['qwen2.5'];
 
-export const azure_models = ['gpt-4', 'gpt-35-turbo'];
+export const openrouter_models = ['anthropic/claude-3.5-sonnet'];
+
+export const azure_openai_models = ['gpt-4o'];
 
 export const default_models = {
   openai: 'gpt-4o',
@@ -51,7 +53,7 @@ export const default_models = {
   groq: 'llama-3.3-70b-versatile',
   openrouter: 'anthropic/claude-3.5-sonnet',
   ollama: 'qwen2.5',
-  azure_openai: 'gpt-4',
+  azure_openai: 'gpt-4o',
 };
 
 export function getDefaultModel(key: string): string | undefined {

@@ -161,11 +161,10 @@ export function ConfigureProvidersGrid() {
         }
       }
 
-      const toastInfo = 'configuration';
       toast.success(
         isUpdate
-          ? `Successfully updated ${toastInfo} for ${provider}`
-          : `Successfully added ${toastInfo} for ${provider}`
+          ? `Successfully updated configuration for ${provider}`
+          : `Successfully added configuration for ${provider}`
       );
 
       const updatedKeys = await getActiveProviders();

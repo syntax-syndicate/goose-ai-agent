@@ -12,13 +12,11 @@ use crate::message::Message;
 use crate::model::ModelConfig;
 use mcp_core::tool::Tool;
 
-// Azure OpenAI uses deployments to manage model access, so the model name
-// comes from the deployment configuration rather than being hardcoded.
-// The actual model (gpt-4, gpt-35-turbo, etc.) is specified in the Azure deployment.
+
 pub const AZURE_DEFAULT_MODEL: &str = "gpt-4o";
 pub const AZURE_DOC_URL: &str =
     "https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models";
-
+pub const AZURE_API_VERSION: &str = "2024-10-21-preview";
 pub const AZURE_OPENAI_KNOWN_MODELS: &[&str] = &[
     "gpt-4o",
     "gpt-4o-mini",
@@ -67,9 +65,10 @@ impl AzureProvider {
 
     async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!(
-            "{}/openai/deployments/{}/chat/completions?api-version=2024-02-15-preview",
+            "{}/openai/deployments/{}/chat/completions?api-version={}",
             self.endpoint.trim_end_matches('/'),
-            self.deployment_name
+            self.deployment_name,
+            AZURE_API_VERSION
         );
 
         let response: reqwest::Response = self
@@ -126,10 +125,8 @@ impl Provider for AzureProvider {
     ) -> Result<(Message, ProviderUsage), ProviderError> {
         let payload = create_request(&self.model, system, messages, tools, &ImageFormat::OpenAi)?;
 
-        // Make request
         let response = self.post(payload.clone()).await?;
 
-        // Parse response
         let message = response_to_message(response.clone())?;
         let usage = match get_usage(&response) {
             Ok(usage) => usage,
