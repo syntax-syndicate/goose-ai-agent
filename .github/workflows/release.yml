@@ -110,6 +110,9 @@ jobs:
 
           # back to the base directory for git commands
           cd -
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
           # show during testing
           # TODO: remove after testing
           git diff
