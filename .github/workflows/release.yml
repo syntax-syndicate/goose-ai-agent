@@ -116,7 +116,7 @@ jobs:
 
           # TODO: uncomment after testing
           ## add our changed files, and commit them
-          #git add Cargo.toml ui/desktop/package.json
+          #git add Cargo.toml ui/desktop/package.json ui/desktop/package-lock.json
           #git commit -m "ci: update version to $VERSION"
           #git push
         env:
