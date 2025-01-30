@@ -96,19 +96,19 @@ jobs:
           prerelease: true # TODO: remove after testing
           draft: true # TODO: remove after testing
 
-      # Create/update the stable release
-      - name: Release stable
-        uses: ncipollo/release-action@v1
-        with:
-          tag: stable
-          name: Stable
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: |
-            goose-*.tar.bz2
-            Goose*.zip
-            download_cli.sh
-          allowUpdates: true
-          omitBody: true
-          omitPrereleaseDuringUpdate: true
-          prerelease: true # TODO: remove after testing
-          draft: true # TODO: remove after testing
+      # TODO: uncomment after testing. otherwise, this replaces the assets in the stable release
+      # # Create/update the stable release
+      # - name: Release stable
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     tag: stable
+      #     name: Stable
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     artifacts: |
+      #       goose-*.tar.bz2
+      #       Goose*.zip
+      #       download_cli.sh
+      #     allowUpdates: true
+      #     omitBody: true
+      #     omitPrereleaseDuringUpdate: true
+      
