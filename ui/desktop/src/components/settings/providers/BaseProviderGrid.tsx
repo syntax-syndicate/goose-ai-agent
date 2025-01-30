@@ -8,6 +8,8 @@ import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { useActiveKeys } from '../api_keys/ActiveKeysContext';
 import { getActiveProviders } from '../api_keys/utils';
 
+import { checkOllamaHostIsSet } from './utils';
+
 // Common interfaces and helper functions
 interface Provider {
   id: string;
@@ -48,6 +50,23 @@ export function getProviderDescription(provider) {
     Ollama: 'Run and use open-source models locally',
   };
   return descriptions[provider] || `Access ${provider} models`;
+}
+
+async function getGreenCheckTooltipMessage(hasRequiredKeys, name) {
+  let configuredProviderTooltip: string;
+
+  // ollama
+  // check if OLLAMA_HOST is set
+  // we will see OLLAMA_HOST in config settings if it is set
+  const ollamaIsSetViaHost = await checkOllamaHostIsSet();
+
+  if (ollamaIsSetViaHost) {
+    configuredProviderTooltip = `Ollama provider running off host`;
+  }
+
+  return hasRequiredKeys
+    ? `You have ${getArticle(name)} ${name} API Key set in your environment`
+    : `${name} is installed and running on your machine`;
 }
 
 function BaseProviderCard({
@@ -209,6 +228,8 @@ function BaseProviderCard({
                 </Tooltip>
               </TooltipProvider>
             )}
+
+            {/* Gear icon for configured providers */}
             {isConfigured && showSettings && hasRequiredKeys && (
               <TooltipProvider>
                 <Tooltip>
@@ -233,6 +254,8 @@ function BaseProviderCard({
                 </Tooltip>
               </TooltipProvider>
             )}
+
+            {/* Delete button */}
             {showDelete && hasRequiredKeys && isConfigured && (
               <TooltipProvider>
                 <Tooltip>
@@ -258,6 +281,8 @@ function BaseProviderCard({
               </TooltipProvider>
             )}
           </div>
+
+          {/*Rocket ship for the welcome page*/}
           {isConfigured && onTakeoff && showTakeoff !== false && (
             <TooltipProvider>
               <Tooltip>

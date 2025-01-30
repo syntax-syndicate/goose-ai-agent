@@ -98,8 +98,8 @@ export function ConfigureProvidersGrid() {
             'Content-Type': 'application/json',
             'X-Secret-Key': getSecretKey(),
           },
-          body: JSON.stringify({ 
-            key: keyName, 
+          body: JSON.stringify({
+            key: keyName,
             isSecret,
           }),
         });
@@ -200,6 +200,7 @@ export function ConfigureProvidersGrid() {
       toast.success(`Successfully deleted ${toastInfo} for ${providerToDelete.name}`);
 
       const updatedKeys = await getActiveProviders();
+      console.log('[deleteProviderKey]', updatedKeys);
       setActiveKeys(updatedKeys);
     } catch (error) {
       console.error('Error deleting key:', error);
