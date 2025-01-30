@@ -89,9 +89,10 @@ impl GoogleProvider {
                     Status: {}. Response: {:?}", status, payload )))
             }
             StatusCode::BAD_REQUEST => {
+                let mut error_msg = "Unknown error".to_string();
                 if let Some(payload) = &payload {
                     if let Some(error) = payload.get("error") {
-                        let error_msg = error.get("message").and_then(|m| m.as_str()).unwrap_or("Unknown error");
+                        error_msg = error.get("message").and_then(|m| m.as_str()).unwrap_or("Unknown error").to_string();
                         let error_status = error.get("status").and_then(|s| s.as_str()).unwrap_or("Unknown status");
                         if error_status == "INVALID_ARGUMENT" && error_msg.to_lowercase().contains("exceeds") {
                             return Err(ProviderError::ContextLengthExceeded(error_msg.to_string()));
