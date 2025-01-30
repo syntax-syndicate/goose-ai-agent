@@ -16,7 +16,8 @@ use mcp_core::tool::Tool;
 // comes from the deployment configuration rather than being hardcoded.
 // The actual model (gpt-4, gpt-35-turbo, etc.) is specified in the Azure deployment.
 pub const AZURE_DEFAULT_MODEL: &str = "gpt-4o";
-pub const AZURE_DOC_URL: &str = "https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models";
+pub const AZURE_DOC_URL: &str =
+    "https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models";
 
 pub const AZURE_OPENAI_KNOWN_MODELS: &[&str] = &[
     "gpt-4o",
@@ -24,7 +25,7 @@ pub const AZURE_OPENAI_KNOWN_MODELS: &[&str] = &[
     "o1",
     "o1-mini",
     "o1-preview",
-    "gpt-4"
+    "gpt-4",
 ];
 
 #[derive(Debug, serde::Serialize)]
@@ -50,7 +51,7 @@ impl AzureProvider {
         let api_key: String = config.get_secret("AZURE_OPENAI_API_KEY")?;
         let endpoint: String = config.get("AZURE_OPENAI_ENDPOINT")?;
         let deployment_name: String = config.get("AZURE_OPENAI_DEPLOYMENT_NAME")?;
-        
+
         let client = Client::builder()
             .timeout(Duration::from_secs(600))
             .build()?;
@@ -63,11 +64,10 @@ impl AzureProvider {
             model,
         })
     }
-    
 
     async fn post(&self, payload: Value) -> Result<Value, ProviderError> {
         let url = format!(
-            "{}/openai/deployments/{}/chat/completions?api-version=2024-08-01-preview",
+            "{}/openai/deployments/{}/chat/completions?api-version=2024-02-15-preview",
             self.endpoint.trim_end_matches('/'),
             self.deployment_name
         );
@@ -92,12 +92,20 @@ impl Provider for AzureProvider {
             "Azure OpenAI",
             "Models through Azure OpenAI Service",
             "gpt-4o",
-            AZURE_OPENAI_KNOWN_MODELS.iter().map(|s| s.to_string()).collect(),
+            AZURE_OPENAI_KNOWN_MODELS
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
             AZURE_DOC_URL,
             vec![
                 ConfigKey::new("AZURE_OPENAI_API_KEY", true, true, None),
                 ConfigKey::new("AZURE_OPENAI_ENDPOINT", true, false, None),
-                ConfigKey::new("AZURE_OPENAI_DEPLOYMENT_NAME", true, false, Some("Name of your Azure OpenAI deployment")),
+                ConfigKey::new(
+                    "AZURE_OPENAI_DEPLOYMENT_NAME",
+                    true,
+                    false,
+                    Some("Name of your Azure OpenAI deployment"),
+                ),
             ],
         )
     }

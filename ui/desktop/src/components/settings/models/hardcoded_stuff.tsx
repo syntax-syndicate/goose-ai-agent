@@ -17,6 +17,7 @@ export const goose_models: Model[] = [
   { id: 15, name: 'llama-3.3-70b-versatile', provider: 'Groq' },
   { id: 16, name: 'qwen2.5', provider: 'Ollama' },
   { id: 17, name: 'anthropic/claude-3.5-sonnet', provider: 'OpenRouter' },
+  { id: 18, name: 'gpt-4o', provider: 'Azure OpenAI' },
 ];
 
 export const openai_models = ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo', 'o1'];
@@ -40,7 +41,7 @@ export const groq_models = ['llama-3.3-70b-versatile'];
 
 export const ollama_mdoels = ['qwen2.5'];
 
-export const openrouter_models = ['anthropic/claude-3.5-sonnet'];
+export const azure_models = ['gpt-4', 'gpt-35-turbo'];
 
 export const default_models = {
   openai: 'gpt-4o',
@@ -50,6 +51,7 @@ export const default_models = {
   groq: 'llama-3.3-70b-versatile',
   openrouter: 'anthropic/claude-3.5-sonnet',
   ollama: 'qwen2.5',
+  azure_openai: 'gpt-4',
 };
 
 export function getDefaultModel(key: string): string | undefined {
