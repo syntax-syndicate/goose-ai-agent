@@ -20,9 +20,9 @@ export function ToolCallArguments({ args }: ToolCallArgumentsProps) {
 
       if (!needsExpansion) {
         return (
-          <div className="mb-4">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-textSubtle">{key}</span>
+          <div className="mb-2">
+            <div className="flex flex-row">
+              <span className="text-sm font-medium text-textSubtle min-w-[140px]">{key}</span>
               <span className="text-sm text-textStandard">{value}</span>
             </div>
           </div>
@@ -30,11 +30,15 @@ export function ToolCallArguments({ args }: ToolCallArgumentsProps) {
       }
 
       return (
-        <div className="mb-4">
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-textSubtle">{key}</span>
+        <div className="mb-2">
+          <div className="flex flex-row">
+            <span className="text-sm font-medium text-textSubtle min-w-[140px]">{key}</span>
             <div className="flex items-center">
-              {!isExpanded && (
+              {isExpanded ? (
+                <div className="mt-2">
+                  <MarkdownContent content={value} />
+                </div>
+              ) : (
                 <span className="text-sm text-textStandard mr-2">{value.slice(0, 60)}...</span>
               )}
               <button
@@ -48,14 +52,11 @@ export function ToolCallArguments({ args }: ToolCallArgumentsProps) {
               </button>
             </div>
           </div>
-          {isExpanded && (
+          {/* {isExpanded && (
             <div className="mt-2">
               <MarkdownContent content={value} />
-              {/* <ReactMarkdown className="whitespace-pre-wrap break-words prose-pre:whitespace-pre-wrap prose-pre:break-words !p-0 !text-sm text-textStandard">
-                {value}
-              </ReactMarkdown> */}
             </div>
-          )}
+          )} */}
         </div>
       );
     }
@@ -68,9 +69,9 @@ export function ToolCallArguments({ args }: ToolCallArgumentsProps) {
         : String(value);
 
     return (
-      <div className="mb-4">
-        <div className="flex">
-          <span className="font-medium mr-2">{key}:</span>
+      <div className="mb-2">
+        <div className="flex flex-row">
+          <span className="font-medium mr- min-w-[140px]2">{key}:</span>
           <pre className="whitespace-pre-wrap">{content}</pre>
         </div>
       </div>
@@ -78,7 +79,7 @@ export function ToolCallArguments({ args }: ToolCallArgumentsProps) {
   };
 
   return (
-    <div className="mt-2">
+    <div className="my-2">
       {Object.entries(args).map(([key, value]) => (
         <div key={key}>{renderValue(key, value)}</div>
       ))}

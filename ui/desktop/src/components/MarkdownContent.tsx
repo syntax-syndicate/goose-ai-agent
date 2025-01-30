@@ -76,7 +76,7 @@ export default function MarkdownContent({ content, className = '' }: MarkdownCon
   // Determine whether dark mode is enabled
   const isDarkMode = document.documentElement.classList.contains('dark');
   return (
-    <div className="w-full overflow-x-hidden mb-2">
+    <div className="w-full overflow-x-hidden">
       <ReactMarkdown
         rehypePlugins={[rehypeinlineCodeProperty]}
         className={`prose prose-xs dark:prose-invert w-full max-w-full break-words

@@ -127,7 +127,7 @@ function ToolResult({ result }: ToolResultProps) {
             {shouldMinimize && (
               <button
                 onClick={() => toggleExpand(index)}
-                className="mb-2 flex items-center text-textStandard"
+                className="mb-1 flex items-center text-textStandard"
               >
                 <span className="mr-2 text-sm">Output</span>
                 <ChevronUp
