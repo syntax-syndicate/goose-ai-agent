@@ -66,6 +66,7 @@ export const required_keys = {
   Ollama: ['OLLAMA_HOST'],
   Google: ['GOOGLE_API_KEY'],
   OpenRouter: ['OPENROUTER_API_KEY'],
+  'Azure OpenAI': ['AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_DEPLOYMENT_NAME'],
 };
 
 export const supported_providers = [
@@ -76,6 +77,7 @@ export const supported_providers = [
   'Google',
   'Ollama',
   'OpenRouter',
+  'Azure OpenAI',
 ];
 
 export const model_docs_link = [
@@ -99,4 +101,5 @@ export const provider_aliases = [
   { provider: 'Databricks', alias: 'databricks' },
   { provider: 'OpenRouter', alias: 'openrouter' },
   { provider: 'Google', alias: 'google' },
+  { provider: 'Azure OpenAI', alias: 'azure_openai' },
 ];

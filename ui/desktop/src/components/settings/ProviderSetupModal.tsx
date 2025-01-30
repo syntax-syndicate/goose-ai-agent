@@ -5,7 +5,6 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { required_keys } from './models/hardcoded_stuff';
 import { isSecretKey } from './api_keys/utils';
-// import UnionIcon from "../images/Union@2x.svg";
 
 interface ProviderSetupModalProps {
   provider: string;
@@ -24,14 +23,23 @@ export function ProviderSetupModal({
   onSubmit,
   onCancel,
 }: ProviderSetupModalProps) {
-  const [apiKey, setApiKey] = React.useState('');
-  const keyName = required_keys[provider]?.[0] || 'API Key';
-  const headerText = `Setup ${provider}`;
+  const [configValues, setConfigValues] = React.useState<{ [key: string]: string }>({});
+  const requiredKeys = required_keys[provider] || ['API Key'];
+  const headerText = title || `Setup ${provider}`;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(apiKey);
+    // For backward compatibility, if there's only one key, pass the value directly
+    if (requiredKeys.length === 1) {
+      onSubmit(configValues[requiredKeys[0]] || '');
+    } else {
+      // For multiple keys, concatenate them with a special separator
+      const combinedValue = requiredKeys
+        .map((key) => `${key}=${configValues[key] || ''}`)
+        .join('|||');
+      onSubmit(combinedValue);
+    }
   };
-  const inputType = isSecretKey(keyName) ? 'password' : 'text';
 
   return (
     <div className="fixed inset-0 bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-colors animate-[fadein_200ms_ease-in_forwards]">
@@ -39,29 +47,32 @@ export function ProviderSetupModal({
         <div className="px-4 pb-0 space-y-8">
           {/* Header */}
           <div className="flex">
-            {/* Purple icon */}
-            {/* <div className="w-[24px] h-[24px] flex items-center justify-center">
-              <img src={UnionIcon} alt="Union icon" />
-            </div> */}
             <h2 className="text-2xl font-regular text-textStandard">{headerText}</h2>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit}>
-            <div className="mt-[24px]">
-              <div>
-                <Input
-                  type={inputType}
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder={keyName}
-                  className="w-full h-14 px-4 font-regular rounded-lg border shadow-none border-gray-300 bg-white text-lg placeholder:text-gray-400 font-regular text-gray-900"
-                  required
-                />
-                <div className="flex mt-4 text-gray-600 dark:text-gray-300">
-                  <Lock className="w-6 h-6" />
-                  <span className="text-sm font-light ml-4 mt-[2px]">{`Your API key or host will be stored securely in the keychain and used only for making requests to ${provider}`}</span>
+            <div className="mt-[24px] space-y-4">
+              {requiredKeys.map((keyName) => (
+                <div key={keyName}>
+                  <Input
+                    type={isSecretKey(keyName) ? 'password' : 'text'}
+                    value={configValues[keyName] || ''}
+                    onChange={(e) =>
+                      setConfigValues((prev) => ({
+                        ...prev,
+                        [keyName]: e.target.value,
+                      }))
+                    }
+                    placeholder={keyName}
+                    className="w-full h-14 px-4 font-regular rounded-lg border shadow-none border-gray-300 bg-white text-lg placeholder:text-gray-400 font-regular text-gray-900"
+                    required
+                  />
                 </div>
+              ))}
+              <div className="flex text-gray-600 dark:text-gray-300">
+                <Lock className="w-6 h-6" />
+                <span className="text-sm font-light ml-4 mt-[2px]">{`Your configuration values will be stored securely in the keychain and used only for making requests to ${provider}`}</span>
               </div>
             </div>
 

@@ -20,7 +20,11 @@ pub const AZURE_DOC_URL: &str = "https://learn.microsoft.com/en-us/azure/ai-serv
 
 pub const AZURE_OPENAI_KNOWN_MODELS: &[&str] = &[
     "gpt-4o",
-    "gpt-4o-mini"
+    "gpt-4o-mini",
+    "o1",
+    "o1-mini",
+    "o1-preview",
+    "gpt-4"
 ];
 
 #[derive(Debug, serde::Serialize)]
@@ -84,7 +88,7 @@ impl AzureProvider {
 impl Provider for AzureProvider {
     fn metadata() -> ProviderMetadata {
         ProviderMetadata::new(
-            "azure",
+            "azure_openai",
             "Azure OpenAI",
             "Models through Azure OpenAI Service",
             "gpt-4o",
