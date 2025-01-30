@@ -74,7 +74,7 @@ export function ConfigureProvidersGrid() {
     setShowSetupModal(true);
   };
 
-  const handleModalSubmit = async (apiKey: string) => {
+  const handleModalSubmit = async (configValues: { [key: string]: string }) => {
     if (!selectedForSetup) return;
 
     const provider = providers.find((p) => p.id === selectedForSetup)?.name;
@@ -89,21 +89,6 @@ export function ConfigureProvidersGrid() {
     const isSecret = isSecretKey(keyName);
 
     try {
-      // Handle multiple configuration values
-      let configValues: { [key: string]: string } = {};
-
-      if (apiKey.includes('|||')) {
-        // Parse multiple values
-        const pairs = apiKey.split('|||');
-        pairs.forEach((pair) => {
-          const [key, value] = pair.split('=');
-          configValues[key] = value.trim();
-        });
-      } else {
-        // Single value case
-        configValues[requiredKeys[0]] = apiKey.trim();
-      }
-
       // Delete existing keys if provider is already configured
       const isUpdate = providers.find((p) => p.id === selectedForSetup)?.isConfigured;
       if (isUpdate) {

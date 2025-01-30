@@ -12,7 +12,7 @@ interface ProviderSetupModalProps {
   model: string;
   endpoint: string;
   title?: string;
-  onSubmit: (apiKey: string) => void;
+  onSubmit: (configValues: { [key: string]: string }) => void;
   onCancel: () => void;
 }
 
@@ -30,16 +30,7 @@ export function ProviderSetupModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For backward compatibility, if there's only one key, pass the value directly
-    if (requiredKeys.length === 1) {
-      onSubmit(configValues[requiredKeys[0]] || '');
-    } else {
-      // For multiple keys, concatenate them with a special separator
-      const combinedValue = requiredKeys
-        .map((key) => `${key}=${configValues[key] || ''}`)
-        .join('|||');
-      onSubmit(combinedValue);
-    }
+    onSubmit(configValues);
   };
 
   return (
