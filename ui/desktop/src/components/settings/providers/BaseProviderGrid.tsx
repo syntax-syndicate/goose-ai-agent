@@ -149,7 +149,7 @@ function BaseProviderCard({
                   <Portal>
                     <TooltipContent side="top" align="center" className="z-[9999]">
                       <p>
-                        To use, the{' '}
+                        To use, either the{' '}
                         <a
                           href="https://ollama.com/download"
                           target="_blank"
@@ -158,7 +158,8 @@ function BaseProviderCard({
                         >
                           Ollama app
                         </a>{' '}
-                        must be installed on your machine and open.
+                        must be installed on your machine and open, or you must enter a value for
+                        OLLAMA_HOST.
                       </p>
                     </TooltipContent>
                   </Portal>
@@ -201,7 +202,7 @@ function BaseProviderCard({
                   </TooltipTrigger>
                   <Portal>
                     <TooltipContent side="top" align="center" className="z-[9999]">
-                      <p>Re-check for active Ollama app running in the background.</p>
+                      <p>Click to re-check for active Ollama app running in the background.</p>
                     </TooltipContent>
                   </Portal>
                 </Tooltip>
