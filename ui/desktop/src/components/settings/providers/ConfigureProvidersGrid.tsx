@@ -86,8 +86,6 @@ export function ConfigureProvidersGrid() {
       return;
     }
 
-    const isSecret = isSecretKey(keyName);
-
     try {
       // Delete existing keys if provider is already configured
       const isUpdate = providers.find((p) => p.id === selectedForSetup)?.isConfigured;
@@ -101,10 +99,7 @@ export function ConfigureProvidersGrid() {
               'X-Secret-Key': getSecretKey(),
             },
             body: JSON.stringify({
-              
-            key: keyName, 
-            isSecret,
-         ,
+              key: keyName,
               isSecret,
             }),
           });
