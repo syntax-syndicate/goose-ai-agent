@@ -80,6 +80,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
+          
       # Create/update the versioned release
       - name: Release versioned
         uses: ncipollo/release-action@v1
@@ -92,8 +93,6 @@ jobs:
           allowUpdates: true
           omitBody: true
           omitPrereleaseDuringUpdate: true
-          prerelease: true
-          draft: true
 
       # Create/update the stable release
       - name: Release stable
