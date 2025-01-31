@@ -8,7 +8,7 @@ import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { useActiveKeys } from '../api_keys/ActiveKeysContext';
 import { getActiveProviders } from '../api_keys/utils';
 
-import { checkOllamaHostIsSet } from './utils';
+import { checkOllama, checkOllamaHostIsSet } from './utils';
 
 // Common interfaces and helper functions
 interface Provider {
@@ -52,21 +52,20 @@ export function getProviderDescription(provider) {
   return descriptions[provider] || `Access ${provider} models`;
 }
 
-async function getGreenCheckTooltipMessage(hasRequiredKeys, name) {
-  let configuredProviderTooltip: string;
-
-  // ollama
-  // check if OLLAMA_HOST is set
-  // we will see OLLAMA_HOST in config settings if it is set
-  const ollamaIsSetViaHost = await checkOllamaHostIsSet();
-
-  if (ollamaIsSetViaHost) {
-    configuredProviderTooltip = `Ollama provider running off host`;
+async function getGreenCheckTooltipMessage(name: string) {
+  if (name == 'Ollama') {
+    // ollama
+    // check if Ollama is running or there's a host in the 'secrets' config
+    const ollamaConfig = await checkOllama();
+    const ollamaLocation = ollamaConfig.location;
+    if (ollamaLocation == 'app') {
+      return `Ollama is running locally`;
+    } else {
+      return `Ollama is configured via OLLAMA_HOST`;
+    }
   }
 
-  return hasRequiredKeys
-    ? `You have ${getArticle(name)} ${name} API Key set in your environment`
-    : `${name} is installed and running on your machine`;
+  return `You have ${getArticle(name)} ${name} API Key set in your environment`;
 }
 
 function BaseProviderCard({
@@ -88,6 +87,16 @@ function BaseProviderCard({
   const numRequiredKeys = required_keys[name]?.length || 0;
   const tooltipText = numRequiredKeys === 1 ? `Add ${name} API Key` : `Add ${name} API Keys`;
   const { activeKeys, setActiveKeys } = useActiveKeys();
+  const [configuredTooltipMessage, setConfiguredTooltipMessage] = useState('');
+
+  useEffect(() => {
+    const fetchConfiguredProviderTooltipMessage = async () => {
+      const message = await getGreenCheckTooltipMessage(name);
+      setConfiguredTooltipMessage(message);
+    };
+
+    fetchConfiguredProviderTooltipMessage();
+  }, [name]);
 
   return (
     <div className="relative h-full p-[2px] overflow-hidden rounded-[9px] group/card bg-borderSubtle hover:bg-transparent hover:duration-300">
@@ -121,11 +130,7 @@ function BaseProviderCard({
                   </TooltipTrigger>
                   <Portal>
                     <TooltipContent side="top" align="center" className="z-[9999]">
-                      <p>
-                        {hasRequiredKeys
-                          ? `You have ${getArticle(name)} ${name} API Key set in your environment`
-                          : `${name} is installed and running on your machine`}
-                      </p>
+                      <p>{configuredTooltipMessage}</p>
                     </TooltipContent>
                   </Portal>
                 </Tooltip>
