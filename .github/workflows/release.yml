@@ -5,7 +5,7 @@ on:
       - 'documentation/**'
     tags:
       - "v1.*"
-      - 'test.*' # TODO: remove after testing
+
 name: Release
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -24,8 +24,7 @@ jobs:
       - name: Extract version
         id: set-version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/test.} # TODO: remove after testing
-          # VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION=${GITHUB_REF#refs/tags/v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
   # ------------------------------------
@@ -93,22 +92,21 @@ jobs:
           allowUpdates: true
           omitBody: true
           omitPrereleaseDuringUpdate: true
-          prerelease: true # TODO: remove after testing
-          draft: true # TODO: remove after testing
+          prerelease: true
+          draft: true
 
-      # TODO: uncomment after testing. otherwise, this replaces the assets in the stable release
-      # # Create/update the stable release
-      # - name: Release stable
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     tag: stable
-      #     name: Stable
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     artifacts: |
-      #       goose-*.tar.bz2
-      #       Goose*.zip
-      #       download_cli.sh
-      #     allowUpdates: true
-      #     omitBody: true
-      #     omitPrereleaseDuringUpdate: true
+      # Create/update the stable release
+      - name: Release stable
+        uses: ncipollo/release-action@v1
+        with:
+          tag: stable
+          name: Stable
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+            goose-*.tar.bz2
+            Goose*.zip
+            download_cli.sh
+          allowUpdates: true
+          omitBody: true
+          omitPrereleaseDuringUpdate: true
       
